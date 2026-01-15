@@ -1,0 +1,15 @@
+.gradle/
+build/
+.idea/
+.vscode/
+.metals/
+*.iml
+.jdks/
+
+.es/
+*.log
+*.pid
+*.zip
+
+distros/*
+!distros/.gitkeep

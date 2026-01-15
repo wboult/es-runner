@@ -1,0 +1,32 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'com.elastic'
+version = '0.1.0'
+description = 'Local Elasticsearch distribution runner for tests and tooling.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+dependencies {
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    binaryResultsDirectory.set(
+            layout.buildDirectory.dir("test-results/${name}/binary-${System.getProperty('user.name', 'user')}")
+    )
+}
