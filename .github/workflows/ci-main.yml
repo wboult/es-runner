@@ -68,7 +68,7 @@ jobs:
           ES_VERSION: ${{ matrix.es_version }}
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
-        run: ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
+        run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
 
   scala3-test:
     runs-on: ubuntu-latest
@@ -97,4 +97,4 @@ jobs:
           ES_VERSION: "9.2.4"
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
-        run: ./gradlew scala3Test
+        run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew scala3Test
