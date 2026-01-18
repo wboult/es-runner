@@ -1,7 +1,7 @@
 [versions]
 junit = "5.10.2"
 junitPlatform = "1.10.2"
-scala = "2.12.21"
+scala = "3.8.0"
 spark = "3.5.3"
 
 [libraries]
