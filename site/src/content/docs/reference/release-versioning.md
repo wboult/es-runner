@@ -23,7 +23,7 @@ Anything not documented may change without notice.
 
 ## Deprecation policy
 
-- Deprecations will be announced in release notes.
+- Deprecations are announced in release notes.
 - Deprecated APIs remain for **at least one minor release**.
 - Removals occur in the next **major** release unless otherwise stated.
 
@@ -37,5 +37,6 @@ Anything not documented may change without notice.
 
 ## Related
 
+- [Changelog](../changelog/)
+- [API stability and deprecations](../../explanation/api-stability/)
 - [Compatibility matrix](../compatibility/)
-- [Troubleshooting](../../how-to/troubleshooting/)

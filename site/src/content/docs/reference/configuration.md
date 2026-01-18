@@ -54,7 +54,18 @@ Path zip = ElasticRunner.resolveDistroZip(
 - `path.data` and `path.logs` are always set to subfolders inside `workDir`.
 - `http.port` is always set based on `httpPort`/range.
 
-If you use `.settings(...)`, you **replace** the defaults. Use `.setting(...)` to add/override without losing defaults.
+**Important:**
+
+- `builder.setting(key, value)` **adds or overrides** settings without removing defaults.
+- `builder.settings(map)` **replaces** all settings, including defaults. Use this when you want full control.
+
+## Precedence
+
+Settings are applied in this order:
+
+1. Defaults (from `ElasticRunnerConfig.defaults()`)
+2. Builder updates (including `.setting(...)` and `.settings(...)`)
+3. Implicit writes (`cluster.name`, `path.data`, `path.logs`, `http.port`)
 
 ## Related
 
