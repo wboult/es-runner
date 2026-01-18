@@ -11,6 +11,7 @@ class ReadmeScala3ExampleTest:
   @Test
   def readmeScala3ExampleWorks(): Unit =
     val version = sys.env.getOrElse("ES_VERSION", "9.2.4")
+    val major = version.takeWhile(_ != '.')
     val workDir = Files.createTempDirectory("es-runner-readme-scala3-")
     val config = IntegrationTestSupport.configFromExample(
       version,
@@ -25,6 +26,6 @@ class ReadmeScala3ExampleTest:
     try
       val client = server.client()
       assertTrue(client.clusterHealth().contains("\"status\""))
-      assertTrue(client.version().startsWith("9."))
+      assertTrue(client.version().startsWith(s"$major."))
     finally
       server.close()

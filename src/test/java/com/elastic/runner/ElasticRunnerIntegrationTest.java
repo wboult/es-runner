@@ -24,11 +24,12 @@ class ElasticRunnerIntegrationTest {
                 true
         );
 
+        String major = version.split("\\.")[0];
         try (ElasticServer server = ElasticRunner.start(config)) {
             assertTrue(server.ping());
             assertTrue(server.clusterHealth().contains("\"status\""));
             assertTrue(server.clusterName().contains("it-cluster"));
-            assertTrue(server.version().startsWith("9."));
+            assertTrue(server.version().startsWith(major + "."));
         }
     }
 }
