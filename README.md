@@ -29,6 +29,29 @@ try (ElasticServer server = ElasticRunner.start(config)) {
 }
 ```
 
+## Lifecycle helpers
+
+Use `withServer` for a functional, auto-closing style:
+
+```java
+ElasticRunner.withServer(builder -> builder
+    .version("9.2.4")
+    .distrosDir(Paths.get("distros"))
+    .download(true), server -> {
+        System.out.println(server.clusterHealth());
+        System.out.println(server.version());
+    });
+```
+
+If you need explicit shutdown details:
+
+```java
+ElasticServer server = ElasticRunner.start(Paths.get("distros/elasticsearch-9.2.4-windows-x86_64.zip"));
+StopResult result = server.stopWithResult();
+System.out.println("graceful=" + result.graceful());
+System.out.println(server.logTail());
+```
+
 ## Examples
 
 Java:

@@ -25,6 +25,7 @@ public final class ElasticServer implements AutoCloseable {
     private final HttpClient httpClient;
     private final ElasticClient client;
     private final Instant startTime;
+    private final Thread logThread;
 
     ElasticServer(ElasticRunnerConfig config,
                   Process process,
@@ -35,7 +36,8 @@ public final class ElasticServer implements AutoCloseable {
                   Path stateFile,
                   int httpPort,
                   HttpClient httpClient,
-                  Instant startTime) {
+                  Instant startTime,
+                  Thread logThread) {
         this.config = Objects.requireNonNull(config, "config");
         this.process = Objects.requireNonNull(process, "process");
         this.homeDir = Objects.requireNonNull(homeDir, "homeDir");
@@ -48,6 +50,7 @@ public final class ElasticServer implements AutoCloseable {
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
         this.client = new ElasticClient(baseUri, httpClient);
         this.startTime = Objects.requireNonNull(startTime, "startTime");
+        this.logThread = Objects.requireNonNull(logThread, "logThread");
     }
 
     public ElasticRunnerConfig config() {
@@ -66,6 +69,14 @@ public final class ElasticServer implements AutoCloseable {
         return logFile;
     }
 
+    public Path pidFile() {
+        return pidFile;
+    }
+
+    public Path stateFile() {
+        return stateFile;
+    }
+
     public int httpPort() {
         return httpPort;
     }
@@ -82,8 +93,20 @@ public final class ElasticServer implements AutoCloseable {
         return process.isAlive();
     }
 
+    public long pid() {
+        return process.pid();
+    }
+
     public Instant startTime() {
         return startTime;
+    }
+
+    public String logTail() {
+        return LogTail.read(logFile, 20);
+    }
+
+    public String logTail(int maxLines) {
+        return LogTail.read(logFile, maxLines);
     }
 
     public String root() throws IOException, InterruptedException {
@@ -245,25 +268,46 @@ public final class ElasticServer implements AutoCloseable {
     }
 
     public void stop() {
-        stop(config.shutdownTimeout());
+        stopWithResult(config.shutdownTimeout());
     }
 
     public void stop(Duration timeout) {
-        if (!process.isAlive()) {
+        stopWithResult(timeout);
+    }
+
+    public StopResult stopWithResult() {
+        return stopWithResult(config.shutdownTimeout());
+    }
+
+    public StopResult stopWithResult(Duration timeout) {
+        boolean wasRunning = process.isAlive();
+        if (!wasRunning) {
             cleanup();
-            return;
+            stopLogThread(Duration.ofSeconds(1));
+            return new StopResult(false, false, false, Duration.ZERO);
         }
+
+        Instant waitStart = Instant.now();
+        boolean graceful = false;
+        boolean forced = false;
         process.destroy();
         try {
-            if (!process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
+            if (process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
+                graceful = true;
+            } else {
                 process.destroyForcibly();
+                forced = true;
                 process.waitFor(5, TimeUnit.SECONDS);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
             cleanup();
+            stopLogThread(Duration.ofSeconds(2));
         }
+
+        Duration waited = Duration.between(waitStart, Instant.now());
+        return new StopResult(true, graceful, forced, waited);
     }
 
     @Override
@@ -274,6 +318,17 @@ public final class ElasticServer implements AutoCloseable {
     private void cleanup() {
         deleteIfExists(pidFile);
         deleteIfExists(stateFile);
+    }
+
+    private void stopLogThread(Duration timeout) {
+        if (!logThread.isAlive()) {
+            return;
+        }
+        try {
+            logThread.join(timeout.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void deleteIfExists(Path file) {
