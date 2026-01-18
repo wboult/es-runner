@@ -4,6 +4,8 @@ Local Elasticsearch distribution runner intended for tests and offline tooling.
 It launches an Elasticsearch ZIP distribution in a separate process, waits for
 readiness, and provides a Java API for interaction.
 
+Documentation: https://wboult.github.io/elastic-runner/
+
 ## Requirements
 
 - JDK 17+

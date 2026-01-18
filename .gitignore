@@ -5,6 +5,9 @@ build/
 .metals/
 *.iml
 .jdks/
+node_modules/
+site/.astro/
+site/dist/
 
 .es/
 *.log
