@@ -3,6 +3,7 @@ package com.elastic.runner;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
 

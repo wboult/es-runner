@@ -135,6 +135,7 @@ public final class ElasticRunner {
         try {
             HttpClient client = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
+                    .followRedirects(HttpClient.Redirect.NORMAL)
                     .build();
             HttpRequest request = HttpRequest.newBuilder(uri)
                     .timeout(Duration.ofMinutes(5))
