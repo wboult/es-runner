@@ -41,6 +41,13 @@ group = 'com.elastic'
 version = '0.1.0'
 description = 'Local Elasticsearch distribution runner for tests and tooling.'
 
+def scalaVersion = (findProperty("scalaVersion") ?: "2.12.19").toString()
+def sparkVersion = (findProperty("sparkVersion") ?: "3.5.3").toString()
+def scalaBinaryVersion = scalaVersion.split("\\.").take(2).join(".")
+if (!(scalaBinaryVersion in ["2.12", "2.13"])) {
+    throw new GradleException("Unsupported Scala version: ${scalaVersion}")
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
@@ -52,8 +59,8 @@ java {
 dependencies {
     testImplementation libs.junit.jupiter
     testRuntimeOnly libs.junit.platform.launcher
-    testImplementation libs.scala.library
-    testImplementation libs.spark.sql
+    testImplementation "org.scala-lang:scala-library:${scalaVersion}"
+    testImplementation "org.apache.spark:spark-sql_${scalaBinaryVersion}:${sparkVersion}"
 }
 
 tasks.withType(JavaCompile).configureEach {
