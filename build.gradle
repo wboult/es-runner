@@ -34,6 +34,7 @@ class TestResultLogger implements TestListener {
 
 plugins {
     id 'java-library'
+    id 'scala'
 }
 
 group = 'com.elastic'
@@ -51,11 +52,17 @@ java {
 dependencies {
     testImplementation libs.junit.jupiter
     testRuntimeOnly libs.junit.platform.launcher
+    testImplementation libs.scala.library
+    testImplementation libs.spark.sql
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 17
+}
+
+tasks.withType(ScalaCompile).configureEach {
+    scalaCompileOptions.additionalParameters = ["-target:jvm-1.8"]
 }
 
 tasks.withType(Test).configureEach {
@@ -70,5 +77,9 @@ tasks.withType(Test).configureEach {
         showCauses = true
         showStackTraces = true
     }
+    jvmArgs(
+        "--add-opens=java.base/java.nio=ALL-UNNAMED",
+        "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED"
+    )
     addTestListener(new TestResultLogger())
 }
