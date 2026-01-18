@@ -138,7 +138,6 @@ for (int i = 0; i < 2; i++) {
     ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
         .distroZip(isolatedZip)
         .workDir(tempDir.resolve("work"))
-        .clusterName("example-multi-" + i)
         .setting("discovery.type", "single-node"));
 
     servers.add(ElasticRunner.start(config));
