@@ -22,7 +22,7 @@ jobs:
         id: versions
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "list=${{ inputs.versions }}" >> "$GITHUB_OUTPUT"
+            printf 'list=%s\n' '${{ inputs.versions }}' >> "$GITHUB_OUTPUT"
           else
             echo 'list=["9.2.4","9.2.3","8.9.10"]' >> "$GITHUB_OUTPUT"
           fi
