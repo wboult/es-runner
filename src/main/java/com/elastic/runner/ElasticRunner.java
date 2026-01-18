@@ -63,7 +63,7 @@ public final class ElasticRunner {
 
     public static ElasticServer start(ElasticRunnerConfig config) {
         Objects.requireNonNull(config, "config");
-        Path zip = resolveDistroZip(config);
+        Path zip = resolveDistroZipInternal(config);
 
         String version = config.version() != null ? config.version() : DistroVersion.fromZip(zip);
         Path workDir = config.workDir().toAbsolutePath();
@@ -136,7 +136,12 @@ public final class ElasticRunner {
         );
     }
 
-    private static Path resolveDistroZip(ElasticRunnerConfig config) {
+    public static Path resolveDistroZip(ElasticRunnerConfig config) {
+        Objects.requireNonNull(config, "config");
+        return resolveDistroZipInternal(config);
+    }
+
+    private static Path resolveDistroZipInternal(ElasticRunnerConfig config) {
         if (config.distroZip() != null) {
             return requireZip(config.distroZip());
         }
