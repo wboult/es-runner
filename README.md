@@ -29,6 +29,51 @@ try (ElasticServer server = ElasticRunner.start(config)) {
 }
 ```
 
+## Examples
+
+Java:
+
+```java
+Path workDir = Paths.get(".es");
+ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+    .version("9.2.4")
+    .distrosDir(Paths.get("distros"))
+    .download(false)
+    .workDir(workDir)
+    .clusterName("example-java"));
+
+try (ElasticServer server = ElasticRunner.start(config)) {
+    ElasticClient client = server.client();
+    System.out.println(client.clusterHealth());
+    System.out.println(client.version());
+}
+```
+
+Scala:
+
+```scala
+import java.nio.file.Paths
+
+val workDir = Paths.get(".es")
+val config = ElasticRunnerConfig.from(builder =>
+  builder
+    .version("9.2.4")
+    .distrosDir(Paths.get("distros"))
+    .download(false)
+    .workDir(workDir)
+    .clusterName("example-scala")
+)
+
+val server = ElasticRunner.start(config)
+try {
+  val client = server.client()
+  println(client.clusterHealth())
+  println(client.version())
+} finally {
+  server.close()
+}
+```
+
 ## Design
 
 - Functional-ish configuration: immutable config object with `withX` methods,
