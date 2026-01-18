@@ -2,7 +2,7 @@
 junit = "5.10.2"
 junitPlatform = "1.10.2"
 scala = "2.12.21"
-spark = "3.5.3"
+spark = "3.5.8"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
