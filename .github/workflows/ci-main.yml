@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       versions:
-        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","9.2.3"])'
+        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","9.2.3","8.9.10"])'
         required: false
-        default: '["9.2.4","9.2.3"]'
+        default: '["9.2.4","9.2.3","8.9.10"]'
 
 jobs:
   resolve-matrix:
@@ -20,11 +20,13 @@ jobs:
     steps:
       - name: Resolve version matrix
         id: versions
+        env:
+          VERSIONS: ${{ inputs.versions }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "list=${{ inputs.versions }}" >> "$GITHUB_OUTPUT"
+            python -c 'import json, os; raw=os.environ.get("VERSIONS"); output=(raw if raw and "\"" in raw else json.dumps([i.strip() for i in raw.strip("[]").split(",") if i.strip()])) if raw else json.dumps(["9.2.4","9.2.3","8.9.10"]); print(f"list={output}")' >> "$GITHUB_OUTPUT"
           else
-            echo 'list=["9.2.4","9.2.3"]' >> "$GITHUB_OUTPUT"
+            echo 'list=["9.2.4","9.2.3","8.9.10"]' >> "$GITHUB_OUTPUT"
           fi
 
   test:
@@ -68,4 +70,33 @@ jobs:
           ES_VERSION: ${{ matrix.es_version }}
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
-        run: ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
+        run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
+
+  scala3-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache Elasticsearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: es-distro-${{ runner.os }}-9.2.4
+
+      - name: Run Scala 3 tests
+        env:
+          ES_VERSION: "9.2.4"
+          ES_DISTROS_DIR: distros
+          ES_DISTRO_DOWNLOAD: "true"
+        run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew scala3Test

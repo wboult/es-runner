@@ -4,10 +4,18 @@ import org.junit.jupiter.api.Assumptions;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 final class IntegrationTestSupport {
+    private static final Map<String, Boolean> DOWNLOAD_AVAILABILITY = new ConcurrentHashMap<>();
+
     private IntegrationTestSupport() {
     }
 
@@ -42,6 +50,7 @@ final class IntegrationTestSupport {
         }
 
         if (download) {
+            assumeDownloadAvailable(version, baseUrl);
             ElasticRunnerConfig config = base.withVersion(version)
                     .withDistrosDir(distrosDir)
                     .withDownload(true);
@@ -93,6 +102,7 @@ final class IntegrationTestSupport {
             if (finalDistroZip != null) {
                 builder.distroZip(finalDistroZip);
             } else {
+                assumeDownloadAvailable(version, baseUrl);
                 builder.version(version)
                         .distrosDir(distrosDir)
                         .download(download);
@@ -104,5 +114,33 @@ final class IntegrationTestSupport {
                 customize.accept(builder);
             }
         });
+    }
+
+    private static void assumeDownloadAvailable(String version, String baseUrl) {
+        String effectiveBaseUrl = (baseUrl == null || baseUrl.isBlank())
+                ? ElasticRunnerConfig.defaults().downloadBaseUrl()
+                : baseUrl;
+        String key = version + "|" + effectiveBaseUrl;
+        Boolean available = DOWNLOAD_AVAILABILITY.get(key);
+        if (available == null) {
+            available = checkDownloadAvailable(version, effectiveBaseUrl);
+            DOWNLOAD_AVAILABILITY.put(key, available);
+        }
+        Assumptions.assumeTrue(available, "Elasticsearch distro not found at " + effectiveBaseUrl);
+    }
+
+    private static boolean checkDownloadAvailable(String version, String baseUrl) {
+        try {
+            DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
+            URI uri = descriptor.downloadUri(baseUrl);
+            HttpRequest request = HttpRequest.newBuilder(uri)
+                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .timeout(Duration.ofSeconds(10))
+                    .build();
+            HttpResponse<Void> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.discarding());
+            return response.statusCode() != 404;
+        } catch (Exception ignored) {
+            return true;
+        }
     }
 }
