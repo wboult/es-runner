@@ -41,6 +41,16 @@ group = 'com.elastic'
 version = '0.1.0'
 description = 'Local Elasticsearch distribution runner for tests and tooling.'
 
+def libsCatalog = project.extensions.getByType(org.gradle.api.artifacts.VersionCatalogsExtension).named("libs")
+def defaultScalaVersion = libsCatalog.findVersion("scala").get().requiredVersion
+def defaultSparkVersion = libsCatalog.findVersion("spark").get().requiredVersion
+def scalaVersionEffective = (findProperty("scalaVersion") ?: defaultScalaVersion).toString()
+def sparkVersionEffective = (findProperty("sparkVersion") ?: defaultSparkVersion).toString()
+def scalaBinaryVersionEffective = scalaVersionEffective.split("\\.").take(2).join(".")
+if (!(scalaBinaryVersionEffective in ["2.12", "2.13"])) {
+    throw new GradleException("Unsupported Scala version: ${scalaVersionEffective}")
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
@@ -52,8 +62,14 @@ java {
 dependencies {
     testImplementation libs.junit.jupiter
     testRuntimeOnly libs.junit.platform.launcher
-    testImplementation libs.scala.library
-    testImplementation libs.spark.sql
+    if (findProperty("scalaVersion") != null || findProperty("sparkVersion") != null) {
+        testImplementation "org.scala-lang:scala-library:${scalaVersionEffective}"
+        testImplementation "org.apache.spark:spark-sql_${scalaBinaryVersionEffective}:${sparkVersionEffective}"
+    } else {
+        testImplementation libsCatalog.findLibrary("scala-library").get()
+        def sparkAlias = scalaBinaryVersionEffective == "2.12" ? "spark-sql-212" : "spark-sql-213"
+        testImplementation libsCatalog.findLibrary(sparkAlias).get()
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

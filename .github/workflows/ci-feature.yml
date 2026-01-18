@@ -33,6 +33,15 @@ jobs:
       fail-fast: false
       matrix:
         es_version: ${{ fromJson(needs.resolve-matrix.outputs.versions) }}
+        scala_spark:
+          - scala: "2.12.21"
+            spark: "3.5.3"
+          - scala: "2.13.18"
+            spark: "3.5.3"
+          - scala: "2.13.18"
+            spark: "4.0.0"
+          - scala: "2.13.18"
+            spark: "4.1.1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,4 +67,4 @@ jobs:
           ES_VERSION: ${{ matrix.es_version }}
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
-        run: ./gradlew test
+        run: ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
