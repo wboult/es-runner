@@ -45,7 +45,7 @@ final class IntegrationTestSupport {
 
         DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
         Path localZip = distrosDir.resolve(descriptor.fileName());
-        if (Files.exists(localZip) && !download) {
+        if (Files.exists(localZip)) {
             return base.withDistroZip(localZip);
         }
 
@@ -88,7 +88,7 @@ final class IntegrationTestSupport {
         if (zipPath != null && !zipPath.isBlank()) {
             distroZip = Path.of(zipPath);
             Assumptions.assumeTrue(Files.exists(distroZip), "Elasticsearch distro ZIP not found");
-        } else if (localZip != null && Files.exists(localZip) && !download) {
+        } else if (localZip != null && Files.exists(localZip)) {
             distroZip = localZip;
         }
 

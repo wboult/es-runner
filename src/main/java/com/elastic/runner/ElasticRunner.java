@@ -15,18 +15,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class ElasticRunner {
     private ElasticRunner() {
     }
 
+    public static ElasticServer start(Path distroZip) {
+        return start(ElasticRunnerConfig.defaults().withDistroZip(distroZip));
+    }
+
+    public static ElasticServer start(String version) {
+        return start(ElasticRunnerConfig.defaults().withVersion(version));
+    }
+
     public static ElasticServer start(UnaryOperator<ElasticRunnerConfig> configurer) {
         return start(configurer.apply(ElasticRunnerConfig.defaults()));
     }
 
-    public static ElasticServer start(java.util.function.Consumer<ElasticRunnerConfig.Builder> consumer) {
+    public static ElasticServer start(Consumer<ElasticRunnerConfig.Builder> consumer) {
         return start(ElasticRunnerConfig.from(consumer));
+    }
+
+    public static void withServer(ElasticRunnerConfig config, Consumer<ElasticServer> action) {
+        try (ElasticServer server = start(config)) {
+            action.accept(server);
+        }
+    }
+
+    public static <T> T withServer(ElasticRunnerConfig config, Function<ElasticServer, T> action) {
+        try (ElasticServer server = start(config)) {
+            return action.apply(server);
+        }
+    }
+
+    public static void withServer(Consumer<ElasticRunnerConfig.Builder> configurer,
+                                  Consumer<ElasticServer> action) {
+        withServer(ElasticRunnerConfig.from(configurer), action);
+    }
+
+    public static <T> T withServer(Consumer<ElasticRunnerConfig.Builder> configurer,
+                                   Function<ElasticServer, T> action) {
+        return withServer(ElasticRunnerConfig.from(configurer), action);
     }
 
     public static ElasticServer start(ElasticRunnerConfig config) {
@@ -99,7 +131,8 @@ public final class ElasticRunner {
                 stateFile,
                 httpPort,
                 httpClient,
-                startTime
+                startTime,
+                logThread
         );
     }
 
@@ -248,7 +281,7 @@ public final class ElasticRunner {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
             if (!process.isAlive()) {
-                String logTail = readLogTail(logFile);
+                String logTail = LogTail.read(logFile, 20);
                 throw new ElasticRunnerException("Elasticsearch process exited early. " + logTail);
             }
             try {
@@ -268,21 +301,8 @@ public final class ElasticRunner {
             }
             sleep(500);
         }
-        String logTail = readLogTail(logFile);
+        String logTail = LogTail.read(logFile, 20);
         throw new ElasticRunnerException("Timed out waiting for Elasticsearch. " + logTail);
-    }
-
-    private static String readLogTail(Path logFile) {
-        if (!Files.exists(logFile)) {
-            return "Log file not found.";
-        }
-        try {
-            List<String> lines = Files.readAllLines(logFile, StandardCharsets.UTF_8);
-            int from = Math.max(0, lines.size() - 20);
-            return "Log tail:\n" + String.join(System.lineSeparator(), lines.subList(from, lines.size()));
-        } catch (IOException e) {
-            return "Failed to read log file.";
-        }
     }
 
     private static void writePid(Path pidFile, long pid) {
