@@ -34,12 +34,14 @@ jobs:
       matrix:
         es_version: ${{ fromJson(needs.resolve-matrix.outputs.versions) }}
         scala_spark:
-          - scala: "2.12.19"
+          - scala: "2.12.21"
             spark: "3.5.3"
-          - scala: "2.13.14"
+          - scala: "2.13.18"
             spark: "3.5.3"
-          - scala: "2.13.14"
+          - scala: "2.13.18"
             spark: "4.0.0"
+          - scala: "2.13.18"
+            spark: "4.1.1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4

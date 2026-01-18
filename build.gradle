@@ -41,7 +41,7 @@ group = 'com.elastic'
 version = '0.1.0'
 description = 'Local Elasticsearch distribution runner for tests and tooling.'
 
-def scalaVersion = (findProperty("scalaVersion") ?: "2.12.19").toString()
+def scalaVersion = (findProperty("scalaVersion") ?: "2.12.21").toString()
 def sparkVersion = (findProperty("sparkVersion") ?: "3.5.3").toString()
 def scalaBinaryVersion = scalaVersion.split("\\.").take(2).join(".")
 if (!(scalaBinaryVersion in ["2.12", "2.13"])) {
