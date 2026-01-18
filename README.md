@@ -12,7 +12,7 @@ readiness, and provides a Java API for interaction.
 ## Quick start
 
 ```java
-Path distroZip = Paths.get("distros/elasticsearch-9.2.4-windows-x86_64.zip");
+Path distroZip = Paths.get("elasticsearch-9.2.4-windows-x86_64.zip");
 Path workDir = Paths.get(".es");
 
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
@@ -36,7 +36,6 @@ Use `withServer` for a functional, auto-closing style:
 ```java
 ElasticRunner.withServer(builder -> builder
     .version("9.2.4")
-    .distrosDir(Paths.get("distros"))
     .download(true), server -> {
         System.out.println(server.clusterHealth());
         System.out.println(server.version());
@@ -46,7 +45,7 @@ ElasticRunner.withServer(builder -> builder
 If you need explicit shutdown details:
 
 ```java
-ElasticServer server = ElasticRunner.start(Paths.get("distros/elasticsearch-9.2.4-windows-x86_64.zip"));
+ElasticServer server = ElasticRunner.start(Paths.get("elasticsearch-9.2.4-windows-x86_64.zip"));
 StopResult result = server.stopWithResult();
 System.out.println("graceful=" + result.graceful());
 System.out.println(server.logTail());
@@ -60,8 +59,7 @@ Java:
 Path workDir = Paths.get(".es");
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
     .version("9.2.4")
-    .distrosDir(Paths.get("distros"))
-    .download(false)
+    .download(true)
     .workDir(workDir)
     .clusterName("example-java"));
 
@@ -81,8 +79,7 @@ val workDir = Paths.get(".es")
 val config = ElasticRunnerConfig.from(builder =>
   builder
     .version("9.2.4")
-    .distrosDir(Paths.get("distros"))
-    .download(false)
+    .download(true)
     .workDir(workDir)
     .clusterName("example-scala")
 )
@@ -97,6 +94,27 @@ try {
 }
 ```
 
+Kotlin:
+
+```kotlin
+import java.nio.file.Paths
+
+val workDir = Paths.get(".es")
+val config = ElasticRunnerConfig.from { builder ->
+    builder
+        .version("9.2.4")
+        .download(true)
+        .workDir(workDir)
+        .clusterName("example-kotlin")
+}
+
+ElasticRunner.start(config).use { server ->
+    val client = server.client()
+    println(client.clusterHealth())
+    println(client.version())
+}
+```
+
 ## Design
 
 - Functional-ish configuration: immutable config object with `withX` methods,
@@ -106,14 +124,13 @@ try {
 
 ## Official distro downloads
 
-If you only set a version, the runner will look in `distros/` first and then
-download from the official Elastic distribution URL:
+If you only set a version, the runner will download from the official Elastic
+distribution URL:
 
 ```
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
     .version("9.2.4")
-    .distrosDir(Paths.get("distros"))
-    .download(false));
+    .download(true));
 ```
 
 Use `download(true)` to force a re-download even if the archive is present.
