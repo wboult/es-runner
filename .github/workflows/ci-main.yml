@@ -1,0 +1,66 @@
+name: CI (main)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","9.2.3"])'
+        required: false
+        default: '["9.2.4","9.2.3"]'
+
+jobs:
+  resolve-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.versions.outputs.list }}
+    steps:
+      - name: Resolve version matrix
+        id: versions
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "list=${{ inputs.versions }}" >> "$GITHUB_OUTPUT"
+          else
+            echo 'list=["9.2.4","9.2.3"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  test:
+    needs: resolve-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        es_version: ${{ fromJson(needs.resolve-matrix.outputs.versions) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache Elasticsearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: es-distro-${{ runner.os }}-${{ matrix.es_version }}
+
+      - name: Download Elasticsearch distro
+        run: |
+          set -euo pipefail
+          mkdir -p distros
+          archive="distros/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz"
+          if [ ! -f "$archive" ]; then
+            curl -sSL -o "$archive" "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz"
+          fi
+
+      - name: Run tests
+        env:
+          ES_DISTRO_ZIP: distros/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz
+        run: ./gradlew test
