@@ -115,45 +115,65 @@ ElasticRunner.start(config).use { server ->
 }
 ```
 
-Pre-downloaded distro reused for multiple servers (Java):
+Programmatic download + two-node cluster (Java):
 
 ```java
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-Path sharedDistroZip = Paths.get("elasticsearch-9.2.4-linux-x86_64.zip"); // pre-downloaded once
+String version = "9.2.4";
+Path distrosDir = Paths.get("distros");
+Path sharedZip = ElasticRunner.resolveDistroZip(
+    ElasticRunnerConfig.from(builder -> builder
+        .version(version)
+        .download(true)
+        .distrosDir(distrosDir))
+);
 
-List<ElasticServer> servers = new ArrayList<>();
-List<Path> tempDirs = new ArrayList<>();
+String clusterName = "example-cluster";
+String masterNodes = "[\"node-0\",\"node-1\"]";
+String seedHosts = "[\"127.0.0.1:9300\",\"127.0.0.1:9301\"]";
 
-for (int i = 0; i < 2; i++) {
-    Path tempDir = Files.createTempDirectory("es-runner-" + i);
-    tempDirs.add(tempDir);
-    Path isolatedZip = tempDir.resolve(sharedDistroZip.getFileName());
-    Files.copy(sharedDistroZip, isolatedZip);
+ElasticServer node0 = startNode(sharedZip, clusterName, "node-0", 9200, 9300, masterNodes, seedHosts);
+ElasticServer node1 = startNode(sharedZip, clusterName, "node-1", 9201, 9301, masterNodes, seedHosts);
+
+try {
+    System.out.println(node0.client().clusterHealth());
+} finally {
+    node1.close();
+    node0.close();
+}
+
+static ElasticServer startNode(Path sharedZip,
+                               String clusterName,
+                               String nodeName,
+                               int httpPort,
+                               int transportPort,
+                               String masterNodes,
+                               String seedHosts) throws IOException {
+    Path tempDir = Files.createTempDirectory("es-" + nodeName + "-");
+    Path isolatedZip = tempDir.resolve(sharedZip.getFileName());
+    Files.copy(sharedZip, isolatedZip);
+
+    Map<String, String> settings = new LinkedHashMap<>();
+    settings.put("xpack.security.enabled", "false");
+    settings.put("node.name", nodeName);
+    settings.put("transport.port", Integer.toString(transportPort));
+    settings.put("cluster.initial_master_nodes", masterNodes);
+    settings.put("discovery.seed_hosts", seedHosts);
 
     ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
         .distroZip(isolatedZip)
         .workDir(tempDir.resolve("work"))
-        .setting("discovery.type", "single-node"));
+        .clusterName(clusterName)
+        .httpPort(httpPort)
+        .settings(settings));
 
-    servers.add(ElasticRunner.start(config));
-}
-
-try {
-    for (ElasticServer server : servers) {
-        System.out.println(server.baseUri());
-    }
-} finally {
-    for (ElasticServer server : servers) {
-        server.close();
-    }
-    for (Path tempDir : tempDirs) {
-        tempDir.toFile().deleteOnExit();
-    }
+    return ElasticRunner.start(config);
 }
 ```
 
