@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       versions:
-        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","9.2.3"])'
+        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","8.9.10"])'
         required: false
-        default: '["9.2.4"]'
+        default: '["9.2.4","8.9.10"]'
 
 jobs:
   resolve-matrix:
@@ -23,7 +23,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "list=${{ inputs.versions }}" >> "$GITHUB_OUTPUT"
           else
-            echo 'list=["9.2.4"]' >> "$GITHUB_OUTPUT"
+            echo 'list=["9.2.4","8.9.10"]' >> "$GITHUB_OUTPUT"
           fi
 
   test:
