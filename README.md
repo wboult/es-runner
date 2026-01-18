@@ -115,6 +115,49 @@ ElasticRunner.start(config).use { server ->
 }
 ```
 
+Pre-downloaded distro reused for multiple servers (Java):
+
+```java
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+Path sharedDistroZip = Paths.get("elasticsearch-9.2.4-linux-x86_64.zip"); // pre-downloaded once
+
+List<ElasticServer> servers = new ArrayList<>();
+List<Path> tempDirs = new ArrayList<>();
+
+for (int i = 0; i < 2; i++) {
+    Path tempDir = Files.createTempDirectory("es-runner-" + i);
+    tempDirs.add(tempDir);
+    Path isolatedZip = tempDir.resolve(sharedDistroZip.getFileName());
+    Files.copy(sharedDistroZip, isolatedZip);
+
+    ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+        .distroZip(isolatedZip)
+        .workDir(tempDir.resolve("work"))
+        .clusterName("example-multi-" + i)
+        .setting("discovery.type", "single-node"));
+
+    servers.add(ElasticRunner.start(config));
+}
+
+try {
+    for (ElasticServer server : servers) {
+        System.out.println(server.baseUri());
+    }
+} finally {
+    for (ElasticServer server : servers) {
+        server.close();
+    }
+    for (Path tempDir : tempDirs) {
+        tempDir.toFile().deleteOnExit();
+    }
+}
+```
+
 ## Design
 
 - Functional-ish configuration: immutable config object with `withX` methods,
