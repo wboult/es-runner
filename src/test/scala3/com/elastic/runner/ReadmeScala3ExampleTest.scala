@@ -1,0 +1,30 @@
+package com.elastic.runner
+
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+import java.nio.file.Files
+import java.time.Duration
+
+class ReadmeScala3ExampleTest:
+
+  @Test
+  def readmeScala3ExampleWorks(): Unit =
+    val version = sys.env.getOrElse("ES_VERSION", "9.2.4")
+    val workDir = Files.createTempDirectory("es-runner-readme-scala3-")
+    val config = IntegrationTestSupport.configFromExample(
+      version,
+      workDir,
+      "readme-scala3",
+      Duration.ofSeconds(120),
+      true,
+      builder => builder.setting("discovery.type", "single-node")
+    )
+
+    val server = ElasticRunner.start(config)
+    try
+      val client = server.client()
+      assertTrue(client.clusterHealth().contains("\"status\""))
+      assertTrue(client.version().startsWith("9."))
+    finally
+      server.close()

@@ -68,3 +68,32 @@ jobs:
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
         run: ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
+
+  scala3-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache Elasticsearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: es-distro-${{ runner.os }}-9.2.4
+
+      - name: Run Scala 3 tests
+        env:
+          ES_VERSION: "9.2.4"
+          ES_DISTROS_DIR: distros
+          ES_DISTRO_DOWNLOAD: "true"
+        run: ./gradlew scala3Test

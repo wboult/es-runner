@@ -7,8 +7,14 @@ updates:
     open-pull-requests-limit: 5
     allow:
       - dependency-name: "org.scala-lang:scala-library"
+      - dependency-name: "org.scala-lang:scala3-library_3"
+      - dependency-name: "org.scala-lang:scala3-compiler_3"
       - dependency-name: "org.apache.spark:spark-sql_2.12"
       - dependency-name: "org.apache.spark:spark-sql_2.13"
     ignore:
       - dependency-name: "org.scala-lang:scala-library"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.scala-lang:scala3-library_3"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.scala-lang:scala3-compiler_3"
+        update-types: ["version-update:semver-major"]

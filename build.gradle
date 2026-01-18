@@ -44,8 +44,10 @@ description = 'Local Elasticsearch distribution runner for tests and tooling.'
 def libsCatalog = project.extensions.getByType(org.gradle.api.artifacts.VersionCatalogsExtension).named("libs")
 def defaultScalaVersion = libsCatalog.findVersion("scala").get().requiredVersion
 def defaultSparkVersion = libsCatalog.findVersion("spark").get().requiredVersion
+def defaultScala3Version = libsCatalog.findVersion("scala3").get().requiredVersion
 def scalaVersionEffective = (findProperty("scalaVersion") ?: defaultScalaVersion).toString()
 def sparkVersionEffective = (findProperty("sparkVersion") ?: defaultSparkVersion).toString()
+def scala3VersionEffective = (findProperty("scala3Version") ?: defaultScala3Version).toString()
 def scalaBinaryVersionEffective = scalaVersionEffective.split("\\.").take(2).join(".")
 if (!(scalaBinaryVersionEffective in ["2.12", "2.13"])) {
     throw new GradleException("Unsupported Scala version: ${scalaVersionEffective}")
@@ -59,6 +61,17 @@ java {
     withJavadocJar()
 }
 
+sourceSets {
+    scala3Test {
+        scala.srcDir("src/test/scala3")
+        resources.srcDir("src/test/scala3/resources")
+    }
+}
+
+configurations {
+    scala3Compiler
+}
+
 dependencies {
     testImplementation libs.junit.jupiter
     testRuntimeOnly libs.junit.platform.launcher
@@ -70,6 +83,22 @@ dependencies {
         def sparkAlias = scalaBinaryVersionEffective == "2.12" ? "spark-sql-212" : "spark-sql-213"
         testImplementation libsCatalog.findLibrary(sparkAlias).get()
     }
+    if (findProperty("scala3Version") != null) {
+        scala3TestImplementation "org.scala-lang:scala3-library_3:${scala3VersionEffective}"
+        scala3Compiler "org.scala-lang:scala3-compiler_3:${scala3VersionEffective}"
+        scala3Compiler "org.scala-lang:scala3-sbt-bridge:${scala3VersionEffective}"
+    } else {
+        scala3TestImplementation libsCatalog.findLibrary("scala3-library").get()
+        scala3Compiler libsCatalog.findLibrary("scala3-compiler").get()
+        scala3Compiler libsCatalog.findLibrary("scala3-sbt-bridge").get()
+    }
+    scala3TestImplementation libs.junit.jupiter
+    scala3TestRuntimeOnly libs.junit.platform.launcher
+}
+
+sourceSets.scala3Test {
+    compileClasspath += sourceSets.main.output + sourceSets.test.output
+    runtimeClasspath += sourceSets.main.output + sourceSets.test.output
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -79,6 +108,10 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(ScalaCompile).configureEach {
     scalaCompileOptions.additionalParameters = ["-target:jvm-1.8"]
+    if (name == "compileScala3TestScala") {
+        scalaClasspath = configurations.scala3Compiler
+        dependsOn tasks.compileTestJava
+    }
 }
 
 tasks.withType(Test).configureEach {
@@ -98,4 +131,16 @@ tasks.withType(Test).configureEach {
         "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED"
     )
     addTestListener(new TestResultLogger())
+}
+
+tasks.register("scala3Test", Test) {
+    description = "Runs the Scala 3 tests."
+    group = "verification"
+    testClassesDirs = sourceSets.scala3Test.output.classesDirs
+    classpath = sourceSets.scala3Test.runtimeClasspath
+    shouldRunAfter tasks.test
+}
+
+tasks.named("check").configure {
+    dependsOn tasks.named("scala3Test")
 }

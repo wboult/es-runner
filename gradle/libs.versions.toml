@@ -3,6 +3,7 @@ junit = "5.10.2"
 junitPlatform = "1.10.2"
 scala = "2.12.21"
 spark = "3.5.8"
+scala3 = "3.5.1"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
@@ -10,3 +11,6 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 scala-library = { module = "org.scala-lang:scala-library", version.ref = "scala" }
 spark-sql-212 = { module = "org.apache.spark:spark-sql_2.12", version.ref = "spark" }
 spark-sql-213 = { module = "org.apache.spark:spark-sql_2.13", version.ref = "spark" }
+scala3-library = { module = "org.scala-lang:scala3-library_3", version.ref = "scala3" }
+scala3-compiler = { module = "org.scala-lang:scala3-compiler_3", version.ref = "scala3" }
+scala3-sbt-bridge = { module = "org.scala-lang:scala3-sbt-bridge", version.ref = "scala3" }
