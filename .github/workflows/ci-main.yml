@@ -20,9 +20,20 @@ jobs:
     steps:
       - name: Resolve version matrix
         id: versions
+        env:
+          VERSIONS: ${{ inputs.versions }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            printf 'list=%s\n' '${{ inputs.versions }}' >> "$GITHUB_OUTPUT"
+            python - <<'PY' >> "$GITHUB_OUTPUT"
+            import json
+            import os
+
+            raw = os.environ.get("VERSIONS") or '["9.2.4","9.2.3","8.9.10"]'
+            if '"' not in raw:
+                items = [item.strip() for item in raw.strip("[]").split(",") if item.strip()]
+                raw = json.dumps(items)
+            print(f"list={raw}")
+            PY
           else
             echo 'list=["9.2.4","9.2.3","8.9.10"]' >> "$GITHUB_OUTPUT"
           fi
