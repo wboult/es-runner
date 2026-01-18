@@ -23,16 +23,7 @@ jobs:
           VERSIONS: ${{ inputs.versions }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          python - <<'PY' >> "$GITHUB_OUTPUT"
-import json
-import os
-
-raw = os.environ.get("VERSIONS") or '["9.2.4","8.9.10"]'
-if '"' not in raw:
-    items = [item.strip() for item in raw.strip("[]").split(",") if item.strip()]
-    raw = json.dumps(items)
-print(f"list={raw}")
-PY
+            python -c 'import json, os; raw=os.environ.get("VERSIONS"); output=(raw if raw and "\"" in raw else json.dumps([i.strip() for i in raw.strip("[]").split(",") if i.strip()])) if raw else json.dumps(["9.2.4","8.9.10"]); print(f"list={output}")' >> "$GITHUB_OUTPUT"
           else
             echo 'list=["9.2.4","8.9.10"]' >> "$GITHUB_OUTPUT"
           fi
