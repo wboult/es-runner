@@ -23,6 +23,7 @@ public final class ElasticServer implements AutoCloseable {
     private final int httpPort;
     private final URI baseUri;
     private final HttpClient httpClient;
+    private final ElasticClient client;
     private final Instant startTime;
 
     ElasticServer(ElasticRunnerConfig config,
@@ -45,6 +46,7 @@ public final class ElasticServer implements AutoCloseable {
         this.httpPort = httpPort;
         this.baseUri = URI.create("http://localhost:" + httpPort + "/");
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
+        this.client = new ElasticClient(baseUri, httpClient);
         this.startTime = Objects.requireNonNull(startTime, "startTime");
     }
 
@@ -72,6 +74,10 @@ public final class ElasticServer implements AutoCloseable {
         return baseUri;
     }
 
+    public ElasticClient client() {
+        return client;
+    }
+
     public boolean isRunning() {
         return process.isAlive();
     }
@@ -81,43 +87,31 @@ public final class ElasticServer implements AutoCloseable {
     }
 
     public String root() throws IOException, InterruptedException {
-        return get("/");
+        return client.get("/");
     }
 
     public String info() throws IOException, InterruptedException {
-        return root();
+        return client.info();
     }
 
     public String clusterName() throws IOException, InterruptedException {
-        return jsonField(info(), "cluster_name");
+        return client.clusterName();
     }
 
     public String version() throws IOException, InterruptedException {
-        return jsonField(info(), "number");
+        return client.version();
     }
 
     public String clusterHealth() throws IOException, InterruptedException {
-        return get("/_cluster/health");
+        return client.clusterHealth();
     }
 
     public String clusterHealthStatus() throws IOException, InterruptedException {
-        return jsonField(clusterHealth(), "status");
+        return client.clusterHealthStatus();
     }
 
     public boolean waitForStatus(String status, Duration timeout) throws IOException, InterruptedException {
-        Instant deadline = Instant.now().plus(timeout);
-        String expected = "\"status\":\"" + status + "\"";
-        while (Instant.now().isBefore(deadline)) {
-            if (!isRunning()) {
-                return false;
-            }
-            String health = clusterHealth();
-            if (health.contains(expected)) {
-                return true;
-            }
-            Thread.sleep(500);
-        }
-        return false;
+        return client.waitForStatus(status, timeout);
     }
 
     public boolean waitForYellow(Duration timeout) throws IOException, InterruptedException {
@@ -129,55 +123,87 @@ public final class ElasticServer implements AutoCloseable {
     }
 
     public boolean ping() {
-        try {
-            return request("GET", "/", null).statusCode() == 200;
-        } catch (IOException | InterruptedException e) {
-            return false;
-        }
+        return client.ping();
     }
 
     public String get(String path) throws IOException, InterruptedException {
-        return request("GET", path, null).body();
+        return client.get(path);
     }
 
     public String post(String path, String body) throws IOException, InterruptedException {
-        return request("POST", path, body).body();
+        return client.post(path, body);
     }
 
     public String put(String path, String body) throws IOException, InterruptedException {
-        return request("PUT", path, body).body();
+        return client.put(path, body);
     }
 
     public String delete(String path) throws IOException, InterruptedException {
-        return request("DELETE", path, null).body();
+        return client.delete(path);
     }
 
     public String createIndex(String index) throws IOException, InterruptedException {
-        return put("/" + index, null);
+        return client.createIndex(index);
     }
 
     public String createIndex(String index, String json) throws IOException, InterruptedException {
-        return put("/" + index, json);
+        return client.createIndex(index, json);
+    }
+
+    public boolean indexExists(String index) throws IOException, InterruptedException {
+        return client.indexExists(index);
     }
 
     public String deleteIndex(String index) throws IOException, InterruptedException {
-        return delete("/" + index);
+        return client.deleteIndex(index);
     }
 
     public String refresh(String index) throws IOException, InterruptedException {
-        return post("/" + index + "/_refresh", "");
+        return client.refresh(index);
     }
 
     public String indexDocument(String index, String id, String json) throws IOException, InterruptedException {
-        return put("/" + index + "/_doc/" + id, json);
+        return client.indexDocument(index, id, json);
     }
 
     public String search(String index, String jsonQuery) throws IOException, InterruptedException {
-        return post("/" + index + "/_search", jsonQuery);
+        return client.search(index, jsonQuery);
+    }
+
+    public String count(String index) throws IOException, InterruptedException {
+        return client.count(index);
+    }
+
+    public long countValue(String index) throws IOException, InterruptedException {
+        return client.countValue(index);
+    }
+
+    public String catIndices() throws IOException, InterruptedException {
+        return client.catIndices();
+    }
+
+    public String nodesInfo() throws IOException, InterruptedException {
+        return client.nodesInfo();
+    }
+
+    public String nodesStats() throws IOException, InterruptedException {
+        return client.nodesStats();
+    }
+
+    public String putIndexTemplate(String name, String json) throws IOException, InterruptedException {
+        return client.putIndexTemplate(name, json);
+    }
+
+    public String getIndexTemplate(String name) throws IOException, InterruptedException {
+        return client.getIndexTemplate(name);
+    }
+
+    public String deleteIndexTemplate(String name) throws IOException, InterruptedException {
+        return client.deleteIndexTemplate(name);
     }
 
     public String bulk(String ndjson) throws IOException, InterruptedException {
-        return requestNdjson("/_bulk", ndjson).body();
+        return client.bulk(ndjson);
     }
 
     public HttpResponse<String> request(String method, String path, String body)
@@ -198,8 +224,8 @@ public final class ElasticServer implements AutoCloseable {
             throws IOException, InterruptedException {
         URI uri = baseUri.resolve(path.startsWith("/") ? path.substring(1) : path);
         HttpRequest request = HttpRequest.newBuilder(uri)
-                .timeout(Duration.ofMinutes(5))
-                .header("Content-Type", "application/x-ndjson")
+            .timeout(Duration.ofMinutes(5))
+            .header("Content-Type", "application/x-ndjson")
                 .POST(HttpRequest.BodyPublishers.ofString(ndjson))
                 .build();
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
