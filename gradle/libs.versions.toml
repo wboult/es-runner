@@ -3,7 +3,7 @@ junit = "5.10.2"
 junitPlatform = "1.10.2"
 scala = "2.12.21"
 spark = "3.5.8"
-scala3 = "3.5.1"
+scala3 = "3.8.1"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
