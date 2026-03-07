@@ -25,7 +25,7 @@ class ReadmeScalaExampleTest {
     try {
       val client = server.client()
       assertTrue(client.clusterHealth().contains("\"status\""))
-      assertTrue(client.version().startsWith("9."))
+      assertTrue(client.version().startsWith(version.takeWhile(_ != '.') + "."))
     } finally {
       server.close()
     }
