@@ -68,9 +68,9 @@ jobs:
       - name: Prime local Elasticsearch distro
         run: |
           mkdir -p distros
-          archive="distros/elasticsearch-${{ matrix.es_version }}-linux-x86_64.zip"
+          archive="distros/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz"
           if [ ! -f "$archive" ]; then
-            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es_version }}-linux-x86_64.zip" -o "$archive"
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz" -o "$archive"
           fi
 
       - name: Run tests

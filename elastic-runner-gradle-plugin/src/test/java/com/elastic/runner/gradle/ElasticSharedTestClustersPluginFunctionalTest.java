@@ -25,8 +25,8 @@ class ElasticSharedTestClustersPluginFunctionalTest {
     void sharesOneClusterAcrossProjectsAndInjectsSuiteNamespaces() throws IOException {
         projectDir = Files.createTempDirectory("elastic-runner-gradle-plugin-it");
         try {
-            Path distroZip = localDistroZip();
-            Assumptions.assumeTrue(distroZip != null, "Local Elasticsearch distro ZIP not found");
+            Path distroArchive = localDistroArchive();
+            Assumptions.assumeTrue(distroArchive != null, "Local Elasticsearch distro archive not found");
 
             write(projectDir.resolve("settings.gradle"), """
                     rootProject.name = 'fixture'
@@ -43,7 +43,7 @@ class ElasticSharedTestClustersPluginFunctionalTest {
                     org.gradle.vfs.watch=false
                     """);
 
-            String escapedZip = distroZip.toAbsolutePath().toString().replace("\\", "\\\\");
+            String escapedZip = distroArchive.toAbsolutePath().toString().replace("\\", "\\\\");
             String buildGradle = """
                     import org.gradle.api.plugins.jvm.JvmTestSuite
 
@@ -117,7 +117,7 @@ class ElasticSharedTestClustersPluginFunctionalTest {
         }
     }
 
-    private Path localDistroZip() throws IOException {
+    private Path localDistroArchive() throws IOException {
         Path current = Path.of(System.getProperty("user.dir")).toAbsolutePath();
         for (Path candidate = current; candidate != null; candidate = candidate.getParent()) {
             Path distros = candidate.resolve("distros");
@@ -126,7 +126,10 @@ class ElasticSharedTestClustersPluginFunctionalTest {
             }
             try (var stream = Files.list(distros)) {
                 Path zip = stream
-                        .filter(path -> path.getFileName().toString().endsWith(".zip"))
+                        .filter(path -> {
+                            String name = path.getFileName().toString();
+                            return name.endsWith(".zip") || name.endsWith(".tar.gz");
+                        })
                         .sorted(Comparator.comparing(path -> path.getFileName().toString()))
                         .findFirst()
                         .orElse(null);
