@@ -65,12 +65,27 @@ jobs:
           path: distros
           key: es-distro-${{ runner.os }}-${{ matrix.es_version }}
 
+      - name: Prime local Elasticsearch distro
+        run: |
+          mkdir -p distros
+          archive="distros/elasticsearch-${{ matrix.es_version }}-linux-x86_64.zip"
+          if [ ! -f "$archive" ]; then
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es_version }}-linux-x86_64.zip" -o "$archive"
+          fi
+
       - name: Run tests
         env:
           ES_VERSION: ${{ matrix.es_version }}
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
-        run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          :test
+          :elastic-runner-gradle-plugin:test
+          :elastic-runner-gradle-test-support:test
+          -PscalaVersion=${{ matrix.scala_spark.scala }}
+          -PsparkVersion=${{ matrix.scala_spark.spark }}
 
   scala3-test:
     runs-on: ubuntu-latest
