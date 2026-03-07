@@ -2,6 +2,7 @@ package com.elastic.runner;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -31,7 +32,16 @@ class ElasticRunnerBulkIntegrationTest {
             server.waitForYellow(Duration.ofSeconds(120));
 
             String index = "bulk-test";
-            server.createIndex(index);
+            server.createIndex(index, """
+                    {
+                      "settings": {
+                        "index": {
+                          "number_of_replicas": 0,
+                          "refresh_interval": "-1"
+                        }
+                      }
+                    }
+                    """);
 
             int total = 100_000;
             int batchSize = 250;
@@ -52,7 +62,7 @@ class ElasticRunnerBulkIntegrationTest {
                             .append(random.nextInt(10_000))
                             .append("\"}\n");
                 }
-                String response = server.bulk(ndjson.toString());
+                String response = bulkOrFail(server, ndjson.toString());
                 assertTrue(response.contains("\"errors\":false"));
             }
 
@@ -60,6 +70,14 @@ class ElasticRunnerBulkIntegrationTest {
             String countJson = server.post("/" + index + "/_count", "{\"query\":{\"match_all\":{}}}");
             String count = JsonUtils.parseFlatJson(countJson).get("count");
             assertEquals("100000", count);
+        }
+    }
+
+    private static String bulkOrFail(ElasticServer server, String ndjson) throws IOException, InterruptedException {
+        try {
+            return server.bulk(ndjson);
+        } catch (IOException e) {
+            throw new IOException("Bulk indexing failed. Elasticsearch log tail:\n" + server.logTail(80), e);
         }
     }
 
