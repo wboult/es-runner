@@ -1,4 +1,4 @@
----
+﻿---
 title: Defaults and safety
 description: Why defaults are chosen and how to override them.
 ---
@@ -24,11 +24,12 @@ These defaults make local startup easier and avoid cluster-formation pitfalls. T
 
 ```java
 ElasticRunnerConfig config = ElasticRunnerConfig.defaults()
-    .withSetting("xpack.security.enabled", "true")
-    .withSetting("discovery.type", "single-node");
+    .setting("xpack.security.enabled", "true")
+    .setting("discovery.type", "single-node");
 ```
 
 ## Related
 
 - [Configuration reference](../../reference/configuration/)
 - [Run a two-node cluster](../../how-to/two-node-cluster/)
+

@@ -42,13 +42,13 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
 
 try (ElasticServer server = ElasticRunner.start(config)) {
     System.out.println(server.baseUri());
-    System.out.println(server.clusterHealth());
+    System.out.println(server.clusterHealth().status());
 }
 ```
 
 ## 3. Verify health
 
-If `clusterHealth()` returns JSON with a `"status"` field, the server is up.
+If `clusterHealth().status()` returns a valid status string (e.g. `"green"`, `"yellow"`), the server is up.
 
 ## 4. Shutdown
 

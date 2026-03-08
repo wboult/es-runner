@@ -27,7 +27,7 @@ This reference lists the main entry points for the Elastic Runner API.
 
 - `ElasticRunnerConfig.defaults()` for defaults
 - `ElasticRunnerConfig.from(builder -> ...)` for the builder DSL
-- `withX(...)` methods for functional updates
+- `ElasticRunnerConfig.defaults().toBuilder()` to build sequentially
 
 See [Configuration reference](../configuration/) for the full list of fields.
 

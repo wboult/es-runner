@@ -1,4 +1,4 @@
----
+ï»¿---
 title: Troubleshooting
 description: Diagnose common failures and recover quickly.
 ---
@@ -40,7 +40,7 @@ This guide helps you resolve common issues when starting Elasticsearch with Elas
 - Inspect `server.logTail()` for the root cause.
 - Check JVM heap settings (`heap`) and disk permissions.
 
-## Cluster won’t form
+## Cluster wonï¿½t form
 
 **Symptom**: Two nodes start but remain separate.
 
@@ -53,3 +53,4 @@ This guide helps you resolve common issues when starting Elasticsearch with Elas
 
 - [Error messages reference](../../reference/errors/)
 - [Configuration reference](../../reference/configuration/)
+

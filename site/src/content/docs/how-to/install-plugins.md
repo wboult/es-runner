@@ -18,7 +18,7 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
     .clusterName("plugins"));
 
 try (ElasticServer server = ElasticRunner.start(config)) {
-    System.out.println(server.clusterHealth());
+    System.out.println(server.clusterHealth().status());
 }
 ```
 
