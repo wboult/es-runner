@@ -38,7 +38,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.9.24'
 }
 
-group = 'com.elastic'
+group = 'io.github.wboult'
 version = '0.1.0'
 description = 'Local Elasticsearch distribution runner for tests and tooling.'
 
@@ -161,3 +161,4 @@ tasks.register("scala3Test", Test) {
 tasks.named("check").configure {
     dependsOn tasks.named("scala3Test")
 }
+

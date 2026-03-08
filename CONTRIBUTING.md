@@ -1,6 +1,6 @@
-# Contributing to Elastic Runner
+# Contributing to ES Runner
 
-Thanks for helping improve Elastic Runner! This guide covers setup, tests, and pull requests.
+Thanks for helping improve ES Runner! This guide covers setup, tests, and pull requests.
 
 ## Development setup
 
@@ -20,7 +20,7 @@ If you need integration tests to run locally, enable downloads:
 
 ```bash
 export ES_DISTRO_DOWNLOAD=true
-export ES_VERSION=9.2.4
+export ES_VERSION=9.3.1
 ```
 
 ## Documentation site
@@ -45,6 +45,7 @@ npm run dev
 - Open a pull request on GitHub.
 - Describe the change and any breaking impact.
 - Ensure all CI checks pass.
+- Keep `main` linear: squash merge only, no merge commits.
 
 ## Reporting issues
 
@@ -54,3 +55,10 @@ For bugs, open a GitHub issue with:
 - Expected vs actual behavior
 - Logs or stack traces
 - Environment details (JDK, OS, ES version)
+
+## Public release work
+
+If you are working on public-launch or publishing tasks, use
+`docs/public-release-readiness.md` as the repo-specific checklist.
+
+

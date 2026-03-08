@@ -7,7 +7,7 @@ description: Security defaults, reporting, and support windows.
 
 ## Security defaults
 
-Elastic Runner disables security by default for local convenience:
+ES Runner disables security by default for local convenience:
 
 - `xpack.security.enabled = false`
 

@@ -24,7 +24,7 @@ If you need integration tests, set:
 
 ```bash
 export ES_DISTRO_DOWNLOAD=true
-export ES_VERSION=9.2.4
+export ES_VERSION=9.3.1
 ```
 
 ## 3. Make changes
@@ -43,3 +43,4 @@ export ES_VERSION=9.2.4
 
 - [Build/test matrix](../../reference/build-test-matrix/)
 - [Release & versioning policy](../../reference/release-versioning/)
+

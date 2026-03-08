@@ -5,7 +5,7 @@ description: Reuse one Elasticsearch process across Gradle projects and suites w
 
 # Use shared Gradle test clusters
 
-Elastic Runner includes a Gradle plugin for build-scoped shared Elasticsearch
+ES Runner includes a Gradle plugin for build-scoped shared Elasticsearch
 clusters.
 
 Use it when you want:
@@ -18,13 +18,13 @@ Use it when you want:
 
 ```groovy
 plugins {
-    id 'com.elastic.runner.shared-test-clusters'
+    id 'io.github.wboult.es-runner.shared-test-clusters'
 }
 
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
             clusterName.set("shared-it")
             quiet.set(true)
@@ -34,7 +34,7 @@ elasticTestClusters {
     suites {
         matchingName("integrationTest") {
             useCluster("integration")
-            namespaceMode.set(com.elastic.runner.gradle.NamespaceMode.SUITE)
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
     }
 }
@@ -47,7 +47,7 @@ subprojects {
     apply plugin: 'java'
 
     dependencies {
-        testImplementation "com.elastic:elastic-runner-gradle-test-support:${project.version}"
+        testImplementation "io.github.wboult:es-runner-gradle-test-support:${project.version}"
     }
 
     testing {
@@ -60,15 +60,15 @@ subprojects {
 }
 ```
 
-If you are using this from the Elastic Runner source tree itself, depend on
-`project(":elastic-runner-gradle-test-support")` instead of published
+If you are using this from the ES Runner source tree itself, depend on
+`project(":es-runner-gradle-test-support")` instead of published
 coordinates.
 
 ## Use the injected test environment
 
 ```java
-import com.elastic.runner.ElasticClient;
-import com.elastic.runner.gradle.testsupport.ElasticGradleTestEnv;
+import io.github.wboult.esrunner.ElasticClient;
+import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
 
 ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
@@ -124,3 +124,4 @@ See [Cloud storage mirrors](../cloud-storage-mirrors/) for access setup.
 
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Configuration reference](../../reference/configuration/)
+

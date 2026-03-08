@@ -1,11 +1,11 @@
 ---
 title: Architecture & lifecycle
-description: How Elastic Runner starts and manages Elasticsearch.
+description: How ES Runner starts and manages Elasticsearch.
 ---
 
 # Architecture & lifecycle
 
-Elastic Runner starts **official Elasticsearch distributions** as an external process. It does not embed Elasticsearch.
+ES Runner starts **official Elasticsearch distributions** as an external process. It does not embed Elasticsearch.
 
 ## Startup flow
 

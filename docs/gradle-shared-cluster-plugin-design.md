@@ -1,6 +1,6 @@
 # Gradle Shared Cluster Plugin Design
 
-This document proposes a Gradle integration for Elastic Runner that starts a
+This document proposes a Gradle integration for ES Runner that starts a
 small number of shared Elasticsearch servers once per build and makes them
 available to multiple Gradle projects and test suites without repeated
 per-JVM/per-suite startup.
@@ -32,13 +32,13 @@ the design rationale and the intended evolution beyond the current feature set.
 
 ```kotlin
 plugins {
-    id("com.elastic.runner.shared-test-clusters")
+    id("io.github.wboult.es-runner.shared-test-clusters")
 }
 
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.convention(true)
             distrosDir.set(layout.rootDirectory.dir(".gradle/elasticsearch/distros"))
             workDir.set(layout.rootDirectory.dir(".gradle/elasticsearch/work"))
@@ -109,7 +109,7 @@ Example DSL:
 elasticTestClusters {
     clusters {
         register("search") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
             downloadBaseUrl.set("https://mirror.example.com/elasticsearch/")
             heap.set("512m")
@@ -319,8 +319,8 @@ Use two deliverables:
 
 Suggested coordinates / id:
 
-- artifact: `com.elastic:elastic-runner-gradle-plugin`
-- plugin id: `com.elastic.runner.shared-test-clusters`
+- artifact: `io.github.wboult:es-runner-gradle-plugin`
+- plugin id: `io.github.wboult.es-runner.shared-test-clusters`
 
 Responsibilities:
 
@@ -333,7 +333,7 @@ Responsibilities:
 
 Suggested artifact:
 
-- `com.elastic:elastic-runner-gradle-test-support`
+- `io.github.wboult:es-runner-gradle-test-support`
 
 Responsibilities:
 
@@ -370,13 +370,13 @@ test runtime classpath.
 
 ```kotlin
 plugins {
-    id("com.elastic.runner.shared-test-clusters")
+    id("io.github.wboult.es-runner.shared-test-clusters")
 }
 
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
         }
     }
@@ -406,3 +406,4 @@ This gives:
 - no per-test-JVM startup churn
 - no cross-suite index collisions
 - an obvious path for multi-project builds
+

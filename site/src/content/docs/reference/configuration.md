@@ -41,7 +41,7 @@ You can resolve a ZIP programmatically without starting a server:
 ```java
 Path zip = ElasticRunner.resolveDistroZip(
     ElasticRunnerConfig.from(builder -> builder
-        .version("9.2.4")
+        .version("9.3.1")
         .download(true)
         .distrosDir(Paths.get("distros"))
     )
@@ -71,3 +71,4 @@ Settings are applied in this order:
 
 - [API reference](../api/)
 - [Troubleshooting](../../how-to/troubleshooting/)
+

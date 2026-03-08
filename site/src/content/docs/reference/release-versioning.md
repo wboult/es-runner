@@ -1,11 +1,11 @@
-﻿---
+---
 title: Release & versioning policy
 description: How versions are assigned and what changes mean.
 ---
 
 # Release & versioning policy
 
-Elastic Runner follows **Semantic Versioning (SemVer)**:
+ES Runner follows **Semantic Versioning (SemVer)**:
 
 - **MAJOR**: breaking changes to public API or behavior
 - **MINOR**: new features, backward compatible

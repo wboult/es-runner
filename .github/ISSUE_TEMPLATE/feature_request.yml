@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest an enhancement to the library, Gradle plugin, or docs.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Explain the user problem or workflow gap.
+      placeholder: Starting one node per suite is too expensive for our multi-project Gradle build.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API or behavior you would like to see.
+      placeholder: Add a build-scoped shared cluster abstraction with suite-level namespacing.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Mention workarounds or competing approaches if relevant.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Share constraints, environment details, or links.

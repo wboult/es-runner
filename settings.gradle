@@ -1,6 +1,6 @@
-rootProject.name = 'elastic-runner'
-include('elastic-runner-gradle-plugin')
-include('elastic-runner-gradle-test-support')
+rootProject.name = 'es-runner'
+include('es-runner-gradle-plugin')
+include('es-runner-gradle-test-support')
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -8,3 +8,4 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+

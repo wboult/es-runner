@@ -1,4 +1,4 @@
-﻿---
+---
 title: Error messages
 description: Common errors and what they mean.
 ---
@@ -57,7 +57,7 @@ This reference lists common `ElasticRunnerException` messages and likely causes.
 
 ## Where to look for logs
 
-Elastic Runner writes logs to:
+ES Runner writes logs to:
 
 ```
 <workDir>/<version>/logs/runner.log

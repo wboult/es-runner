@@ -5,7 +5,7 @@ description: Install prerequisites and start your first Elasticsearch server.
 
 # Getting started
 
-This tutorial walks you through installing the prerequisites and starting your first server with Elastic Runner.
+This tutorial walks you through installing the prerequisites and starting your first server with ES Runner.
 
 ## Prerequisites
 
@@ -14,11 +14,11 @@ This tutorial walks you through installing the prerequisites and starting your f
 
 ## 1. Add the dependency
 
-Add Elastic Runner to your build (example for Gradle):
+Add ES Runner to your build (example for Gradle):
 
 ```groovy
 dependencies {
-    testImplementation "com.elastic:elastic-runner:0.1.0"
+    testImplementation "io.github.wboult:es-runner:0.1.0"
 }
 ```
 
@@ -30,7 +30,7 @@ The simplest form is to point at a ZIP and start a server:
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-Path distroZip = Paths.get("elasticsearch-9.2.4-linux-x86_64.zip");
+Path distroZip = Paths.get("elasticsearch-9.3.1-linux-x86_64.zip");
 Path workDir = Paths.get(".es");
 
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
@@ -62,3 +62,4 @@ server.close();
 
 - [First single-node server](../first-server/)
 - [Run a two-node cluster](../../how-to/two-node-cluster/)
+

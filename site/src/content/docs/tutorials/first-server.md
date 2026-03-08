@@ -5,11 +5,11 @@ description: Start a single-node Elasticsearch server using a version string.
 
 # First single-node server
 
-This tutorial uses a **version string** so Elastic Runner downloads the ZIP for you.
+This tutorial uses a **version string** so ES Runner downloads the ZIP for you.
 
 ## 1. Choose a version
 
-Pick an Elasticsearch version supported by your environment. Example: `9.2.4`.
+Pick an Elasticsearch version supported by your environment. Example: `9.3.1`.
 
 ## 2. Start a single node
 
@@ -17,7 +17,7 @@ Pick an Elasticsearch version supported by your environment. Example: `9.2.4`.
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-String version = "9.2.4";
+String version = "9.3.1";
 Path workDir = Files.createTempDirectory("es-runner-");
 
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
@@ -43,3 +43,4 @@ try (ElasticServer server = ElasticRunner.start(config)) {
 
 - [Run a two-node cluster](../../how-to/two-node-cluster/)
 - [Configuration reference](../../reference/configuration/)
+

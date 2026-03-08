@@ -1,6 +1,6 @@
 # Gradle shared test clusters
 
-Elastic Runner ships with a Gradle plugin that starts a shared Elasticsearch
+ES Runner ships with a Gradle plugin that starts a shared Elasticsearch
 server once per cluster definition and reuses it across multiple Gradle
 projects and test suites during a single build.
 
@@ -18,8 +18,8 @@ startup cost is too high, but suites still need isolation from each other.
 
 ## Plugin pieces
 
-- Gradle plugin id: `com.elastic.runner.shared-test-clusters`
-- test helper artifact: `com.elastic:elastic-runner-gradle-test-support`
+- Gradle plugin id: `io.github.wboult.es-runner.shared-test-clusters`
+- test helper artifact: `io.github.wboult:es-runner-gradle-test-support`
 
 The plugin wires test tasks. The helper artifact keeps test code clean by
 turning injected system properties into an `ElasticClient` plus namespace-aware
@@ -31,13 +31,13 @@ Apply the plugin once in the root build:
 
 ```groovy
 plugins {
-    id 'com.elastic.runner.shared-test-clusters'
+    id 'io.github.wboult.es-runner.shared-test-clusters'
 }
 
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
             distrosDir.set(layout.rootDirectory.dir(".gradle/elasticsearch/distros").asFile.absolutePath)
             workDir.set(layout.rootProject.layout.buildDirectory.dir("elastic-test-clusters/integration").get().asFile.absolutePath)
@@ -49,7 +49,7 @@ elasticTestClusters {
     suites {
         matchingName("integrationTest") {
             useCluster("integration")
-            namespaceMode.set(com.elastic.runner.gradle.NamespaceMode.SUITE)
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
     }
 }
@@ -62,7 +62,7 @@ subprojects {
     apply plugin: 'java'
 
     dependencies {
-        testImplementation "com.elastic:elastic-runner-gradle-test-support:${project.version}"
+        testImplementation "io.github.wboult:es-runner-gradle-test-support:${project.version}"
     }
 
     testing {
@@ -75,15 +75,15 @@ subprojects {
 }
 ```
 
-If you are wiring this inside the Elastic Runner repo itself, use
-`testImplementation(project(":elastic-runner-gradle-test-support"))` instead of
+If you are wiring this inside the ES Runner repo itself, use
+`testImplementation(project(":es-runner-gradle-test-support"))` instead of
 published coordinates.
 
 ## Test-side usage
 
 ```java
-import com.elastic.runner.ElasticClient;
-import com.elastic.runner.gradle.testsupport.ElasticGradleTestEnv;
+import io.github.wboult.esrunner.ElasticClient;
+import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
 
 ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
@@ -158,7 +158,7 @@ Example using a private GCS mirror:
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
             downloadBaseUrl.set("gs://elastic-mirror/elasticsearch/")
         }
@@ -196,3 +196,4 @@ The initial implementation covers:
 
 See `docs/gradle-shared-cluster-plugin-design.md` for the design rationale and
 future directions.
+

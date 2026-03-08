@@ -18,13 +18,13 @@ Root build:
 
 ```kotlin
 plugins {
-    id("com.elastic.runner.shared-test-clusters")
+    id("io.github.wboult.es-runner.shared-test-clusters")
 }
 
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
         }
     }
@@ -117,3 +117,4 @@ runtime classpath.
 ## Related
 
 - [API reference](../reference/api/)
+

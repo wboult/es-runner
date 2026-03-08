@@ -1,6 +1,6 @@
 ---
 title: GitHub Actions CI example
-description: Run Elastic Runner in CI using GitHub Actions.
+description: Run ES Runner in CI using GitHub Actions.
 ---
 
 # GitHub Actions CI example
@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests
         env:
-          ES_VERSION: "9.2.4"
+          ES_VERSION: "9.3.1"
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
         run: ./gradlew test
@@ -42,3 +42,4 @@ jobs:
 
 - [Build/test matrix](../../reference/build-test-matrix/)
 - [Troubleshooting](../troubleshooting/)
+

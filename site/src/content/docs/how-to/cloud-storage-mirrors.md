@@ -5,7 +5,7 @@ description: Download Elasticsearch distros from S3, GCS, Azure Blob, HTTPS, or 
 
 # Use cloud storage mirrors
 
-Elastic Runner can download distro archives from:
+ES Runner can download distro archives from:
 
 - `https://`
 - `file://`
@@ -13,29 +13,29 @@ Elastic Runner can download distro archives from:
 - `gs://`
 - `az://`
 
-The configured base is still a prefix. Elastic Runner appends the expected
+The configured base is still a prefix. ES Runner appends the expected
 archive filename for the selected version and current OS.
 
 ## Examples
 
 ```java
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("s3://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("gs://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("az://myaccount/releases/elasticsearch/"));
 
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
 ```
@@ -44,7 +44,7 @@ ElasticRunnerConfig.from(builder -> builder
 
 ### S3
 
-Elastic Runner uses `aws s3 cp`.
+ES Runner uses `aws s3 cp`.
 
 Configure access with normal AWS CLI settings such as:
 
@@ -58,7 +58,7 @@ Configure access with normal AWS CLI settings such as:
 
 ### GCS
 
-Elastic Runner tries `gcloud storage cp` first and `gsutil cp` second.
+ES Runner tries `gcloud storage cp` first and `gsutil cp` second.
 
 Configure access with:
 
@@ -68,7 +68,7 @@ Configure access with:
 
 ### Azure Blob
 
-Elastic Runner expects:
+ES Runner expects:
 
 ```text
 az://<account>/<container>/<prefix>/
@@ -93,5 +93,6 @@ Use `https://` for:
 - artifact proxies
 - shared signed container URLs such as Azure SAS URLs
 
-If the base URL includes a shared query string, Elastic Runner preserves it
+If the base URL includes a shared query string, ES Runner preserves it
 when it appends the distro filename.
+

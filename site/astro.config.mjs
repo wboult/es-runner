@@ -8,7 +8,7 @@ export default defineConfig({
 	base: '/elastic-runner/',
 	integrations: [
 		starlight({
-			title: 'Elastic Runner',
+			title: 'ES Runner',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/wboult/elastic-runner' }],
 			sidebar: [
 				{

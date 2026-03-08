@@ -1,0 +1,26 @@
+name: Docs issue
+description: Report inaccurate, missing, or confusing documentation.
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: textarea
+    id: location
+    attributes:
+      label: Where is the problem?
+      description: Link the page or file and quote the section if possible.
+      placeholder: README.md, docs/cloud-storage-mirrors.md, API reference page, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or unclear?
+      placeholder: The plugin section still implies published coordinates that do not exist yet.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      placeholder: Replace the stale example with the current package name, plugin id, or tested version.

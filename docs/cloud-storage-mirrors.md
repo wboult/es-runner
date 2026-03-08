@@ -1,6 +1,6 @@
 # Cloud Storage Mirrors
 
-Elastic Runner can resolve and download Elasticsearch distro archives from more
+ES Runner can resolve and download Elasticsearch distro archives from more
 than plain HTTPS mirrors.
 
 Supported `downloadBaseUrl(...)` schemes:
@@ -18,22 +18,22 @@ Examples:
 
 ```java
 ElasticRunnerConfig s3Config = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("s3://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig gcsConfig = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("gs://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig azureConfig = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("az://myaccount/releases/elasticsearch/"));
 
 ElasticRunnerConfig fileMirrorConfig = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
 ```
@@ -48,7 +48,7 @@ Use this for:
 - internal artifact proxies
 - signed container URLs such as Azure Blob SAS container URLs
 
-If the base URL has a shared query string, Elastic Runner preserves that query
+If the base URL has a shared query string, ES Runner preserves that query
 when it appends the distro filename.
 
 ### Local/shared file mirrors
@@ -63,7 +63,7 @@ file:///srv/mirrors/elasticsearch/
 
 ### S3
 
-Elastic Runner shells out to:
+ES Runner shells out to:
 
 ```text
 aws s3 cp
@@ -81,7 +81,7 @@ Install the AWS CLI and configure access using any standard AWS CLI mechanism:
 
 ### GCS
 
-Elastic Runner tries:
+ES Runner tries:
 
 ```text
 gcloud storage cp
@@ -113,7 +113,7 @@ Example:
 az://myaccount/releases/elasticsearch/
 ```
 
-Elastic Runner tries:
+ES Runner tries:
 
 ```text
 azcopy copy
@@ -133,3 +133,4 @@ Recommended access options:
 - `AZURE_STORAGE_CONNECTION_STRING`
 - `AZURE_STORAGE_KEY`
 - `AZURE_STORAGE_SAS_TOKEN`
+
