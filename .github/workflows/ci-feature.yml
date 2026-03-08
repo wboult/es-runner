@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       versions:
-        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","8.9.2"])'
+        description: 'JSON array of Elasticsearch versions (keep this to the latest 9.x and latest 8.x only, e.g. ["9.3.1","8.19.11"])'
         required: false
-        default: '["9.2.4","8.9.2"]'
+        default: '["9.3.1","8.19.11"]'
 
 jobs:
   resolve-matrix:
@@ -24,9 +24,9 @@ jobs:
           VERSIONS: ${{ inputs.versions }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            python -c 'import json, os; raw=os.environ.get("VERSIONS"); output=(raw if raw and "\"" in raw else json.dumps([i.strip() for i in raw.strip("[]").split(",") if i.strip()])) if raw else json.dumps(["9.2.4","8.9.2"]); print(f"list={output}")' >> "$GITHUB_OUTPUT"
+            python -c 'import json, os; raw=os.environ.get("VERSIONS"); output=(raw if raw and "\"" in raw else json.dumps([i.strip() for i in raw.strip("[]").split(",") if i.strip()])) if raw else json.dumps(["9.3.1","8.19.11"]); print(f"list={output}")' >> "$GITHUB_OUTPUT"
           else
-            echo 'list=["9.2.4","8.9.2"]' >> "$GITHUB_OUTPUT"
+            echo 'list=["9.3.1","8.19.11"]' >> "$GITHUB_OUTPUT"
           fi
 
   test:
@@ -108,11 +108,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: distros
-          key: es-distro-${{ runner.os }}-9.2.4
+          key: es-distro-${{ runner.os }}-9.3.1
 
       - name: Run Scala 3 tests
         env:
-          ES_VERSION: "9.2.4"
+          ES_VERSION: "9.3.1"
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
         run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew scala3Test

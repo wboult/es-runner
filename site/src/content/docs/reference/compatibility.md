@@ -13,7 +13,7 @@ This matrix reflects what is **actively tested in CI**. Other combinations may w
 | --- | --- |
 | JDK | 17 (required) |
 | OS | Ubuntu (CI). Windows/macOS should work with a compatible ZIP and JDK. |
-| Elasticsearch | 9.2.4, 9.2.3, 8.9.10 |
+| Elasticsearch | 9.3.1, 8.19.11 |
 
 ## Scala / Spark (CI matrix)
 
@@ -27,6 +27,7 @@ This matrix reflects what is **actively tested in CI**. Other combinations may w
 ## Notes
 
 - When running Scala 3 tests, CI uses Scala 3.x libraries.
+- CI intentionally tracks only the latest supported 9.x patch and latest supported 8.x patch to avoid matrix explosion.
 - If you rely on Spark integrations, pin Scala/Spark versions as shown above.
 
 ## Related
