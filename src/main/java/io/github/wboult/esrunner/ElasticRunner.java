@@ -165,7 +165,7 @@ public final class ElasticRunner {
         Path stateFile = versionDir.resolve("state.json");
         Process process = startProcess(homeDir, configDir, config, pidFile);
         Thread logThread = new Thread(new StreamGobbler(process.getInputStream(), logFile, config.quiet()),
-                "elastic-runner-log");
+                "es-runner-log");
         logThread.setDaemon(true);
         logThread.start();
 
@@ -300,7 +300,7 @@ public final class ElasticRunner {
             try {
                 Process process = builder.start();
                 Thread logThread = new Thread(new StreamGobbler(process.getInputStream(), logFile, quiet),
-                        "elastic-runner-plugin-" + plugin);
+                        "es-runner-plugin-" + plugin);
                 logThread.setDaemon(true);
                 logThread.start();
                 if (!process.waitFor(5, TimeUnit.MINUTES) || process.exitValue() != 0) {

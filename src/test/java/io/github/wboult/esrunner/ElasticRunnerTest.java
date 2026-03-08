@@ -14,7 +14,7 @@ class ElasticRunnerTest {
 
     @Test
     void resolveDistroZipUsesExplicitZip() throws IOException {
-        Path tempDir = Files.createTempDirectory("elastic-runner-zip");
+        Path tempDir = Files.createTempDirectory("es-runner-zip");
         Path zip = tempDir.resolve("elasticsearch.zip").toAbsolutePath();
         Files.writeString(zip, "fake");
 
@@ -25,7 +25,7 @@ class ElasticRunnerTest {
 
     @Test
     void resolveDistroZipUsesVersionAndDistrosDir() throws IOException {
-        Path distrosDir = Files.createTempDirectory("elastic-runner-distros");
+        Path distrosDir = Files.createTempDirectory("es-runner-distros");
         String version = "9.2.4";
         DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
         Path zip = distrosDir.resolve(descriptor.fileName()).toAbsolutePath();
@@ -43,8 +43,8 @@ class ElasticRunnerTest {
     void resolveDistroZipDownloadsFromFileMirror() throws IOException {
         String version = "9.2.4";
         DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
-        Path mirrorDir = Files.createTempDirectory("elastic-runner-mirror");
-        Path distrosDir = Files.createTempDirectory("elastic-runner-distros");
+        Path mirrorDir = Files.createTempDirectory("es-runner-mirror");
+        Path distrosDir = Files.createTempDirectory("es-runner-distros");
         Path mirroredZip = mirrorDir.resolve(descriptor.fileName());
         Files.writeString(mirroredZip, "mirror-zip");
 

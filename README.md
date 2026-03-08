@@ -7,7 +7,7 @@ starting, stopping, and talking to the cluster.
 It is aimed at environments where you want a real Elasticsearch node but do not
 want to depend on Docker, Testcontainers, or an already-running shared cluster.
 
-Documentation: <https://wboult.github.io/elastic-runner/>
+Documentation: <https://wboult.github.io/es-runner/>
 
 ## Why use it
 

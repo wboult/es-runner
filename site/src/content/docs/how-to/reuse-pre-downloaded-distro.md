@@ -15,7 +15,7 @@ temp folders for each node.
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-Path cacheDir = Paths.get(".cache", "elastic-runner");
+Path cacheDir = Paths.get(".cache", "es-runner");
 String version = "9.3.1";
 
 Path cachedZip = ElasticRunner.resolveDistroZip(

@@ -105,8 +105,8 @@ class ElasticSharedTestClustersPluginFunctionalTest {
             assertEquals(SUCCESS, result.task(":app:integrationTest").getOutcome());
             assertEquals(SUCCESS, result.task(":search:integrationTest").getOutcome());
 
-            List<String> appInfo = Files.readAllLines(projectDir.resolve("app/build/elastic-runner-info.txt"));
-            List<String> searchInfo = Files.readAllLines(projectDir.resolve("search/build/elastic-runner-info.txt"));
+            List<String> appInfo = Files.readAllLines(projectDir.resolve("app/build/es-runner-info.txt"));
+            List<String> searchInfo = Files.readAllLines(projectDir.resolve("search/build/es-runner-info.txt"));
 
             assertEquals(appInfo.get(0), searchInfo.get(0), "baseUri should be shared across projects");
             assertNotEquals(appInfo.get(1), searchInfo.get(1), "suite namespaces should differ across projects");
@@ -181,7 +181,7 @@ class ElasticSharedTestClustersPluginFunctionalTest {
 
                         Files.createDirectories(Path.of("build"));
                         Files.writeString(
-                                Path.of("build/elastic-runner-info.txt"),
+                                Path.of("build/es-runner-info.txt"),
                                 baseUri + System.lineSeparator() + namespace,
                                 StandardCharsets.UTF_8
                         );

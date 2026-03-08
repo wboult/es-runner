@@ -5,8 +5,8 @@ Thanks for helping improve ES Runner! This guide covers setup, tests, and pull r
 ## Development setup
 
 ```bash
-git clone https://github.com/wboult/elastic-runner.git
-cd elastic-runner
+git clone https://github.com/wboult/es-runner.git
+cd es-runner
 ```
 
 ## Build & test
