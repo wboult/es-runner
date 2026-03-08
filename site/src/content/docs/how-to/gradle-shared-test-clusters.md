@@ -114,11 +114,12 @@ Cluster definitions accept the same distro settings as the core library:
 That means you can point shared Gradle clusters at:
 
 - official Elastic downloads
+- `https://` mirrors (including pre-signed S3 / GCS / Azure SAS URLs)
 - `file://` mirrors
-- `s3://`, `gs://`, or `az://` mirrors
-- signed HTTPS URLs
 
-See [Cloud storage mirrors](../cloud-storage-mirrors/) for access setup.
+See [Cloud storage mirrors](../cloud-storage-mirrors/) for per-provider
+guidance including how to generate pre-signed / SAS HTTPS URLs for private
+S3, GCS, and Azure Blob buckets.
 
 ## Related
 

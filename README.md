@@ -14,8 +14,7 @@ Documentation: <https://wboult.github.io/elastic-runner/>
 - runs the official Elasticsearch distribution, not an embedded fork
 - works on bare-metal CI agents and restricted environments
 - keeps Elasticsearch in a separate process, so your test JVM stays clean
-- supports downloading distros from official URLs, local mirrors, or common
-  cloud storage backends
+- supports downloading distros from official URLs, HTTPS mirrors, and local file paths
 - includes an incubating Gradle plugin for build-scoped shared test clusters
 
 ## When not to use it
@@ -34,10 +33,6 @@ Use something else when:
 
 - JDK 17+
 - an Elasticsearch distribution ZIP, or a version plus `download(true)`
-- for cloud mirrors:
-  - `aws` for `s3://`
-  - `gcloud` or `gsutil` for `gs://`
-  - `azcopy` or `az` for `az://`
 
 Latest CI-tested Elasticsearch lines:
 
@@ -103,21 +98,27 @@ try {
 
 - `https://mirror.example.com/elasticsearch/`
 - `file:///srv/elasticsearch-mirror/`
-- `s3://my-bucket/elasticsearch/`
-- `gs://my-bucket/elasticsearch/`
-- `az://myaccount/mycontainer/elasticsearch/`
 
-Example:
+Examples:
 
 ```java
-ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+ElasticRunnerConfig mirrorConfig = ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
-    .downloadBaseUrl("gs://elastic-mirror/elasticsearch/"));
+    .downloadBaseUrl("https://internal-mirror.example.com/elasticsearch/"));
+
+ElasticRunnerConfig fileMirrorConfig = ElasticRunnerConfig.from(builder -> builder
+    .version("9.3.1")
+    .download(true)
+    .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
 ```
 
-See [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md) for auth and
-CLI setup.
+For private S3, GCS, or Azure Blob buckets, generate a pre-signed / SAS HTTPS
+URL and use it directly — these work with the built-in `https://` downloader.
+See [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md) for
+per-provider instructions, and
+[docs/cloud-storage-extension-plan.md](docs/cloud-storage-extension-plan.md)
+for the planned native SDK-based extension modules.
 
 ## Gradle shared test clusters
 

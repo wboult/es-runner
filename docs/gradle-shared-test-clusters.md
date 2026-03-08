@@ -152,7 +152,7 @@ Cluster definitions map closely to `ElasticRunnerConfig`. Common properties:
 - `plugins`
 - `quiet`
 
-Example using a private GCS mirror:
+Example using an internal HTTPS mirror:
 
 ```groovy
 elasticTestClusters {
@@ -160,14 +160,15 @@ elasticTestClusters {
         register("integration") {
             version.set("9.3.1")
             download.set(true)
-            downloadBaseUrl.set("gs://elastic-mirror/elasticsearch/")
+            downloadBaseUrl.set("https://internal-mirror.example.com/elasticsearch/")
         }
     }
 }
 ```
 
-Mirror auth follows the same rules as the main library. See
-`docs/cloud-storage-mirrors.md`.
+Mirror configuration follows the same rules as the core library. See
+`docs/cloud-storage-mirrors.md`. For cloud storage (S3, GCS, Azure), use
+HTTPS pre-signed or SAS URLs rather than native cloud scheme URIs.
 
 ## Operational guidance
 
