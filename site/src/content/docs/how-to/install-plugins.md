@@ -11,7 +11,7 @@ Elastic Runner can install plugins before it starts Elasticsearch. Plugins are i
 
 ```java
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .plugin("analysis-icu")
     .workDir(Paths.get(".es"))
@@ -26,7 +26,7 @@ try (ElasticServer server = ElasticRunner.start(config)) {
 
 ```java
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .plugins(List.of("analysis-icu", "analysis-phonetic"))
     .workDir(Paths.get(".es"))
@@ -41,3 +41,4 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
 ## Related
 
 - [Troubleshooting](../troubleshooting/)
+

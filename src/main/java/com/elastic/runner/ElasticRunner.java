@@ -21,48 +21,114 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+/**
+ * Entry point for resolving Elasticsearch distributions and starting
+ * local process-based clusters.
+ */
 public final class ElasticRunner {
     private ElasticRunner() {
     }
 
+    /**
+     * Starts Elasticsearch from a local ZIP archive using default settings.
+     *
+     * @param distroZip Elasticsearch ZIP archive
+     * @return running server handle
+     */
     public static ElasticServer start(Path distroZip) {
         return start(ElasticRunnerConfig.defaults().toBuilder().distroZip(distroZip).build());
     }
 
+    /**
+     * Starts Elasticsearch for the given version using default distro download
+     * resolution rules.
+     *
+     * @param version Elasticsearch version
+     * @return running server handle
+     */
     public static ElasticServer start(String version) {
         return start(ElasticRunnerConfig.defaults().toBuilder().version(version).build());
     }
 
+    /**
+     * Starts Elasticsearch after transforming the default configuration.
+     *
+     * @param configurer function that derives a config from defaults
+     * @return running server handle
+     */
     public static ElasticServer start(UnaryOperator<ElasticRunnerConfig> configurer) {
         return start(configurer.apply(ElasticRunnerConfig.defaults()));
     }
 
+    /**
+     * Starts Elasticsearch from a builder-based configuration DSL.
+     *
+     * @param consumer config builder callback
+     * @return running server handle
+     */
     public static ElasticServer start(Consumer<ElasticRunnerConfig.Builder> consumer) {
         return start(ElasticRunnerConfig.from(consumer));
     }
 
+    /**
+     * Starts a server, executes the action, and always closes the server.
+     *
+     * @param config full server configuration
+     * @param action callback invoked with the running server
+     */
     public static void withServer(ElasticRunnerConfig config, Consumer<ElasticServer> action) {
         try (ElasticServer server = start(config)) {
             action.accept(server);
         }
     }
 
+    /**
+     * Starts a server, executes the function, returns its value, and always
+     * closes the server.
+     *
+     * @param config full server configuration
+     * @param action callback invoked with the running server
+     * @param <T> return type
+     * @return callback result
+     */
     public static <T> T withServer(ElasticRunnerConfig config, Function<ElasticServer, T> action) {
         try (ElasticServer server = start(config)) {
             return action.apply(server);
         }
     }
 
+    /**
+     * Starts a server from a builder callback, executes the action, and closes
+     * the server afterward.
+     *
+     * @param configurer config builder callback
+     * @param action callback invoked with the running server
+     */
     public static void withServer(Consumer<ElasticRunnerConfig.Builder> configurer,
                                   Consumer<ElasticServer> action) {
         withServer(ElasticRunnerConfig.from(configurer), action);
     }
 
+    /**
+     * Starts a server from a builder callback, executes the function, returns
+     * its value, and closes the server afterward.
+     *
+     * @param configurer config builder callback
+     * @param action callback invoked with the running server
+     * @param <T> return type
+     * @return callback result
+     */
     public static <T> T withServer(Consumer<ElasticRunnerConfig.Builder> configurer,
                                    Function<ElasticServer, T> action) {
         return withServer(ElasticRunnerConfig.from(configurer), action);
     }
 
+    /**
+     * Starts Elasticsearch using the provided configuration.
+     *
+     * @param config immutable runner configuration
+     * @return running server handle
+     */
     public static ElasticServer start(ElasticRunnerConfig config) {
         Objects.requireNonNull(config, "config");
         Path zip = resolveDistroZipInternal(config);
@@ -147,6 +213,12 @@ public final class ElasticRunner {
         }
     }
 
+    /**
+     * Resolves the ZIP archive for a config, downloading it first when needed.
+     *
+     * @param config immutable runner configuration
+     * @return local ZIP archive path
+     */
     public static Path resolveDistroZip(ElasticRunnerConfig config) {
         Objects.requireNonNull(config, "config");
         return resolveDistroZipInternal(config);

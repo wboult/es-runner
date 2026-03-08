@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 Path cacheDir = Paths.get(".cache", "elastic-runner");
-String version = "9.2.4";
+String version = "9.3.1";
 
 Path cachedZip = ElasticRunner.resolveDistroZip(
     ElasticRunnerConfig.from(builder -> builder
@@ -96,3 +96,4 @@ static ElasticServer startNode(Path cachedZip,
 - The cache directory holds the original ZIP and stays read-only.
 - Each node works from a temp directory, so data/logs are isolated.
 - This pattern also works for repeating test runs without re-downloading.
+

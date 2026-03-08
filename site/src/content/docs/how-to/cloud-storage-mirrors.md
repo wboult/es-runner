@@ -20,22 +20,22 @@ archive filename for the selected version and current OS.
 
 ```java
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("s3://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("gs://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("az://myaccount/releases/elasticsearch/"));
 
 ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
 ```
@@ -95,3 +95,4 @@ Use `https://` for:
 
 If the base URL includes a shared query string, Elastic Runner preserves it
 when it appends the distro filename.
+

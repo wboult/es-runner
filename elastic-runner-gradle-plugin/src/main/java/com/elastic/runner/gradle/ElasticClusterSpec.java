@@ -10,6 +10,9 @@ import org.gradle.api.provider.Property;
 import javax.inject.Inject;
 import java.time.Duration;
 
+/**
+ * DSL model for one shared Elasticsearch cluster definition.
+ */
 public abstract class ElasticClusterSpec {
     private final String name;
     private final Property<String> distroZip;
@@ -29,6 +32,14 @@ public abstract class ElasticClusterSpec {
     private final ListProperty<String> plugins;
     private final Property<Boolean> quiet;
 
+    /**
+     * Creates a cluster specification with defaults derived from
+     * {@link ElasticRunnerConfig#defaults()}.
+     *
+     * @param name cluster name in the Gradle container
+     * @param objects Gradle object factory
+     * @param layout project layout used for default directories
+     */
     @Inject
     public ElasticClusterSpec(String name, ObjectFactory objects, ProjectLayout layout) {
         this.name = name;
@@ -71,98 +82,158 @@ public abstract class ElasticClusterSpec {
         this.quiet.convention(defaults.quiet());
     }
 
+    /**
+     * Returns the logical cluster name inside the Gradle DSL container.
+     *
+     * @return cluster definition name
+     */
     public String getName() {
         return name;
     }
 
+    /** @return optional local ZIP path */
     public Property<String> getDistroZip() {
         return distroZip;
     }
 
+    /** @return optional Elasticsearch version */
     public Property<String> getVersion() {
         return version;
     }
 
+    /** @return distro cache directory */
     public Property<String> getDistrosDir() {
         return distrosDir;
     }
 
+    /** @return whether downloads should refresh the cache */
     public Property<Boolean> getDownload() {
         return download;
     }
 
+    /** @return download base URL or mirror prefix */
     public Property<String> getDownloadBaseUrl() {
         return downloadBaseUrl;
     }
 
+    /** @return cluster working directory */
     public Property<String> getWorkDir() {
         return workDir;
     }
 
+    /** @return configured cluster name */
     public Property<String> getClusterName() {
         return clusterName;
     }
 
+    /** @return fixed HTTP port, or zero for ranged allocation */
     public Property<Integer> getHttpPort() {
         return httpPort;
     }
 
+    /** @return start of the HTTP port range */
     public Property<Integer> getPortRangeStart() {
         return portRangeStart;
     }
 
+    /** @return end of the HTTP port range */
     public Property<Integer> getPortRangeEnd() {
         return portRangeEnd;
     }
 
+    /** @return heap setting used for Xms and Xmx */
     public Property<String> getHeap() {
         return heap;
     }
 
+    /** @return startup timeout in milliseconds */
     public Property<Long> getStartupTimeoutMillis() {
         return startupTimeoutMillis;
     }
 
+    /** @return shutdown timeout in milliseconds */
     public Property<Long> getShutdownTimeoutMillis() {
         return shutdownTimeoutMillis;
     }
 
+    /** @return extra Elasticsearch settings */
     public MapProperty<String, String> getSettings() {
         return settings;
     }
 
+    /** @return plugin install list */
     public ListProperty<String> getPlugins() {
         return plugins;
     }
 
+    /** @return quiet output flag */
     public Property<Boolean> getQuiet() {
         return quiet;
     }
 
+    /**
+     * Sets the local ZIP path as an arbitrary object convertible to a string.
+     *
+     * @param value distro ZIP path
+     */
     public void distroZip(Object value) {
         distroZip.set(value.toString());
     }
 
+    /**
+     * Sets the shared distro cache directory as an arbitrary object convertible
+     * to a string.
+     *
+     * @param value distro cache directory
+     */
     public void distrosDir(Object value) {
         distrosDir.set(value.toString());
     }
 
+    /**
+     * Sets the cluster working directory as an arbitrary object convertible to
+     * a string.
+     *
+     * @param value working directory
+     */
     public void workDir(Object value) {
         workDir.set(value.toString());
     }
 
+    /**
+     * Adds or overrides one Elasticsearch setting.
+     *
+     * @param key Elasticsearch setting key
+     * @param value setting value
+     */
     public void setting(String key, String value) {
         settings.put(key, value);
     }
 
+    /**
+     * Adds one plugin to install before startup.
+     *
+     * @param pluginId plugin identifier or install source accepted by
+     *                 {@code elasticsearch-plugin install}
+     */
     public void plugin(String pluginId) {
         plugins.add(pluginId);
     }
 
+    /**
+     * Sets the startup timeout using a {@link Duration}.
+     *
+     * @param duration startup timeout
+     */
     public void startupTimeout(Duration duration) {
         startupTimeoutMillis.set(duration.toMillis());
     }
 
+    /**
+     * Sets the shutdown timeout using a {@link Duration}.
+     *
+     * @param duration shutdown timeout
+     */
     public void shutdownTimeout(Duration duration) {
         shutdownTimeoutMillis.set(duration.toMillis());
     }

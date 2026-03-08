@@ -14,6 +14,11 @@ Use it when you want:
 - multiple Gradle projects to share the same cluster
 - suite-level namespaces so parallel suites do not collide
 
+Current plugin/helper identifiers in this repo are still provisional for the
+first public release. Use the examples here for source-tree integration today,
+but expect the published namespace and plugin id to move to an owner-controlled
+prefix before Maven Central or Plugin Portal publication.
+
 ## Apply the plugin in the root build
 
 ```groovy
@@ -24,7 +29,7 @@ plugins {
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
             clusterName.set("shared-it")
             quiet.set(true)
@@ -124,3 +129,4 @@ See [Cloud storage mirrors](../cloud-storage-mirrors/) for access setup.
 
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Configuration reference](../../reference/configuration/)
+

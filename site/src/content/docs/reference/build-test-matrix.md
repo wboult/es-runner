@@ -24,11 +24,11 @@ CI runs multiple combinations of Elasticsearch/Scala/Spark versions and includes
 
 | Variable | Purpose | Example |
 | --- | --- | --- |
-| `ES_DISTRO_ZIP` | Path to a local ZIP | `/path/to/elasticsearch-9.2.4.zip` |
+| `ES_DISTRO_ZIP` | Path to a local ZIP | `/path/to/elasticsearch-9.3.1.zip` |
 | `ES_DISTRO_DOWNLOAD` | Allow downloads | `true` |
 | `ES_DISTROS_DIR` | Directory for ZIPs | `distros` |
 | `ES_DISTRO_BASE_URL` | Mirror base URL | `https://mirror.example.com/elasticsearch/` |
-| `ES_VERSION` | Version used by example tests | `9.2.4` |
+| `ES_VERSION` | Version used by example tests | `9.3.1` |
 
 ## Local runs
 
@@ -41,10 +41,11 @@ If you need downloads locally:
 
 ```bash
 export ES_DISTRO_DOWNLOAD=true
-export ES_VERSION=9.2.4
+export ES_VERSION=9.3.1
 ```
 
 ## Related
 
 - [Troubleshooting](../../how-to/troubleshooting/)
 - [Compatibility matrix](../compatibility/)
+

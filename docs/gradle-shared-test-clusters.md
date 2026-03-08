@@ -25,6 +25,10 @@ The plugin wires test tasks. The helper artifact keeps test code clean by
 turning injected system properties into an `ElasticClient` plus namespace-aware
 resource names.
 
+These identifiers are current repo-internal identifiers, not yet a committed
+public publishing namespace. Before the first public release, they should move
+to an owner-controlled namespace for Maven Central and the Gradle Plugin Portal.
+
 ## Recommended build layout
 
 Apply the plugin once in the root build:
@@ -37,7 +41,7 @@ plugins {
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
             distrosDir.set(layout.rootDirectory.dir(".gradle/elasticsearch/distros").asFile.absolutePath)
             workDir.set(layout.rootProject.layout.buildDirectory.dir("elastic-test-clusters/integration").get().asFile.absolutePath)
@@ -158,7 +162,7 @@ Example using a private GCS mirror:
 elasticTestClusters {
     clusters {
         register("integration") {
-            version.set("9.2.4")
+            version.set("9.3.1")
             download.set(true)
             downloadBaseUrl.set("gs://elastic-mirror/elasticsearch/")
         }
@@ -196,3 +200,4 @@ The initial implementation covers:
 
 See `docs/gradle-shared-cluster-plugin-design.md` for the design rationale and
 future directions.
+

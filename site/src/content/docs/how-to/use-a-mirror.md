@@ -11,7 +11,7 @@ If your environment blocks direct downloads, you can point Elastic Runner at a *
 
 ```java
 ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("https://my-mirror.example.com/elasticsearch/")
     .workDir(Paths.get(".es"))
@@ -21,7 +21,7 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
 The mirror must contain ZIPs with the same filenames as Elastic’s official artifacts, for example:
 
 ```
-elasticsearch-9.2.4-linux-x86_64.zip
+elasticsearch-9.3.1-linux-x86_64.zip
 ```
 
 ## Verify availability
@@ -32,3 +32,4 @@ Elastic Runner performs a download when the ZIP is missing or when `download(tru
 
 - [Download/resolve behavior](../../reference/configuration/#download-and-distros)
 - [Troubleshooting downloads](../troubleshooting/)
+

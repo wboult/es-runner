@@ -12,24 +12,49 @@ import org.gradle.api.provider.Property;
 import java.nio.file.Path;
 import java.time.Duration;
 
+/**
+ * Shared Gradle build service that lazily starts one Elasticsearch cluster and
+ * reuses it for all bound test tasks in the build.
+ */
 public abstract class ElasticClusterService implements BuildService<ElasticClusterService.Params>, AutoCloseable {
+    /**
+     * Build service parameters mirroring the cluster DSL and
+     * {@link ElasticRunnerConfig}.
+     */
     public interface Params extends BuildServiceParameters {
+        /** @return cluster definition name */
         Property<String> getName();
+        /** @return optional local ZIP path */
         Property<String> getDistroZip();
+        /** @return optional Elasticsearch version */
         Property<String> getVersion();
+        /** @return distro cache directory */
         Property<String> getDistrosDir();
+        /** @return whether downloads should refresh the cache */
         Property<Boolean> getDownload();
+        /** @return download base URL or mirror prefix */
         Property<String> getDownloadBaseUrl();
+        /** @return cluster working directory */
         Property<String> getWorkDir();
+        /** @return configured cluster name */
         Property<String> getClusterName();
+        /** @return fixed HTTP port, or zero for ranged allocation */
         Property<Integer> getHttpPort();
+        /** @return start of the HTTP port range */
         Property<Integer> getPortRangeStart();
+        /** @return end of the HTTP port range */
         Property<Integer> getPortRangeEnd();
+        /** @return heap setting used for Xms and Xmx */
         Property<String> getHeap();
+        /** @return startup timeout in milliseconds */
         Property<Long> getStartupTimeoutMillis();
+        /** @return shutdown timeout in milliseconds */
         Property<Long> getShutdownTimeoutMillis();
+        /** @return extra Elasticsearch settings */
         MapProperty<String, String> getSettings();
+        /** @return plugin install list */
         ListProperty<String> getPlugins();
+        /** @return quiet output flag */
         Property<Boolean> getQuiet();
     }
 
@@ -37,6 +62,12 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
     private ElasticServer server;
     private ElasticClusterMetadata metadata;
 
+    /**
+     * Starts the cluster on first use and returns the stable connection
+     * metadata.
+     *
+     * @return cluster metadata
+     */
     public ElasticClusterMetadata metadata() {
         synchronized (lock) {
             if (server == null || !server.isRunning()) {
@@ -67,6 +98,9 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
         }
     }
 
+    /**
+     * Stops the shared cluster when Gradle disposes of the build service.
+     */
     @Override
     public void close() {
         synchronized (lock) {

@@ -10,7 +10,16 @@ import org.gradle.api.tasks.testing.Test;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Root Gradle plugin that provisions build-scoped shared Elasticsearch clusters
+ * and injects their connection details into matching test tasks.
+ */
 public final class ElasticSharedTestClustersPlugin implements Plugin<Project> {
+    /**
+     * Applies the plugin to the root project only.
+     *
+     * @param project project receiving the plugin
+     */
     @Override
     public void apply(Project project) {
         if (project != project.getRootProject()) {

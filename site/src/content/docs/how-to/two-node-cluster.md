@@ -10,7 +10,7 @@ This guide shows how to **download one ZIP programmatically** and start **two no
 ## 1. Resolve the distro ZIP
 
 ```java
-String version = "9.2.4";
+String version = "9.3.1";
 Path distrosDir = Paths.get("distros");
 
 Path sharedZip = ElasticRunner.resolveDistroZip(
@@ -77,3 +77,4 @@ static ElasticServer startNode(Path sharedZip,
 
 - [Configuration reference](../../reference/configuration/)
 - [Troubleshooting](../troubleshooting/)
+

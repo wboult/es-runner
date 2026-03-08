@@ -10,6 +10,12 @@ public record ClusterInfoResponse(
         String clusterName,
         String versionNumber
 ) {
+    /**
+     * Validates record components.
+     *
+     * @param clusterName cluster name
+     * @param versionNumber Elasticsearch version
+     */
     public ClusterInfoResponse {
         Objects.requireNonNull(clusterName, "clusterName");
         Objects.requireNonNull(versionNumber, "versionNumber");
@@ -17,6 +23,9 @@ public record ClusterInfoResponse(
 
     /**
      * Parses the flat JSON representation into a ClusterInfoResponse.
+     *
+     * @param json flat JSON response body
+     * @return parsed cluster info response
      */
     public static ClusterInfoResponse fromJson(String json) {
         Map<String, String> fields = JsonUtils.parseFlatJson(json);

@@ -12,6 +12,14 @@ public record ClusterHealthResponse(
         int numberOfNodes,
         int numberOfDataNodes
 ) {
+    /**
+     * Validates record components.
+     *
+     * @param clusterName cluster name
+     * @param status health status
+     * @param numberOfNodes total node count
+     * @param numberOfDataNodes data node count
+     */
     public ClusterHealthResponse {
         Objects.requireNonNull(clusterName, "clusterName");
         Objects.requireNonNull(status, "status");
@@ -19,6 +27,9 @@ public record ClusterHealthResponse(
 
     /**
      * Parses the flat JSON representation into a ClusterHealthResponse.
+     *
+     * @param json flat JSON response body
+     * @return parsed cluster health response
      */
     public static ClusterHealthResponse fromJson(String json) {
         Map<String, String> fields = JsonUtils.parseFlatJson(json);

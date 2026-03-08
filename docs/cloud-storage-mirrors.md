@@ -18,22 +18,22 @@ Examples:
 
 ```java
 ElasticRunnerConfig s3Config = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("s3://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig gcsConfig = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("gs://elastic-mirror/elasticsearch/"));
 
 ElasticRunnerConfig azureConfig = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("az://myaccount/releases/elasticsearch/"));
 
 ElasticRunnerConfig fileMirrorConfig = ElasticRunnerConfig.from(builder -> builder
-    .version("9.2.4")
+    .version("9.3.1")
     .download(true)
     .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
 ```
@@ -133,3 +133,4 @@ Recommended access options:
 - `AZURE_STORAGE_CONNECTION_STRING`
 - `AZURE_STORAGE_KEY`
 - `AZURE_STORAGE_SAS_TOKEN`
+
