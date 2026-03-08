@@ -3,8 +3,6 @@ title: Build & test matrix
 description: CI jobs, test suites, and how to run them locally.
 ---
 
-# Build & test matrix
-
 ## CI overview
 
 CI runs multiple combinations of Elasticsearch/Scala/Spark versions and includes:

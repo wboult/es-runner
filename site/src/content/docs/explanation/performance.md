@@ -1,9 +1,7 @@
-﻿---
+---
 title: Performance guidance
 description: Tuning startup time and runtime performance.
 ---
-
-# Performance guidance
 
 ## Heap sizing
 

@@ -3,9 +3,7 @@ title: Configuration reference
 description: ElasticRunnerConfig fields, defaults, and behavior.
 ---
 
-# Configuration reference
-
-This page documents `ElasticRunnerConfig` fields, defaults, and how they’re applied.
+This page documents `ElasticRunnerConfig` fields, defaults, and how they're applied.
 
 ## Core fields
 

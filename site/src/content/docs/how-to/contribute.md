@@ -3,8 +3,6 @@ title: Contribute
 description: Set up a dev environment and submit changes.
 ---
 
-# Contribute
-
 We welcome contributions! This guide covers local setup and how to submit a change.
 
 ## 1. Clone the repo

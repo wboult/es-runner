@@ -3,8 +3,6 @@ title: Security & support policy
 description: Security defaults, reporting, and support windows.
 ---
 
-# Security & support policy
-
 ## Security defaults
 
 ES Runner disables security by default for local convenience:

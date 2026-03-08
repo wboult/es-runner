@@ -3,8 +3,6 @@ title: Troubleshooting
 description: Diagnose common failures and recover quickly.
 ---
 
-# Troubleshooting
-
 This guide helps you resolve common issues when starting Elasticsearch with ES Runner.
 
 ## Distro ZIP not found
