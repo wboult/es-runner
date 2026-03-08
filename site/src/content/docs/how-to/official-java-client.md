@@ -3,8 +3,6 @@ title: Official Java Client
 description: Use ES Runner with Elastic's official Java API Client.
 ---
 
-# Official Java API Client
-
 ES Runner keeps its built-in `ElasticClient` intentionally small. If you want
 the standard typed Java client for Elasticsearch APIs, use the optional
 `es-runner-java-client` adapter module.

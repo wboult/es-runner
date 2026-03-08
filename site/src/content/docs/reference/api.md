@@ -3,8 +3,6 @@ title: API reference
 description: Public entry points and the main Java API.
 ---
 
-# API reference
-
 This reference lists the public entry points you are expected to start with
 first. The library has a small surface area on purpose: start a node, get a
 server handle, and use the attached client or convenience helpers.

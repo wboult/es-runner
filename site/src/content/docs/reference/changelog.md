@@ -3,9 +3,7 @@ title: Changelog
 description: Release notes and recent changes.
 ---
 
-# Changelog
-
-Release notes are maintained in the repository’s `CHANGELOG.md`.
+Release notes are maintained in the repository's `CHANGELOG.md`.
 
 - Source: `CHANGELOG.md`
 - Follows **Keep a Changelog**

@@ -3,8 +3,6 @@ title: Use shared Gradle test clusters
 description: Reuse one Elasticsearch process across Gradle projects and suites with suite-level namespaces.
 ---
 
-# Use shared Gradle test clusters
-
 ES Runner includes a Gradle plugin for build-scoped shared Elasticsearch
 clusters.
 

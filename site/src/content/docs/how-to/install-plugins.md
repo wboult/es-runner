@@ -3,8 +3,6 @@ title: Install plugins
 description: Install Elasticsearch plugins before startup.
 ---
 
-# Install plugins
-
 ES Runner can install plugins before it starts Elasticsearch. Plugins are installed into the extracted distro.
 
 ## Install a single plugin

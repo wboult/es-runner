@@ -3,8 +3,6 @@ title: Release & versioning policy
 description: How versions are assigned and what changes mean.
 ---
 
-# Release & versioning policy
-
 ES Runner follows **Semantic Versioning (SemVer)**:
 
 - **MAJOR**: breaking changes to public API or behavior

@@ -3,8 +3,6 @@ title: GitHub Actions CI example
 description: Run ES Runner in CI using GitHub Actions.
 ---
 
-# GitHub Actions CI example
-
 This example runs tests and enables distro downloads in GitHub Actions.
 
 ```yaml

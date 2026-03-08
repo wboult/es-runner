@@ -3,8 +3,6 @@ title: Compatibility matrix
 description: Supported and tested versions.
 ---
 
-# Compatibility matrix
-
 This matrix reflects what is **actively tested in CI**. Other combinations may work but are not guaranteed.
 
 ## Core

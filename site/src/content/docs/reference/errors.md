@@ -3,8 +3,6 @@ title: Error messages
 description: Common errors and what they mean.
 ---
 
-# Error messages
-
 This reference lists common `ElasticRunnerException` messages and likely causes.
 
 ## `Distro archive does not exist`
@@ -27,7 +25,7 @@ This reference lists common `ElasticRunnerException` messages and likely causes.
 
 **Fix**:
 - Verify the version exists.
-- Confirm your mirror�s base URL and filename.
+- Confirm your mirror's base URL and filename.
 
 ## `Timed out waiting for Elasticsearch`
 

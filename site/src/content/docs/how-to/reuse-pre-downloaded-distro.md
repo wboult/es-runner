@@ -3,8 +3,6 @@ title: Reuse a pre-downloaded distro
 description: Download once, copy into per-node temp folders, and start multiple nodes.
 ---
 
-# Reuse a pre-downloaded distro
-
 When you want multiple nodes (or repeated test runs) without re-downloading,
 resolve the distro ZIP once into a cache directory, then copy it into isolated
 temp folders for each node.
