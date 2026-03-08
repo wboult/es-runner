@@ -212,17 +212,22 @@ public final class ElasticClient implements Serializable {
                 .header("Content-Type", "application/x-ndjson")
                 .POST(HttpRequest.BodyPublishers.ofString(ndjson))
                 .build();
-        HttpResponse<String> response = httpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        // Bulk requests are long-lived and hit the JDK connection-pool flake seen in CI, so use a fresh client.
+        HttpResponse<String> response = buildHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         return new ElasticResponse(response.statusCode(), response.body(), response.headers().map());
     }
 
     private HttpClient httpClient() {
         if (httpClient == null) {
-            httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
+            httpClient = buildHttpClient();
         }
         return httpClient;
+    }
+
+    private static HttpClient buildHttpClient() {
+        return HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
     }
 
     private static String jsonField(String json, String key) {

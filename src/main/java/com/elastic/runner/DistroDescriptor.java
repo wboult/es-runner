@@ -22,7 +22,20 @@ final class DistroDescriptor {
     }
 
     URI downloadUri(String baseUrl) {
-        String normalized = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
-        return URI.create(normalized + fileName());
+        URI base = URI.create(baseUrl);
+        String path = base.getPath() == null ? "" : base.getPath();
+        String normalizedPath = path.endsWith("/") ? path : path + "/";
+        String downloadPath = normalizedPath + fileName();
+        try {
+            return new URI(
+                    base.getScheme(),
+                    base.getRawAuthority(),
+                    downloadPath,
+                    base.getQuery(),
+                    base.getFragment()
+            );
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid downloadBaseUrl: " + baseUrl, e);
+        }
     }
 }

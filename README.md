@@ -200,6 +200,149 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
 Use `download(true)` to force a re-download even if the archive is present.
 You can override the base URL with `downloadBaseUrl(...)` if you use a mirror.
 
+Supported `downloadBaseUrl(...)` forms:
+
+- `https://mirror.example.com/elasticsearch/`
+- `file:///mnt/elasticsearch-mirror/`
+- `s3://my-bucket/elasticsearch/`
+- `gs://my-bucket/elasticsearch/`
+- `az://myaccount/mycontainer/elasticsearch/`
+
+Common production mirror options:
+
+- Plain `https://` mirrors, including Artifactory/Nexus/proxy endpoints
+- Shared filesystem mirrors via `file://`
+- Signed HTTPS container URLs, such as Azure Blob SAS container URLs
+- Cloud storage URIs backed by installed CLIs for private buckets/containers
+
+Examples:
+
+```java
+ElasticRunnerConfig s3Config = ElasticRunnerConfig.from(builder -> builder
+    .version("9.2.4")
+    .download(true)
+    .downloadBaseUrl("s3://elastic-mirror/elasticsearch/"));
+
+ElasticRunnerConfig gcsConfig = ElasticRunnerConfig.from(builder -> builder
+    .version("9.2.4")
+    .download(true)
+    .downloadBaseUrl("gs://elastic-mirror/elasticsearch/"));
+
+ElasticRunnerConfig azureConfig = ElasticRunnerConfig.from(builder -> builder
+    .version("9.2.4")
+    .download(true)
+    .downloadBaseUrl("az://myaccount/releases/elasticsearch/"));
+
+ElasticRunnerConfig fileMirrorConfig = ElasticRunnerConfig.from(builder -> builder
+    .version("9.2.4")
+    .download(true)
+    .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
+```
+
+### Access configuration
+
+`https://` and `file://` downloads do not need extra tooling. For private cloud
+storage mirrors:
+
+- `s3://`: install the AWS CLI (`aws`). Elastic Runner uses `aws s3 cp`.
+  Configure access with standard AWS settings such as `AWS_PROFILE`,
+  `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+  `AWS_SESSION_TOKEN`, or an attached IAM role.
+- `gs://`: install Google Cloud CLI (`gcloud`) or `gsutil`. Elastic Runner
+  tries `gcloud storage cp` first, then `gsutil cp`. Authenticate with
+  `gcloud auth login` for user credentials or
+  `gcloud auth activate-service-account --key-file=...` for service accounts.
+- `az://`: install `azcopy` (preferred) or Azure CLI (`az`). Elastic Runner
+  tries `azcopy copy` first, then `az storage blob download`.
+  Use `azcopy login`, `azcopy login --identity`, or `az login` for RBAC-based
+  access. Azure CLI fallback also works with
+  `AZURE_STORAGE_CONNECTION_STRING`, `AZURE_STORAGE_KEY`, or
+  `AZURE_STORAGE_SAS_TOKEN`.
+
+If you already have an HTTPS blob/container URL with a shared SAS query, use
+that directly with `downloadBaseUrl(...)`; the runner preserves the query when
+it appends the distro filename.
+
+## Gradle shared test clusters
+
+Elastic Runner also includes a Gradle plugin for build-scoped shared
+Elasticsearch test clusters:
+
+- plugin id: `com.elastic.runner.shared-test-clusters`
+- companion test helper artifact: `com.elastic:elastic-runner-gradle-test-support`
+
+The intended model is:
+
+- define a small number of clusters once in the root build
+- bind suites such as `integrationTest` to those clusters
+- reuse one Elasticsearch process across projects during the build
+- inject a per-suite namespace so parallel suites do not collide
+
+Root build example:
+
+```groovy
+plugins {
+    id 'com.elastic.runner.shared-test-clusters'
+}
+
+elasticTestClusters {
+    clusters {
+        register("integration") {
+            version.set("9.2.4")
+            download.set(true)
+            clusterName.set("shared-it")
+            quiet.set(true)
+        }
+    }
+
+    suites {
+        matchingName("integrationTest") {
+            useCluster("integration")
+            namespaceMode.set(com.elastic.runner.gradle.NamespaceMode.SUITE)
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    testing {
+        suites {
+            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite) {
+                useJUnitJupiter()
+            }
+        }
+    }
+}
+```
+
+Test-side helper example:
+
+```java
+ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
+ElasticClient client = env.client();
+String ordersIndex = env.index("orders");
+
+client.createIndex(ordersIndex);
+client.indexDocument(ordersIndex, "1", "{\"status\":\"new\"}");
+client.refresh(ordersIndex);
+```
+
+Injected system properties:
+
+- `elastic.runner.baseUri`
+- `elastic.runner.httpPort`
+- `elastic.runner.clusterName`
+- `elastic.runner.buildId`
+- `elastic.runner.suiteId`
+- `elastic.runner.namespace`
+- `elastic.runner.resourcePrefix`
+
+See [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
+for the usage guide and
+[docs/gradle-shared-cluster-plugin-design.md](docs/gradle-shared-cluster-plugin-design.md)
+for the design notes.
+
 ## Tests
 
 Unit tests always run. Integration tests require:

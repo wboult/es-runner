@@ -93,47 +93,53 @@ public final class ElasticRunner {
         }
 
         Path logFile = logsDir.resolve("runner.log");
-        Process process = startProcess(homeDir, configDir, config);
+        Path pidFile = versionDir.resolve("es.pid");
+        Path stateFile = versionDir.resolve("state.json");
+        Process process = startProcess(homeDir, configDir, config, pidFile);
         Thread logThread = new Thread(new StreamGobbler(process.getInputStream(), logFile, config.quiet()),
                 "elastic-runner-log");
         logThread.setDaemon(true);
         logThread.start();
 
-        Path pidFile = versionDir.resolve("es.pid");
-        Path stateFile = versionDir.resolve("state.json");
-        writePid(pidFile, process.pid());
+        try {
+            Instant startTime = Instant.now();
+            URI baseUri = URI.create("http://localhost:" + httpPort + "/");
+            HttpClient httpClient = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(2))
+                    .build();
 
-        Instant startTime = Instant.now();
-        URI baseUri = URI.create("http://localhost:" + httpPort + "/");
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(2))
-                .build();
+            waitForReady(httpClient, baseUri, config.startupTimeout(), process, logFile);
 
-        writeState(stateFile, new RunnerState(
-                process.pid(),
-                httpPort,
-                config.clusterName(),
-                version,
-                startTime,
-                versionDir,
-                baseUri.toString()
-        ));
+            long serverPid = readServerPid(pidFile).orElse(process.pid());
 
-        waitForReady(httpClient, baseUri, config.startupTimeout(), process, logFile);
+            writeState(stateFile, new RunnerState(
+                    serverPid,
+                    httpPort,
+                    config.clusterName(),
+                    version,
+                    startTime,
+                    versionDir,
+                    baseUri.toString()
+            ));
 
-        return new ElasticServer(
-                config,
-                process,
-                homeDir,
-                versionDir,
-                logFile,
-                pidFile,
-                stateFile,
-                httpPort,
-                httpClient,
-                startTime,
-                logThread
-        );
+            return new ElasticServer(
+                    config,
+                    process,
+                    homeDir,
+                    versionDir,
+                    logFile,
+                    pidFile,
+                    stateFile,
+                    serverPid,
+                    httpPort,
+                    httpClient,
+                    startTime,
+                    logThread
+            );
+        } catch (RuntimeException e) {
+            cleanupFailedStart(process, pidFile, stateFile, logThread);
+            throw e;
+        }
     }
 
     public static Path resolveDistroZip(ElasticRunnerConfig config) {
@@ -169,33 +175,7 @@ public final class ElasticRunner {
     }
 
     private static void download(URI uri, Path target) {
-        Path temp = target.resolveSibling(target.getFileName() + ".partial");
-        try {
-            HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .followRedirects(HttpClient.Redirect.NORMAL)
-                    .build();
-            HttpRequest request = HttpRequest.newBuilder(uri)
-                    .timeout(Duration.ofMinutes(5))
-                    .GET()
-                    .build();
-            createDirs(target.getParent());
-            HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(temp));
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new ElasticRunnerException("Failed to download distro: " + uri + " (HTTP " + response.statusCode() + ")");
-            }
-            Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new ElasticRunnerException("Failed to download distro from " + uri, e);
-        } finally {
-            try {
-                Files.deleteIfExists(temp);
-            } catch (IOException ignored) {
-            }
-        }
+        DistroDownloader.download(uri, target);
     }
 
     private static int resolvePort(ElasticRunnerConfig config) {
@@ -262,9 +242,13 @@ public final class ElasticRunner {
 
     private static Process startProcess(Path homeDir,
                                         Path configDir,
-                                        ElasticRunnerConfig config) {
+                                        ElasticRunnerConfig config,
+                                        Path pidFile) {
         Path script = homeDir.resolve("bin").resolve(Os.executableName("elasticsearch"));
         List<String> command = Os.commandFor(script);
+        command = new java.util.ArrayList<>(command);
+        command.add("-p");
+        command.add(pidFile.toString());
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.directory(homeDir.toFile());
         builder.redirectErrorStream(true);
@@ -310,15 +294,6 @@ public final class ElasticRunner {
         throw new ElasticRunnerException("Timed out waiting for Elasticsearch. " + logTail);
     }
 
-    private static void writePid(Path pidFile, long pid) {
-        try {
-            Files.createDirectories(pidFile.getParent());
-            Files.writeString(pidFile, Long.toString(pid), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to write PID file.", e);
-        }
-    }
-
     private static void writeState(Path stateFile, RunnerState state) {
         try {
             state.write(stateFile);
@@ -327,11 +302,51 @@ public final class ElasticRunner {
         }
     }
 
+    private static void cleanupFailedStart(Process process,
+                                           Path pidFile,
+                                           Path stateFile,
+                                           Thread logThread) {
+        try {
+            long serverPid = readServerPid(pidFile).orElse(process.pid());
+            ProcessTree.terminate(process, serverPid, Duration.ofSeconds(10));
+            if (logThread.isAlive()) {
+                logThread.join(TimeUnit.SECONDS.toMillis(2));
+            }
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        } finally {
+            deleteIfExists(pidFile);
+            deleteIfExists(stateFile);
+        }
+    }
+
+    private static java.util.OptionalLong readServerPid(Path pidFile) {
+        if (!Files.exists(pidFile)) {
+            return java.util.OptionalLong.empty();
+        }
+        try {
+            String value = Files.readString(pidFile, StandardCharsets.UTF_8).trim();
+            if (value.isEmpty()) {
+                return java.util.OptionalLong.empty();
+            }
+            return java.util.OptionalLong.of(Long.parseLong(value));
+        } catch (IOException | NumberFormatException ignored) {
+            return java.util.OptionalLong.empty();
+        }
+    }
+
     private static void createDirs(Path dir) {
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
             throw new ElasticRunnerException("Failed to create directory: " + dir, e);
+        }
+    }
+
+    private static void deleteIfExists(Path file) {
+        try {
+            Files.deleteIfExists(file);
+        } catch (IOException ignored) {
         }
     }
 

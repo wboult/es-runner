@@ -1,4 +1,6 @@
 rootProject.name = 'elastic-runner'
+include('elastic-runner-gradle-plugin')
+include('elastic-runner-gradle-test-support')
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)

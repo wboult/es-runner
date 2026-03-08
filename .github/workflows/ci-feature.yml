@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - "feature/**"
+      - "codex/**"
   workflow_dispatch:
     inputs:
       versions:
-        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","8.9.10"])'
+        description: 'JSON array of Elasticsearch versions (e.g. ["9.2.4","8.9.2"])'
         required: false
-        default: '["9.2.4","8.9.10"]'
+        default: '["9.2.4","8.9.2"]'
 
 jobs:
   resolve-matrix:
@@ -23,9 +24,9 @@ jobs:
           VERSIONS: ${{ inputs.versions }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            python -c 'import json, os; raw=os.environ.get("VERSIONS"); output=(raw if raw and "\"" in raw else json.dumps([i.strip() for i in raw.strip("[]").split(",") if i.strip()])) if raw else json.dumps(["9.2.4","8.9.10"]); print(f"list={output}")' >> "$GITHUB_OUTPUT"
+            python -c 'import json, os; raw=os.environ.get("VERSIONS"); output=(raw if raw and "\"" in raw else json.dumps([i.strip() for i in raw.strip("[]").split(",") if i.strip()])) if raw else json.dumps(["9.2.4","8.9.2"]); print(f"list={output}")' >> "$GITHUB_OUTPUT"
           else
-            echo 'list=["9.2.4","8.9.10"]' >> "$GITHUB_OUTPUT"
+            echo 'list=["9.2.4","8.9.2"]' >> "$GITHUB_OUTPUT"
           fi
 
   test:
@@ -64,12 +65,28 @@ jobs:
           path: distros
           key: es-distro-${{ runner.os }}-${{ matrix.es_version }}
 
+      - name: Prime local Elasticsearch distro
+        run: |
+          mkdir -p distros
+          archive="distros/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz"
+          if [ ! -f "$archive" ]; then
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz" -o "$archive"
+          fi
+
       - name: Run tests
         env:
           ES_VERSION: ${{ matrix.es_version }}
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
-        run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew test -PscalaVersion=${{ matrix.scala_spark.scala }} -PsparkVersion=${{ matrix.scala_spark.spark }}
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          :test
+          :elastic-runner-gradle-plugin:test
+          :elastic-runner-gradle-test-support:test
+          -Djunit.jupiter.excludeTags=stress
+          -PscalaVersion=${{ matrix.scala_spark.scala }}
+          -PsparkVersion=${{ matrix.scala_spark.spark }}
 
   scala3-test:
     runs-on: ubuntu-latest

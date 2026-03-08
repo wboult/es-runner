@@ -1,7 +1,9 @@
 package com.elastic.runner;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -12,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ElasticRunnerBulkIntegrationTest {
 
+    @Tag("stress")
     @Test
     void indexesLargeDatasetAndCounts() throws Exception {
         String version = System.getenv().getOrDefault("ES_VERSION", "9.2.4");
@@ -29,9 +32,19 @@ class ElasticRunnerBulkIntegrationTest {
         try (ElasticServer server = ElasticRunner.start(config)) {
             assertTrue(server.ping());
             server.waitForYellow(Duration.ofSeconds(120));
+            Thread.sleep(Duration.ofSeconds(5).toMillis());
 
             String index = "bulk-test";
-            server.createIndex(index);
+            server.createIndex(index, """
+                    {
+                      "settings": {
+                        "index": {
+                          "number_of_replicas": 0,
+                          "refresh_interval": "-1"
+                        }
+                      }
+                    }
+                    """);
 
             int total = 100_000;
             int batchSize = 250;
@@ -52,7 +65,7 @@ class ElasticRunnerBulkIntegrationTest {
                             .append(random.nextInt(10_000))
                             .append("\"}\n");
                 }
-                String response = server.bulk(ndjson.toString());
+                String response = bulkOrFail(server, ndjson.toString());
                 assertTrue(response.contains("\"errors\":false"));
             }
 
@@ -61,6 +74,23 @@ class ElasticRunnerBulkIntegrationTest {
             String count = JsonUtils.parseFlatJson(countJson).get("count");
             assertEquals("100000", count);
         }
+    }
+
+    private static String bulkOrFail(ElasticServer server, String ndjson) throws IOException, InterruptedException {
+        IOException lastFailure = null;
+        for (int attempt = 1; attempt <= 5; attempt++) {
+            try {
+                return server.bulk(ndjson);
+            } catch (IOException e) {
+                lastFailure = e;
+                if (attempt == 5) {
+                    break;
+                }
+                server.waitForYellow(Duration.ofSeconds(15));
+                Thread.sleep(Duration.ofSeconds(attempt * 2L).toMillis());
+            }
+        }
+        throw new IOException("Bulk indexing failed. Elasticsearch log tail:\n" + server.logTail(80), lastFailure);
     }
 
 }

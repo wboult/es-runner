@@ -133,6 +133,13 @@ final class IntegrationTestSupport {
         try {
             DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
             URI uri = descriptor.downloadUri(baseUrl);
+            String scheme = uri.getScheme();
+            if ("file".equalsIgnoreCase(scheme)) {
+                return Files.exists(Path.of(uri));
+            }
+            if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                return true;
+            }
             HttpRequest request = HttpRequest.newBuilder(uri)
                     .method("HEAD", HttpRequest.BodyPublishers.noBody())
                     .timeout(Duration.ofSeconds(10))

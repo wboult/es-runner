@@ -20,6 +20,7 @@ public final class ElasticServer implements AutoCloseable {
     private final Path logFile;
     private final Path pidFile;
     private final Path stateFile;
+    private final long serverPid;
     private final int httpPort;
     private final URI baseUri;
     private final HttpClient httpClient;
@@ -34,6 +35,7 @@ public final class ElasticServer implements AutoCloseable {
                   Path logFile,
                   Path pidFile,
                   Path stateFile,
+                  long serverPid,
                   int httpPort,
                   HttpClient httpClient,
                   Instant startTime,
@@ -45,6 +47,7 @@ public final class ElasticServer implements AutoCloseable {
         this.logFile = Objects.requireNonNull(logFile, "logFile");
         this.pidFile = Objects.requireNonNull(pidFile, "pidFile");
         this.stateFile = Objects.requireNonNull(stateFile, "stateFile");
+        this.serverPid = serverPid;
         this.httpPort = httpPort;
         this.baseUri = URI.create("http://localhost:" + httpPort + "/");
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
@@ -90,11 +93,11 @@ public final class ElasticServer implements AutoCloseable {
     }
 
     public boolean isRunning() {
-        return process.isAlive();
+        return ProcessTree.isAlive(process, serverPid);
     }
 
     public long pid() {
-        return process.pid();
+        return serverPid;
     }
 
     public Instant startTime() {
@@ -257,7 +260,7 @@ public final class ElasticServer implements AutoCloseable {
     public RunnerState state() {
         String version = config.version() != null ? config.version() : DistroVersion.fromZip(config.distroZip());
         return new RunnerState(
-                process.pid(),
+                serverPid,
                 httpPort,
                 config.clusterName(),
                 version,
@@ -280,7 +283,7 @@ public final class ElasticServer implements AutoCloseable {
     }
 
     public StopResult stopWithResult(Duration timeout) {
-        boolean wasRunning = process.isAlive();
+        boolean wasRunning = isRunning();
         if (!wasRunning) {
             cleanup();
             stopLogThread(Duration.ofSeconds(1));
@@ -288,19 +291,12 @@ public final class ElasticServer implements AutoCloseable {
         }
 
         Instant waitStart = Instant.now();
-        boolean graceful = false;
-        boolean forced = false;
-        process.destroy();
+        boolean graceful;
+        boolean forced;
         try {
-            if (process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
-                graceful = true;
-            } else {
-                process.destroyForcibly();
-                forced = true;
-                process.waitFor(5, TimeUnit.SECONDS);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            ProcessTree.Termination termination = ProcessTree.terminate(process, serverPid, timeout);
+            graceful = termination.graceful();
+            forced = termination.forced();
         } finally {
             cleanup();
             stopLogThread(Duration.ofSeconds(2));
