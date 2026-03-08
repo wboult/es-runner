@@ -1,10 +1,13 @@
 rootProject.name = 'es-runner'
 include('es-runner-gradle-plugin')
 include('es-runner-gradle-test-support')
+include('es-runner-embedded')
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        // Elasticsearch internal artifacts (e.g. transport-netty4) live here, not on Maven Central.
+        maven { url = "https://artifacts.elastic.co/maven/" }
         mavenCentral()
     }
 }

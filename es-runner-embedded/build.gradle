@@ -1,0 +1,84 @@
+/**
+ * Experimental: Elasticsearch 8.1.1 embedded in-process runner.
+ *
+ * Strategy: "filesystem-modules" — esHome points at an extracted ES distribution.
+ * Node loads modules (analysis-common, transport-netty4, …) directly from
+ * esHome/modules/ on the filesystem. No module jars need to be on the classpath.
+ *
+ * Key dep: org.elasticsearch:elasticsearch:8.1.1 — published to artifacts.elastic.co/maven/.
+ * The Elastic Maven repo is declared in settings.gradle (centralised repository management).
+ *
+ * Tests require ES_EMBEDDED_HOME pointing at an extracted 8.1.x distribution.
+ * Export ES_EMBEDDED_HOME=/path/to/elasticsearch-8.1.1  (NOT inside a zip — extracted dir)
+ */
+plugins {
+    id 'java-library'
+}
+
+group = 'io.github.wboult'
+version = '0.1.0'
+description = 'Experimental: run Elasticsearch 8.1.x embedded inside the current JVM.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+// We deliberately do NOT pull in the root project's Scala/Spark test machinery.
+dependencies {
+    // Core ES server — provides Node, Settings, Environment, InternalSettingsPreparer,
+    // HttpServerTransport (interface), Plugin, etc.
+    // The heavy module jars (analysis-common, transport-netty4, x-pack-core, …) are
+    // NOT needed on the Gradle classpath because they are loaded from esHome/modules/
+    // by the Node's own PluginsService at runtime.
+    api("org.elasticsearch:elasticsearch:8.1.1")
+
+    // JUnit 5 for tests
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+// ES 8.x requires many --add-opens to function on Java 17.
+// These mirror the flags that elasticsearch-8.x/config/jvm.options sets.
+def esJvmArgs = [
+        // ES core internals
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio.channels=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio.file=ALL-UNNAMED",
+        "--add-opens=java.base/java.time=ALL-UNNAMED",
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+        "--add-opens=java.management/sun.management=ALL-UNNAMED",
+        "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
+        "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
+
+        // Suppress log4j JMX registration (causes issues in test JVMs)
+        "-Dlog4j2.disable.jmx=true",
+
+        // Suppress ES bootstrap checks that are irrelevant for embedded/dev use
+        "-Des.enforce.bootstrap.checks=false",
+
+        // Mark this as an integration-test distribution so ES skips some
+        // production-mode assertions (mirrors what ESSingleNodeTestCase does)
+        "-Des.distribution.type=integ_test_zip",
+
+        // Prevent ES from locking memory (not meaningful inside a test JVM)
+        "-Des.bootstrap.memory_lock.check=false",
+]
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    jvmArgs(*esJvmArgs)
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = false
+    }
+}
