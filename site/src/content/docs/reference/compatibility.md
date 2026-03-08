@@ -19,9 +19,8 @@ This matrix reflects what is **actively tested in CI**. Other combinations may w
 
 | Scala | Spark | Status |
 | --- | --- | --- |
-| 2.12.21 | 3.5.3 | tested |
-| 2.13.18 | 3.5.3 | tested |
-| 2.13.18 | 4.0.0 | tested |
+| 2.12.21 | 3.5.8 | tested |
+| 2.13.18 | 3.5.8 | tested |
 | 2.13.18 | 4.1.1 | tested |
 
 ## Notes
