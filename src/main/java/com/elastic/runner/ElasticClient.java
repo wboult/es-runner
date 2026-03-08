@@ -217,7 +217,7 @@ public final class ElasticClient implements Serializable {
         return new ElasticResponse(response.statusCode(), response.body(), response.headers().map());
     }
 
-    private HttpClient httpClient() {
+    private synchronized HttpClient httpClient() {
         if (httpClient == null) {
             httpClient = buildHttpClient();
         }

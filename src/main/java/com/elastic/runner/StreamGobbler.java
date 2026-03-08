@@ -35,7 +35,8 @@ final class StreamGobbler implements Runnable {
             if (!quiet) {
                 System.out.flush();
             }
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            System.err.println("[elastic-runner] StreamGobbler error writing to " + logFile + ": " + e.getMessage());
         }
     }
 }
