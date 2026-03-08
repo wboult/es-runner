@@ -21,16 +21,16 @@ class ElasticRunnerConfigTest {
     @Test
     void withSettingIsPure() {
         ElasticRunnerConfig base = ElasticRunnerConfig.defaults();
-        ElasticRunnerConfig updated = base.withSetting("cluster.name", "unit-test");
+        ElasticRunnerConfig updated = base.toBuilder().setting("cluster.name", "unit-test").build();
 
         assertFalse(base.settings().containsKey("cluster.name"));
         assertEquals("unit-test", updated.settings().get("cluster.name"));
     }
 
     @Test
-    void configureAppliesChanges() {
+    void toBuilderAppliesChanges() {
         ElasticRunnerConfig config = ElasticRunnerConfig.defaults()
-                .configure(c -> c.withDistroZip(Path.of("es.zip")).withClusterName("dsl"));
+                .toBuilder().distroZip(Path.of("es.zip")).clusterName("dsl").build();
 
         assertEquals("dsl", config.clusterName());
         assertEquals(Path.of("es.zip"), config.distroZip());

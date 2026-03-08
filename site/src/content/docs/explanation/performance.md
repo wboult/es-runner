@@ -1,4 +1,4 @@
----
+﻿---
 title: Performance guidance
 description: Tuning startup time and runtime performance.
 ---
@@ -10,7 +10,7 @@ description: Tuning startup time and runtime performance.
 Elasticsearch startup and indexing speed are sensitive to heap size. Use:
 
 ```java
-.withHeap("1g")
+.heap("1g")
 ```
 
 For small local tests, `256m` is often enough. For indexing-heavy tests, increase heap.
@@ -25,7 +25,7 @@ For small local tests, `256m` is often enough. For indexing-heavy tests, increas
 If startup is slow (cold downloads, slow disks), increase the timeout:
 
 ```java
-.withStartupTimeout(Duration.ofSeconds(180))
+.startupTimeout(Duration.ofSeconds(180))
 ```
 
 ## Multiple servers
@@ -37,3 +37,4 @@ If startup is slow (cold downloads, slow disks), increase the timeout:
 
 - [Configuration reference](../../reference/configuration/)
 - [Troubleshooting](../../how-to/troubleshooting/)
+

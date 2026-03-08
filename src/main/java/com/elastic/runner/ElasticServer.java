@@ -27,6 +27,7 @@ public final class ElasticServer implements AutoCloseable {
     private final ElasticClient client;
     private final Instant startTime;
     private final Thread logThread;
+    private final Thread shutdownHook;
 
     ElasticServer(ElasticRunnerConfig config,
                   Process process,
@@ -54,6 +55,19 @@ public final class ElasticServer implements AutoCloseable {
         this.client = new ElasticClient(baseUri, httpClient);
         this.startTime = Objects.requireNonNull(startTime, "startTime");
         this.logThread = Objects.requireNonNull(logThread, "logThread");
+
+        this.shutdownHook = new Thread(() -> {
+            if (ProcessTree.isAlive(process, serverPid)) {
+                try {
+                    ProcessTree.terminate(process, serverPid, Duration.ofSeconds(10));
+                } catch (RuntimeException ignored) {
+                    // Best effort during JVM shutdown.
+                } finally {
+                    cleanup();
+                }
+            }
+        }, "elastic-runner-shutdown");
+        Runtime.getRuntime().addShutdownHook(this.shutdownHook);
     }
 
     public ElasticRunnerConfig config() {
@@ -116,7 +130,7 @@ public final class ElasticServer implements AutoCloseable {
         return client.get("/");
     }
 
-    public String info() throws IOException, InterruptedException {
+    public ClusterInfoResponse info() throws IOException, InterruptedException {
         return client.info();
     }
 
@@ -128,7 +142,7 @@ public final class ElasticServer implements AutoCloseable {
         return client.version();
     }
 
-    public String clusterHealth() throws IOException, InterruptedException {
+    public ClusterHealthResponse clusterHealth() throws IOException, InterruptedException {
         return client.clusterHealth();
     }
 
@@ -283,6 +297,12 @@ public final class ElasticServer implements AutoCloseable {
     }
 
     public StopResult stopWithResult(Duration timeout) {
+        try {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (IllegalStateException ignored) {
+            // JVM is shutting down
+        }
+
         boolean wasRunning = isRunning();
         if (!wasRunning) {
             cleanup();

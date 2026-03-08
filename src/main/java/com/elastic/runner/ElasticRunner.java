@@ -12,8 +12,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -24,11 +26,11 @@ public final class ElasticRunner {
     }
 
     public static ElasticServer start(Path distroZip) {
-        return start(ElasticRunnerConfig.defaults().withDistroZip(distroZip));
+        return start(ElasticRunnerConfig.defaults().toBuilder().distroZip(distroZip).build());
     }
 
     public static ElasticServer start(String version) {
-        return start(ElasticRunnerConfig.defaults().withVersion(version));
+        return start(ElasticRunnerConfig.defaults().toBuilder().version(version).build());
     }
 
     public static ElasticServer start(UnaryOperator<ElasticRunnerConfig> configurer) {
@@ -82,11 +84,11 @@ public final class ElasticRunner {
         createDirs(dataDir);
         createDirs(logsDir);
 
-        int httpPort = resolvePort(config);
+        String httpPortSetting = resolveHttpPortSetting(config);
 
         Path configDir = homeDir.resolve("config");
         Path configFile = configDir.resolve("elasticsearch.yml");
-        writeConfig(config, httpPort, dataDir, logsDir, configFile);
+        writeConfig(config, httpPortSetting, dataDir, logsDir, configFile);
 
         if (!config.plugins().isEmpty()) {
             installPlugins(config.plugins(), homeDir, logsDir, config.quiet());
@@ -102,8 +104,11 @@ public final class ElasticRunner {
         logThread.start();
 
         try {
+            int actualPort = config.httpPort() > 0
+                    ? config.httpPort()
+                    : waitForHttpPortBinding(process, logFile, config.startupTimeout());
             Instant startTime = Instant.now();
-            URI baseUri = URI.create("http://localhost:" + httpPort + "/");
+            URI baseUri = URI.create("http://localhost:" + actualPort + "/");
             HttpClient httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(2))
                     .build();
@@ -114,7 +119,7 @@ public final class ElasticRunner {
 
             writeState(stateFile, new RunnerState(
                     serverPid,
-                    httpPort,
+                    actualPort,
                     config.clusterName(),
                     version,
                     startTime,
@@ -131,7 +136,7 @@ public final class ElasticRunner {
                     pidFile,
                     stateFile,
                     serverPid,
-                    httpPort,
+                    actualPort,
                     httpClient,
                     startTime,
                     logThread
@@ -178,20 +183,18 @@ public final class ElasticRunner {
         DistroDownloader.download(uri, target);
     }
 
-    private static int resolvePort(ElasticRunnerConfig config) {
+    static String resolveHttpPortSetting(ElasticRunnerConfig config) {
         if (config.httpPort() > 0) {
-            return config.httpPort();
+            return Integer.toString(config.httpPort());
         }
-        int port = PortPicker.pick(config.portRangeStart(), config.portRangeEnd());
-        if (port <= 0) {
-            throw new ElasticRunnerException("No free port found in range "
-                    + config.portRangeStart() + "-" + config.portRangeEnd());
+        if (config.portRangeStart() == config.portRangeEnd()) {
+            return Integer.toString(config.portRangeStart());
         }
-        return port;
+        return config.portRangeStart() + "-" + config.portRangeEnd();
     }
 
     private static void writeConfig(ElasticRunnerConfig config,
-                                    int httpPort,
+                                    String httpPortSetting,
                                     Path dataDir,
                                     Path logsDir,
                                     Path configFile) {
@@ -199,7 +202,7 @@ public final class ElasticRunner {
         settings.putIfAbsent("cluster.name", config.clusterName());
         settings.put("path.data", dataDir.toString());
         settings.put("path.logs", logsDir.toString());
-        settings.put("http.port", Integer.toString(httpPort));
+        settings.put("http.port", httpPortSetting);
         try {
             ConfigWriter.write(configFile, settings);
         } catch (IOException e) {
@@ -348,6 +351,54 @@ public final class ElasticRunner {
             Files.deleteIfExists(file);
         } catch (IOException ignored) {
         }
+    }
+
+    private static int waitForHttpPortBinding(Process process, Path logFile, Duration timeout) {
+        Instant deadline = Instant.now().plus(timeout);
+        while (Instant.now().isBefore(deadline)) {
+            if (!process.isAlive()) {
+                String logTail = LogTail.read(logFile, 20);
+                throw new ElasticRunnerException("Elasticsearch exited unexpectedly before binding HTTP port: " + logTail);
+            }
+            try {
+                if (Files.exists(logFile)) {
+                    OptionalInt port = findHttpPublishPort(Files.readAllLines(logFile));
+                    if (port.isPresent()) {
+                        return port.getAsInt();
+                    }
+                }
+            } catch (IOException ignored) {
+            }
+            sleep(500);
+        }
+        String logTail = LogTail.read(logFile, 20);
+        throw new ElasticRunnerException("Timed out waiting for HTTP port bind: " + logTail);
+    }
+
+    static OptionalInt findHttpPublishPort(List<String> lines) {
+        java.util.regex.Pattern portPattern = java.util.regex.Pattern.compile("publish_address \\{[^}]*:(\\d+)\\}");
+        for (int i = lines.size() - 1; i >= 0; i--) {
+            String line = lines.get(i);
+            if (!looksLikeHttpPublishAddress(line)) {
+                continue;
+            }
+            java.util.regex.Matcher matcher = portPattern.matcher(line);
+            if (matcher.find()) {
+                return OptionalInt.of(Integer.parseInt(matcher.group(1)));
+            }
+        }
+        return OptionalInt.empty();
+    }
+
+    private static boolean looksLikeHttpPublishAddress(String line) {
+        if (!line.contains("publish_address")) {
+            return false;
+        }
+        if (line.contains("HttpServerTransport")) {
+            return true;
+        }
+        String lower = line.toLowerCase(Locale.ROOT);
+        return lower.contains("http") && lower.contains("bound_addresses");
     }
 
     private static void sleep(long millis) {

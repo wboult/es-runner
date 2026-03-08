@@ -70,26 +70,26 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
 
     private ElasticRunnerConfig toConfig() {
         Params params = getParameters();
-        ElasticRunnerConfig config = ElasticRunnerConfig.defaults()
-                .withDistrosDir(Path.of(params.getDistrosDir().get()))
-                .withDownload(params.getDownload().get())
-                .withDownloadBaseUrl(params.getDownloadBaseUrl().get())
-                .withWorkDir(Path.of(params.getWorkDir().get()))
-                .withClusterName(params.getClusterName().get())
-                .withHttpPort(params.getHttpPort().get())
-                .withPortRange(params.getPortRangeStart().get(), params.getPortRangeEnd().get())
-                .withHeap(params.getHeap().get())
-                .withStartupTimeout(Duration.ofMillis(params.getStartupTimeoutMillis().get()))
-                .withShutdownTimeout(Duration.ofMillis(params.getShutdownTimeoutMillis().get()))
-                .withSettings(params.getSettings().get())
-                .withPlugins(params.getPlugins().get())
-                .withQuiet(params.getQuiet().get());
+        ElasticRunnerConfig.Builder builder = ElasticRunnerConfig.defaults().toBuilder()
+                .distrosDir(Path.of(params.getDistrosDir().get()))
+                .download(params.getDownload().get())
+                .downloadBaseUrl(params.getDownloadBaseUrl().get())
+                .workDir(Path.of(params.getWorkDir().get()))
+                .clusterName(params.getClusterName().get())
+                .httpPort(params.getHttpPort().get())
+                .portRange(params.getPortRangeStart().get(), params.getPortRangeEnd().get())
+                .heap(params.getHeap().get())
+                .startupTimeout(Duration.ofMillis(params.getStartupTimeoutMillis().get()))
+                .shutdownTimeout(Duration.ofMillis(params.getShutdownTimeoutMillis().get()))
+                .settings(params.getSettings().get())
+                .plugins(params.getPlugins().get())
+                .quiet(params.getQuiet().get());
         if (params.getDistroZip().isPresent() && !params.getDistroZip().get().isBlank()) {
-            config = config.withDistroZip(Path.of(params.getDistroZip().get()));
+            builder.distroZip(Path.of(params.getDistroZip().get()));
         }
         if (params.getVersion().isPresent() && !params.getVersion().get().isBlank()) {
-            config = config.withVersion(params.getVersion().get());
+            builder.version(params.getVersion().get());
         }
-        return config;
+        return builder.build();
     }
 }

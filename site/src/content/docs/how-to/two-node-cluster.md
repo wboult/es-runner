@@ -32,7 +32,7 @@ ElasticServer node0 = startNode(sharedZip, clusterName, "node-0", 9200, 9300, ma
 ElasticServer node1 = startNode(sharedZip, clusterName, "node-1", 9201, 9301, masterNodes, seedHosts);
 
 try {
-    System.out.println(node0.client().clusterHealth());
+    System.out.println(node0.client().clusterHealth().status());
 } finally {
     node1.close();
     node0.close();

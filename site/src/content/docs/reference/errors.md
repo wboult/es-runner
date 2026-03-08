@@ -1,4 +1,4 @@
----
+ï»¿---
 title: Error messages
 description: Common errors and what they mean.
 ---
@@ -27,7 +27,7 @@ This reference lists common `ElasticRunnerException` messages and likely causes.
 
 **Fix**:
 - Verify the version exists.
-- Confirm your mirror’s base URL and filename.
+- Confirm your mirrorï¿½s base URL and filename.
 
 ## `Timed out waiting for Elasticsearch`
 
@@ -46,13 +46,14 @@ This reference lists common `ElasticRunnerException` messages and likely causes.
 - Inspect `server.logTail()`.
 - Check config errors, port collisions, or permissions.
 
-## `No free port found in range`
+## `Timed out waiting for HTTP port bind`
 
-**Meaning**: No available HTTP port was found in the configured range.
+**Meaning**: Elasticsearch did not finish binding its HTTP listener before `startupTimeout`.
 
 **Fix**:
-- Expand the range with `.portRange(start, end)`.
-- Stop other processes using those ports.
+- Increase `startupTimeout`.
+- Use a wider `.portRange(start, end)` if the current range is saturated.
+- Inspect `runner.log` to confirm which address Elasticsearch tried to publish.
 
 ## Where to look for logs
 
@@ -68,3 +69,4 @@ Use `server.logTail()` to see recent lines quickly.
 
 - [Troubleshooting](../../how-to/troubleshooting/)
 - [Configuration reference](../configuration/)
+

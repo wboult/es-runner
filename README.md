@@ -1,8 +1,9 @@
 # Elastic Runner
 
-Local Elasticsearch distribution runner intended for tests and offline tooling.
-It launches an Elasticsearch ZIP distribution in a separate process, waits for
-readiness, and provides a Java API for interaction.
+The robust, zero-friction local Elasticsearch distribution runner tailored for integration tests and offline tooling. 
+Perfect for CI/CD pipelines without Docker-in-Docker capabilities, bare-metal build nodes, or environments where Testcontainers isn't viable.
+
+It launches a real Elasticsearch ZIP distribution in an isolated OS process, auto-allocates HTTP ports safely, ensures process cleanup via JVM shutdown hooks, and provides a polished, strongly-typed Java API for readiness checks and cluster interaction.
 
 Documentation: https://wboult.github.io/elastic-runner/
 
@@ -181,10 +182,21 @@ static ElasticServer startNode(Path sharedZip,
 
 ## Design
 
-- Functional-ish configuration: immutable config object with `withX` methods,
-  plus a builder DSL for Java/Scala/Kotlin.
-- External process: uses the official ES distribution, not embedded.
-- API surface: simple HTTP helpers plus lifecycle control.
+- **Builder configuration**: Pure builder architecture designed for maximum IDE discoverability and API clarity, with built-in Kotlin/Scala DSLs.
+- **External process**: Launches the official ES distribution in a separate, fully-isolated process (not embedded), preventing classpath pollution.
+- **API surface**: Intuitive HTTP helpers, strongly-typed responses, and reliable lifecycle control using JVM shutdown hooks to prevent orphaned processes.
+
+## Gradle Plugin Integration (Incubating)
+
+For projects using Gradle, we provide a zero-config test setup plugin:
+
+```kotlin
+plugins {
+    id("com.elastic.runner") version "0.1.0"
+}
+```
+
+This plugin automatically handles downloading Elasticsearch, managing the process lifecycle around your tests, and exposing the cluster URI to your `Test` tasks via system properties.
 
 ## Official distro downloads
 

@@ -1,4 +1,4 @@
----
+ï»¿---
 title: Release & versioning policy
 description: How versions are assigned and what changes mean.
 ---
@@ -11,12 +11,12 @@ Elastic Runner follows **Semantic Versioning (SemVer)**:
 - **MINOR**: new features, backward compatible
 - **PATCH**: bug fixes and internal improvements
 
-## What is “public API”?
+## What is ï¿½public APIï¿½?
 
 Public API includes:
 
 - `ElasticRunner`, `ElasticRunnerConfig`, `ElasticServer`, `ElasticClient`
-- The builder DSL and `withX(...)` methods
+- The builder DSL (`ElasticRunnerConfig.defaults().toBuilder()...build()`)
 - Documented behavior and defaults
 
 Anything not documented may change without notice.
@@ -40,3 +40,4 @@ Anything not documented may change without notice.
 - [Changelog](../changelog/)
 - [API stability and deprecations](../../explanation/api-stability/)
 - [Compatibility matrix](../compatibility/)
+
