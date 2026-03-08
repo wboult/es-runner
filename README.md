@@ -78,6 +78,7 @@ The intended easy path is:
 - `ElasticRunnerConfig.from(builder -> ...)`
 - `ElasticServer` for lifecycle plus convenience methods
 - `ElasticClient` for direct HTTP-oriented operations
+- `es-runner-java-client` when you want the official Elasticsearch Java API Client
 
 If you need explicit shutdown details:
 
@@ -91,6 +92,62 @@ try {
     System.out.println(server.logTail());
 }
 ```
+
+## Official Java API Client
+
+If you want the standard typed Java client instead of the small built-in
+HTTP wrapper, use the optional adapter artifact:
+
+- `io.github.wboult:es-runner-java-client`
+
+Gradle:
+
+```groovy
+testImplementation("io.github.wboult:es-runner-java-client:0.1.0")
+```
+
+Maven:
+
+```xml
+<dependency>
+  <groupId>io.github.wboult</groupId>
+  <artifactId>es-runner-java-client</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
+
+Example:
+
+```java
+import io.github.wboult.esrunner.ElasticRunner;
+import io.github.wboult.esrunner.ElasticServer;
+import io.github.wboult.esrunner.javaclient.ElasticJavaClients;
+import io.github.wboult.esrunner.javaclient.ManagedElasticsearchClient;
+
+try (ElasticServer server = ElasticRunner.start(Paths.get("elasticsearch-9.3.1-windows-x86_64.zip"));
+     ManagedElasticsearchClient managed = ElasticJavaClients.create(server)) {
+    String clusterName = managed.client().info().clusterName();
+    System.out.println(clusterName);
+}
+```
+
+You can customize the underlying official client setup for auth, headers,
+timeouts, or other REST client builder options:
+
+```java
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
+
+try (ManagedElasticsearchClient managed = ElasticJavaClients.create(server, builder -> builder
+        .customizeRestClientBuilder(restClient -> restClient.setDefaultHeaders(new Header[] {
+            new BasicHeader("Authorization", "ApiKey test-key")
+        })))) {
+    System.out.println(managed.client().info().version().number());
+}
+```
+
+See [docs/official-java-client.md](docs/official-java-client.md) for the full
+usage notes.
 
 ## Mirrors and private distros
 
@@ -192,6 +249,7 @@ Examples and deeper guides live in:
 Useful starting points:
 
 - [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
+- [docs/official-java-client.md](docs/official-java-client.md)
 - [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md)
 - [site/src/content/docs/tutorials/getting-started.md](site/src/content/docs/tutorials/getting-started.md)
 - [site/src/content/docs/reference/api.md](site/src/content/docs/reference/api.md)
