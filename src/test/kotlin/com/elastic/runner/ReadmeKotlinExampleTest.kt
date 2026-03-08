@@ -24,7 +24,7 @@ class ReadmeKotlinExampleTest {
         val server = ElasticRunner.start(config)
         try {
             val client = server.client()
-            assertTrue(client.clusterHealth().contains("\"status\""))
+            assertTrue(client.clusterHealth().status() != "")
             assertTrue(client.version().startsWith(version.substringBefore('.') + "."))
         } finally {
             server.close()

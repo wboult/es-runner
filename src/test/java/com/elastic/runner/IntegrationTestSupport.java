@@ -30,32 +30,33 @@ final class IntegrationTestSupport {
         Path distrosDir = Path.of(System.getenv().getOrDefault("ES_DISTROS_DIR", "distros"));
         String baseUrl = System.getenv("ES_DISTRO_BASE_URL");
 
-        ElasticRunnerConfig base = ElasticRunnerConfig.defaults()
-                .withWorkDir(workDir)
-                .withClusterName(clusterName)
-                .withHeap(heap)
-                .withStartupTimeout(startupTimeout)
-                .withQuiet(quiet);
+        ElasticRunnerConfig base = ElasticRunnerConfig.defaults().toBuilder()
+                .workDir(workDir)
+                .clusterName(clusterName)
+                .heap(heap)
+                .startupTimeout(startupTimeout)
+                .quiet(quiet)
+                .build();
 
         if (zipPath != null && !zipPath.isBlank()) {
             Path zip = Path.of(zipPath);
             Assumptions.assumeTrue(Files.exists(zip), "Elasticsearch distro ZIP not found");
-            return base.withDistroZip(zip);
+            return base.toBuilder().distroZip(zip).build();
         }
 
         DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
         Path localZip = distrosDir.resolve(descriptor.fileName());
         if (Files.exists(localZip)) {
-            return base.withDistroZip(localZip);
+            return base.toBuilder().distroZip(localZip).build();
         }
 
         if (download) {
             assumeDownloadAvailable(version, baseUrl);
-            ElasticRunnerConfig config = base.withVersion(version)
-                    .withDistrosDir(distrosDir)
-                    .withDownload(true);
+            ElasticRunnerConfig config = base.toBuilder().version(version)
+                    .distrosDir(distrosDir)
+                    .download(true).build();
             if (baseUrl != null && !baseUrl.isBlank()) {
-                config = config.withDownloadBaseUrl(baseUrl);
+                config = config.toBuilder().downloadBaseUrl(baseUrl).build();
             }
             return config;
         }

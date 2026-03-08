@@ -59,33 +59,38 @@ public final class ElasticClient implements Serializable {
         return get("/");
     }
 
-    public String info() throws IOException, InterruptedException {
-        return root();
+    public ClusterInfoResponse info() throws IOException, InterruptedException {
+        return ClusterInfoResponse.fromJson(root());
     }
 
     public String clusterName() throws IOException, InterruptedException {
-        return jsonField(info(), "cluster_name");
+        return info().clusterName();
     }
 
     public String version() throws IOException, InterruptedException {
-        return jsonField(info(), "number");
+        return info().versionNumber();
     }
 
-    public String clusterHealth() throws IOException, InterruptedException {
-        return get("/_cluster/health");
+    public ClusterHealthResponse clusterHealth() throws IOException, InterruptedException {
+        return ClusterHealthResponse.fromJson(get("/_cluster/health"));
     }
 
     public String clusterHealthStatus() throws IOException, InterruptedException {
-        return jsonField(clusterHealth(), "status");
+        return clusterHealth().status();
     }
 
     public boolean waitForStatus(String status, Duration timeout) throws IOException, InterruptedException {
         Instant deadline = Instant.now().plus(timeout);
-        String expected = "\"status\":\"" + status + "\"";
         while (Instant.now().isBefore(deadline)) {
-            String health = clusterHealth();
-            if (health.contains(expected)) {
-                return true;
+            try {
+                ClusterHealthResponse health = clusterHealth();
+                String currentStatus = health.status();
+                if (status.equals(currentStatus) 
+                    || ("yellow".equals(status) && "green".equals(currentStatus))) {
+                    return true;
+                }
+            } catch (Exception ignored) {
+                // Ignore transient errors before cluster is fully up
             }
             Thread.sleep(500);
         }

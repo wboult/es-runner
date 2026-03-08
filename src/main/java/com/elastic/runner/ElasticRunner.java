@@ -24,11 +24,11 @@ public final class ElasticRunner {
     }
 
     public static ElasticServer start(Path distroZip) {
-        return start(ElasticRunnerConfig.defaults().withDistroZip(distroZip));
+        return start(ElasticRunnerConfig.defaults().toBuilder().distroZip(distroZip).build());
     }
 
     public static ElasticServer start(String version) {
-        return start(ElasticRunnerConfig.defaults().withVersion(version));
+        return start(ElasticRunnerConfig.defaults().toBuilder().version(version).build());
     }
 
     public static ElasticServer start(UnaryOperator<ElasticRunnerConfig> configurer) {
@@ -102,8 +102,11 @@ public final class ElasticRunner {
         logThread.start();
 
         try {
+            int actualPort = httpPort == 0
+                    ? waitForEphemeralPort(process, logFile, config.startupTimeout())
+                    : httpPort;
             Instant startTime = Instant.now();
-            URI baseUri = URI.create("http://localhost:" + httpPort + "/");
+            URI baseUri = URI.create("http://localhost:" + actualPort + "/");
             HttpClient httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(2))
                     .build();
@@ -114,7 +117,7 @@ public final class ElasticRunner {
 
             writeState(stateFile, new RunnerState(
                     serverPid,
-                    httpPort,
+                    actualPort,
                     config.clusterName(),
                     version,
                     startTime,
@@ -131,7 +134,7 @@ public final class ElasticRunner {
                     pidFile,
                     stateFile,
                     serverPid,
-                    httpPort,
+                    actualPort,
                     httpClient,
                     startTime,
                     logThread
@@ -179,15 +182,7 @@ public final class ElasticRunner {
     }
 
     private static int resolvePort(ElasticRunnerConfig config) {
-        if (config.httpPort() > 0) {
-            return config.httpPort();
-        }
-        int port = PortPicker.pick(config.portRangeStart(), config.portRangeEnd());
-        if (port <= 0) {
-            throw new ElasticRunnerException("No free port found in range "
-                    + config.portRangeStart() + "-" + config.portRangeEnd());
-        }
-        return port;
+        return config.httpPort();
     }
 
     private static void writeConfig(ElasticRunnerConfig config,
@@ -348,6 +343,32 @@ public final class ElasticRunner {
             Files.deleteIfExists(file);
         } catch (IOException ignored) {
         }
+    }
+
+    private static int waitForEphemeralPort(Process process, Path logFile, Duration timeout) {
+        Instant deadline = Instant.now().plus(timeout);
+        java.util.regex.Pattern portPattern = java.util.regex.Pattern.compile("publish_address \\{[^:]+:(\\d+)\\}");
+        while (Instant.now().isBefore(deadline)) {
+            if (!process.isAlive()) {
+                String logTail = LogTail.read(logFile, 20);
+                throw new ElasticRunnerException("Elasticsearch exited unexpectedly before binding port: " + logTail);
+            }
+            try {
+                if (Files.exists(logFile)) {
+                    List<String> lines = Files.readAllLines(logFile);
+                    for (String line : lines) {
+                        java.util.regex.Matcher matcher = portPattern.matcher(line);
+                        if (matcher.find()) {
+                            return Integer.parseInt(matcher.group(1));
+                        }
+                    }
+                }
+            } catch (IOException ignored) {
+            }
+            sleep(500);
+        }
+        String logTail = LogTail.read(logFile, 20);
+        throw new ElasticRunnerException("Timed out waiting for ephemeral port bind: " + logTail);
     }
 
     private static void sleep(long millis) {

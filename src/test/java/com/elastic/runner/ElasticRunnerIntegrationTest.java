@@ -27,7 +27,7 @@ class ElasticRunnerIntegrationTest {
         String major = version.split("\\.")[0];
         try (ElasticServer server = ElasticRunner.start(config)) {
             assertTrue(server.ping());
-            assertTrue(server.clusterHealth().contains("\"status\""));
+            assertTrue(!server.clusterHealth().status().isEmpty());
             assertTrue(server.clusterName().contains("it-cluster"));
             assertTrue(server.version().startsWith(major + "."));
         }
