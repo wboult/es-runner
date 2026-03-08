@@ -1,6 +1,6 @@
-# Elastic Runner
+# ES Runner
 
-Elastic Runner launches a real Elasticsearch ZIP distribution in an isolated OS
+ES Runner launches a real Elasticsearch ZIP distribution in an isolated OS
 process and gives tests or offline tooling a small, direct Java API for
 starting, stopping, and talking to the cluster.
 
@@ -20,7 +20,7 @@ Documentation: <https://wboult.github.io/elastic-runner/>
 
 ## When not to use it
 
-Elastic Runner is a good fit when process startup cost is acceptable or when a
+ES Runner is a good fit when process startup cost is acceptable or when a
 single build-scoped shared node is enough.
 
 Use something else when:
@@ -66,7 +66,7 @@ try (ElasticServer server = ElasticRunner.start(config)) {
 
 ## Simplest download flow
 
-If you want Elastic Runner to fetch the ZIP for you:
+If you want ES Runner to fetch the ZIP for you:
 
 ```java
 ElasticRunner.withServer(builder -> builder
@@ -121,29 +121,28 @@ CLI setup.
 
 ## Gradle shared test clusters
 
-Elastic Runner includes an incubating Gradle plugin for build-scoped shared
+ES Runner includes an incubating Gradle plugin for build-scoped shared
 Elasticsearch clusters. It starts one node per cluster definition, reuses it
 across projects/suites in the build, and injects a per-suite namespace so
 parallel suites do not collide.
 
 Current source-tree plugin id:
 
-- `com.elastic.runner.shared-test-clusters`
+- `io.github.wboult.es-runner.shared-test-clusters`
 
 Current source-tree helper artifact:
 
-- `com.elastic:elastic-runner-gradle-test-support`
+- `io.github.wboult:es-runner-gradle-test-support`
 
-These identifiers are still provisional for the first public release. The repo
-is using them internally today, but the published namespace/plugin id should
-move to an owner-controlled namespace before Maven Central or Plugin Portal
-publication.
+This is an independent OSS library and is not affiliated with Elastic. The code
+uses the owner-controlled `io.github.wboult` namespace for packages,
+coordinates, and Gradle plugin ids.
 
 Root build example:
 
 ```groovy
 plugins {
-    id 'com.elastic.runner.shared-test-clusters'
+    id 'io.github.wboult.es-runner.shared-test-clusters'
 }
 
 elasticTestClusters {
@@ -159,7 +158,7 @@ elasticTestClusters {
     suites {
         matchingName("integrationTest") {
             useCluster("integration")
-            namespaceMode.set(com.elastic.runner.gradle.NamespaceMode.SUITE)
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
     }
 }
@@ -223,10 +222,10 @@ If the system JDK is not compatible, the wrapper uses the pinned JDK 17 in
 This repo already has strong testing and docs, but a few items still need to be
 finished before a first public Maven Central release:
 
-- choose an owner-controlled namespace and plugin id
-- add a top-level `LICENSE`
 - wire signed publication and release automation
-- finish the public API/Javadoc polish pass
+- add complete POM metadata and release workflows
+- add a published-artifact smoke test before the first release tag
 
 See [docs/public-release-readiness.md](docs/public-release-readiness.md) for the
 repo-specific checklist.
+

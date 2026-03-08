@@ -1,6 +1,6 @@
 # Cloud Storage Mirrors
 
-Elastic Runner can resolve and download Elasticsearch distro archives from more
+ES Runner can resolve and download Elasticsearch distro archives from more
 than plain HTTPS mirrors.
 
 Supported `downloadBaseUrl(...)` schemes:
@@ -48,7 +48,7 @@ Use this for:
 - internal artifact proxies
 - signed container URLs such as Azure Blob SAS container URLs
 
-If the base URL has a shared query string, Elastic Runner preserves that query
+If the base URL has a shared query string, ES Runner preserves that query
 when it appends the distro filename.
 
 ### Local/shared file mirrors
@@ -63,7 +63,7 @@ file:///srv/mirrors/elasticsearch/
 
 ### S3
 
-Elastic Runner shells out to:
+ES Runner shells out to:
 
 ```text
 aws s3 cp
@@ -81,7 +81,7 @@ Install the AWS CLI and configure access using any standard AWS CLI mechanism:
 
 ### GCS
 
-Elastic Runner tries:
+ES Runner tries:
 
 ```text
 gcloud storage cp
@@ -113,7 +113,7 @@ Example:
 az://myaccount/releases/elasticsearch/
 ```
 
-Elastic Runner tries:
+ES Runner tries:
 
 ```text
 azcopy copy

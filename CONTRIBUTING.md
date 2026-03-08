@@ -1,6 +1,6 @@
-# Contributing to Elastic Runner
+# Contributing to ES Runner
 
-Thanks for helping improve Elastic Runner! This guide covers setup, tests, and pull requests.
+Thanks for helping improve ES Runner! This guide covers setup, tests, and pull requests.
 
 ## Development setup
 
@@ -60,4 +60,5 @@ For bugs, open a GitHub issue with:
 
 If you are working on public-launch or publishing tasks, use
 `docs/public-release-readiness.md` as the repo-specific checklist.
+
 

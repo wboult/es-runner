@@ -15,5 +15,6 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [0.1.0] - 2026-01-18
 ### Added
-- Initial Elastic Runner API.
+- Initial ES Runner API.
 - Java/Scala examples and integration support.
+

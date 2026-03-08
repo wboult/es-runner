@@ -18,7 +18,7 @@ Root build:
 
 ```kotlin
 plugins {
-    id("com.elastic.runner.shared-test-clusters")
+    id("io.github.wboult.es-runner.shared-test-clusters")
 }
 
 elasticTestClusters {

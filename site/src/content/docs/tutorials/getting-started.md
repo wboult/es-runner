@@ -5,7 +5,7 @@ description: Install prerequisites and start your first Elasticsearch server.
 
 # Getting started
 
-This tutorial walks you through installing the prerequisites and starting your first server with Elastic Runner.
+This tutorial walks you through installing the prerequisites and starting your first server with ES Runner.
 
 ## Prerequisites
 
@@ -14,11 +14,11 @@ This tutorial walks you through installing the prerequisites and starting your f
 
 ## 1. Add the dependency
 
-Add Elastic Runner to your build (example for Gradle):
+Add ES Runner to your build (example for Gradle):
 
 ```groovy
 dependencies {
-    testImplementation "com.elastic:elastic-runner:0.1.0"
+    testImplementation "io.github.wboult:es-runner:0.1.0"
 }
 ```
 

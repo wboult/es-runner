@@ -1,6 +1,6 @@
 # Gradle Shared Cluster Plugin Design
 
-This document proposes a Gradle integration for Elastic Runner that starts a
+This document proposes a Gradle integration for ES Runner that starts a
 small number of shared Elasticsearch servers once per build and makes them
 available to multiple Gradle projects and test suites without repeated
 per-JVM/per-suite startup.
@@ -32,7 +32,7 @@ the design rationale and the intended evolution beyond the current feature set.
 
 ```kotlin
 plugins {
-    id("com.elastic.runner.shared-test-clusters")
+    id("io.github.wboult.es-runner.shared-test-clusters")
 }
 
 elasticTestClusters {
@@ -319,8 +319,8 @@ Use two deliverables:
 
 Suggested coordinates / id:
 
-- artifact: `com.elastic:elastic-runner-gradle-plugin`
-- plugin id: `com.elastic.runner.shared-test-clusters`
+- artifact: `io.github.wboult:es-runner-gradle-plugin`
+- plugin id: `io.github.wboult.es-runner.shared-test-clusters`
 
 Responsibilities:
 
@@ -333,7 +333,7 @@ Responsibilities:
 
 Suggested artifact:
 
-- `com.elastic:elastic-runner-gradle-test-support`
+- `io.github.wboult:es-runner-gradle-test-support`
 
 Responsibilities:
 
@@ -370,7 +370,7 @@ test runtime classpath.
 
 ```kotlin
 plugins {
-    id("com.elastic.runner.shared-test-clusters")
+    id("io.github.wboult.es-runner.shared-test-clusters")
 }
 
 elasticTestClusters {

@@ -23,4 +23,4 @@ body:
     id: suggestion
     attributes:
       label: Suggested improvement
-      placeholder: Clarify that the current plugin id is provisional until public publication is finalized.
+      placeholder: Replace the stale example with the current package name, plugin id, or tested version.

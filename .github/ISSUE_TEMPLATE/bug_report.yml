@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a defect or behavioral regression in Elastic Runner.
+description: Report a defect or behavioral regression in ES Runner.
 title: "[Bug]: "
 labels:
   - bug
@@ -13,7 +13,7 @@ body:
     attributes:
       label: What happened?
       description: Describe the bug and the impact.
-      placeholder: Elastic Runner timed out waiting for Elasticsearch even though the process was running.
+      placeholder: ES Runner timed out waiting for Elasticsearch even though the process was running.
     validations:
       required: true
   - type: textarea
@@ -60,3 +60,4 @@ body:
     attributes:
       label: Build tool and version
       placeholder: Gradle 9.1.0
+

@@ -1,6 +1,6 @@
 ---
 title: GitHub Actions CI example
-description: Run Elastic Runner in CI using GitHub Actions.
+description: Run ES Runner in CI using GitHub Actions.
 ---
 
 # GitHub Actions CI example

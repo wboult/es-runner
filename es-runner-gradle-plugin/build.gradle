@@ -1,0 +1,39 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+group = rootProject.group
+version = rootProject.version
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    implementation project(':')
+    implementation gradleApi()
+
+    testImplementation gradleTestKit()
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+gradlePlugin {
+    plugins {
+        elasticRunnerSharedTestClusters {
+            id = 'io.github.wboult.es-runner.shared-test-clusters'
+            implementationClass = 'io.github.wboult.esrunner.gradle.ElasticSharedTestClustersPlugin'
+            displayName = 'ES Runner Shared Test Clusters'
+            description = 'Shares Elasticsearch test clusters across Gradle projects and suites.'
+        }
+    }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}

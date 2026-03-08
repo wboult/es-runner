@@ -5,7 +5,7 @@ description: Environment variables used by tests and examples.
 
 # Environment variables
 
-Elastic Runner itself does not depend on environment variables at runtime, but tests and examples do.
+ES Runner itself does not depend on environment variables at runtime, but tests and examples do.
 
 | Variable | Purpose | Example |
 | --- | --- | --- |

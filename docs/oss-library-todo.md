@@ -1,4 +1,4 @@
-# OSS Library Quality TODO (Elastic Runner)
+# OSS Library Quality TODO (ES Runner)
 
 This checklist tracks the "top 10" qualities for a useful OSS library and the
 work needed to cover each point in this repo. All items are intended to be

@@ -80,8 +80,8 @@ jobs:
           ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
           ./gradlew
           :test
-          :elastic-runner-gradle-plugin:test
-          :elastic-runner-gradle-test-support:test
+          :es-runner-gradle-plugin:test
+          :es-runner-gradle-test-support:test
           -Djunit.jupiter.excludeTags=stress
           -PscalaVersion=${{ matrix.scala_spark.scala }}
           -PsparkVersion=${{ matrix.scala_spark.spark }}
@@ -114,3 +114,4 @@ jobs:
           ES_DISTROS_DIR: distros
           ES_DISTRO_DOWNLOAD: "true"
         run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew scala3Test
+

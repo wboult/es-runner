@@ -1,11 +1,11 @@
 ---
 title: File layout
-description: Where Elastic Runner writes data and logs.
+description: Where ES Runner writes data and logs.
 ---
 
 # File layout
 
-Elastic Runner writes into `workDir` using the following structure:
+ES Runner writes into `workDir` using the following structure:
 
 ```
 <workDir>/

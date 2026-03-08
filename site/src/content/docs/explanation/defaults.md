@@ -1,11 +1,11 @@
-﻿---
+---
 title: Defaults and safety
 description: Why defaults are chosen and how to override them.
 ---
 
 # Defaults and safety
 
-Elastic Runner ships with conservative defaults to make local use safe and predictable.
+ES Runner ships with conservative defaults to make local use safe and predictable.
 
 ## Default settings
 
