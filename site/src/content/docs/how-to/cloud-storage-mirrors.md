@@ -1,98 +1,85 @@
 ---
 title: Use cloud storage mirrors
-description: Download Elasticsearch distros from S3, GCS, Azure Blob, HTTPS, or file mirrors.
+description: Download Elasticsearch distros from HTTPS or file mirrors, with guidance for S3, GCS, and Azure Blob via pre-signed URLs.
 ---
 
 # Use cloud storage mirrors
 
 ES Runner can download distro archives from:
 
-- `https://`
+- `https://` / `http://`
 - `file://`
-- `s3://`
-- `gs://`
-- `az://`
 
-The configured base is still a prefix. ES Runner appends the expected
-archive filename for the selected version and current OS.
+> **Note:** Native `s3://`, `gs://`, and `az://` URI schemes are not currently
+> supported. See the [extension plan](#future-cloud-storage-modules) below.
+> In the meantime, use pre-signed / SAS HTTPS URLs as described here.
 
-## Examples
+## HTTPS mirrors
+
+Use `https://` for public and internal mirrors, artifact proxies, and
+pre-signed / SAS URLs for private cloud buckets.
 
 ```java
 ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
-    .downloadBaseUrl("s3://elastic-mirror/elasticsearch/"));
+    .downloadBaseUrl("https://internal-mirror.example.com/elasticsearch/"));
+```
 
-ElasticRunnerConfig.from(builder -> builder
-    .version("9.3.1")
-    .download(true)
-    .downloadBaseUrl("gs://elastic-mirror/elasticsearch/"));
+If the base URL includes a shared query string (e.g. a SAS token), ES Runner
+preserves it when it appends the distro filename.
 
-ElasticRunnerConfig.from(builder -> builder
-    .version("9.3.1")
-    .download(true)
-    .downloadBaseUrl("az://myaccount/releases/elasticsearch/"));
+## File mirrors
 
+```java
 ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
     .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
 ```
 
-## Access configuration
+## Cloud storage via pre-signed / SAS URLs
 
-### S3
+All three major providers support HTTPS pre-signed or SAS URLs that work with
+the built-in `https://` downloader — no extra tooling required.
 
-ES Runner uses `aws s3 cp`.
+### S3 pre-signed URL
 
-Configure access with normal AWS CLI settings such as:
-
-- `aws configure`
-- `AWS_PROFILE`
-- `AWS_REGION`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_SESSION_TOKEN`
-- IAM roles
-
-### GCS
-
-ES Runner tries `gcloud storage cp` first and `gsutil cp` second.
-
-Configure access with:
-
-- `gcloud auth login`
-- `gcloud auth activate-service-account --key-file=/path/to/key.json`
-- your normal Cloud SDK configuration
-
-### Azure Blob
-
-ES Runner expects:
-
-```text
-az://<account>/<container>/<prefix>/
+```sh
+aws s3 presign s3://bucket/elasticsearch-9.3.1-linux-x86_64.tar.gz \
+  --expires-in 3600
 ```
 
-It tries `azcopy copy` first, then `az storage blob download`.
+Pass the resulting `https://…` URL directly via `distroZip`, or as a
+`downloadBaseUrl` prefix if you're using the version-based download path.
 
-Recommended access options:
+### GCS signed URL
 
-- `azcopy login`
-- `azcopy login --identity`
-- `az login`
-- `AZURE_STORAGE_CONNECTION_STRING`
-- `AZURE_STORAGE_KEY`
-- `AZURE_STORAGE_SAS_TOKEN`
+```sh
+gcloud storage sign-url gs://bucket/elasticsearch-9.3.1-linux-x86_64.tar.gz \
+  --duration=1h
+```
 
-### HTTPS and signed URLs
+### Azure Blob SAS URL
 
-Use `https://` for:
+```sh
+az storage blob generate-sas \
+  --account-name myaccount \
+  --container-name releases \
+  --name elasticsearch-9.3.1-linux-x86_64.tar.gz \
+  --permissions r \
+  --expiry 2025-12-31T00:00:00Z \
+  --full-uri
+```
 
-- public/private mirrors
-- artifact proxies
-- shared signed container URLs such as Azure SAS URLs
+Use the resulting `https://<account>.blob.core.windows.net/…?<sas>` URL.
 
-If the base URL includes a shared query string, ES Runner preserves it
-when it appends the distro filename.
+## Future cloud storage modules
 
+Native SDK-based extension modules (`es-runner-s3`, `es-runner-gcs`,
+`es-runner-azure`) are planned. Each will be an optional dependency that
+brings in only the SDK for the provider you use, registered via
+`java.util.ServiceLoader` so the core library stays dependency-free.
+
+See the [cloud storage extension plan](../../../../docs/cloud-storage-extension-plan.md)
+for the full design.

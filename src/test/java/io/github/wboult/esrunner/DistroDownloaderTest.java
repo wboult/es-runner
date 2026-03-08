@@ -1,72 +1,44 @@
 package io.github.wboult.esrunner;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DistroDownloaderTest {
 
     @Test
-    void buildsAwsCliCommandForS3Downloads() {
-        List<List<String>> commands = DistroDownloader.commandCandidates(
-                URI.create("s3://elastic-mirror/releases/elasticsearch.zip"),
-                Path.of("target.zip"),
-                Map.of()
-        );
-
-        assertTrue(commands.stream().anyMatch(command ->
-                command.get(0).startsWith("aws")
-                        && command.contains("s3")
-                        && command.contains("cp")
-                        && command.contains("s3://elastic-mirror/releases/elasticsearch.zip")
-        ));
+    void rejectsS3Scheme(@TempDir Path dir) {
+        URI uri = URI.create("s3://elastic-mirror/releases/elasticsearch.zip");
+        ElasticRunnerException ex = assertThrows(ElasticRunnerException.class,
+                () -> DistroDownloader.download(uri, dir.resolve("elasticsearch.zip")));
+        assertTrue(ex.getMessage().contains("s3"), "error should name the offending scheme");
     }
 
     @Test
-    void buildsGcsCommandsWithGcloudThenGsutilFallback() {
-        List<List<String>> commands = DistroDownloader.commandCandidates(
-                URI.create("gs://elastic-mirror/releases/elasticsearch.zip"),
-                Path.of("target.zip"),
-                Map.of()
-        );
-
-        assertTrue(commands.stream().anyMatch(command -> command.get(0).startsWith("gcloud")));
-        assertTrue(commands.stream().anyMatch(command -> command.get(0).startsWith("gsutil")));
+    void rejectsGcsScheme(@TempDir Path dir) {
+        URI uri = URI.create("gs://elastic-mirror/releases/elasticsearch.zip");
+        ElasticRunnerException ex = assertThrows(ElasticRunnerException.class,
+                () -> DistroDownloader.download(uri, dir.resolve("elasticsearch.zip")));
+        assertTrue(ex.getMessage().contains("gs"), "error should name the offending scheme");
     }
 
     @Test
-    void buildsAzureCommandsWithAzcopyAndLoginFallback() {
-        List<List<String>> commands = DistroDownloader.commandCandidates(
-                URI.create("az://acct123/releases/elasticsearch.zip"),
-                Path.of("target.zip"),
-                Map.of()
-        );
-
-        assertTrue(commands.stream().anyMatch(command ->
-                command.get(0).startsWith("azcopy")
-                        && command.contains("https://acct123.blob.core.windows.net/releases/elasticsearch.zip")
-        ));
-        assertTrue(commands.stream().anyMatch(command ->
-                command.get(0).startsWith("az") && command.contains("--auth-mode") && command.contains("login")
-        ));
+    void rejectsAzureScheme(@TempDir Path dir) {
+        URI uri = URI.create("az://acct123/releases/elasticsearch.zip");
+        ElasticRunnerException ex = assertThrows(ElasticRunnerException.class,
+                () -> DistroDownloader.download(uri, dir.resolve("elasticsearch.zip")));
+        assertTrue(ex.getMessage().contains("az"), "error should name the offending scheme");
     }
 
     @Test
-    void skipsAzureLoginModeWhenStorageCredentialEnvironmentIsPresent() {
-        List<List<String>> commands = DistroDownloader.commandCandidates(
-                URI.create("az://acct123/releases/elasticsearch.zip"),
-                Path.of("target.zip"),
-                Map.of("AZURE_STORAGE_CONNECTION_STRING", "UseDevelopmentStorage=true")
-        );
-
-        assertTrue(commands.stream().anyMatch(command ->
-                command.get(0).startsWith("az") && command.stream().noneMatch("--auth-mode"::equals)
-        ));
+    void rejectsUnknownScheme(@TempDir Path dir) {
+        URI uri = URI.create("ftp://example.com/elasticsearch.zip");
+        assertThrows(ElasticRunnerException.class,
+                () -> DistroDownloader.download(uri, dir.resolve("elasticsearch.zip")));
     }
 }
