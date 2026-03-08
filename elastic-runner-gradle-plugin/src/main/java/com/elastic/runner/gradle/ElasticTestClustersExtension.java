@@ -6,7 +6,7 @@ import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.model.ObjectFactory;
 
 import javax.inject.Inject;
-import java.time.Instant;
+import java.util.UUID;
 
 public abstract class ElasticTestClustersExtension {
     private final NamedDomainObjectContainer<ElasticClusterSpec> clusters;
@@ -21,7 +21,7 @@ public abstract class ElasticTestClustersExtension {
                 objects.domainObjectContainer(ElasticSuiteBinding.class,
                         name -> objects.newInstance(ElasticSuiteBinding.class, name, objects));
         this.suites = new ElasticSuiteBindings(bindings);
-        this.buildId = "er" + Long.toUnsignedString(Instant.now().toEpochMilli(), 36);
+        this.buildId = "er" + UUID.randomUUID().toString().replace("-", "");
     }
 
     public NamedDomainObjectContainer<ElasticClusterSpec> getClusters() {

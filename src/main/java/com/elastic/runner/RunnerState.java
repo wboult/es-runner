@@ -78,9 +78,17 @@ public final class RunnerState {
     public static RunnerState read(Path stateFile) throws IOException {
         String json = Files.readString(stateFile, StandardCharsets.UTF_8);
         Map<String, String> values = JsonUtils.parseFlatJson(json);
+        long pid = Long.parseLong(values.getOrDefault("pid", "0"));
+        if (pid <= 0) {
+            throw new IOException("Invalid PID in state file " + stateFile + ": " + pid);
+        }
+        int httpPort = Integer.parseInt(values.getOrDefault("httpPort", "0"));
+        if (httpPort <= 0 || httpPort > 65535) {
+            throw new IOException("Invalid HTTP port in state file " + stateFile + ": " + httpPort);
+        }
         return new RunnerState(
-                Long.parseLong(values.getOrDefault("pid", "0")),
-                Integer.parseInt(values.getOrDefault("httpPort", "0")),
+                pid,
+                httpPort,
                 values.getOrDefault("clusterName", "unknown"),
                 values.getOrDefault("version", "unknown"),
                 Instant.parse(values.getOrDefault("startTime", Instant.EPOCH.toString())),

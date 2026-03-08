@@ -46,12 +46,22 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
                     } catch (Exception ignored) {
                     }
                 }
-                server = ElasticRunner.start(toConfig());
-                metadata = new ElasticClusterMetadata(
-                        server.baseUri().toString(),
-                        server.httpPort(),
-                        server.config().clusterName()
-                );
+                ElasticServer started = ElasticRunner.start(toConfig());
+                try {
+                    metadata = new ElasticClusterMetadata(
+                            started.baseUri().toString(),
+                            started.httpPort(),
+                            started.config().clusterName()
+                    );
+                } catch (Exception e) {
+                    try {
+                        started.close();
+                    } catch (Exception suppressed) {
+                        e.addSuppressed(suppressed);
+                    }
+                    throw e;
+                }
+                server = started;
             }
             return metadata;
         }
