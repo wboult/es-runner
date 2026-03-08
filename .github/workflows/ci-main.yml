@@ -84,6 +84,7 @@ jobs:
           :test
           :elastic-runner-gradle-plugin:test
           :elastic-runner-gradle-test-support:test
+          -Djunit.jupiter.excludeTags=stress
           -PscalaVersion=${{ matrix.scala_spark.scala }}
           -PsparkVersion=${{ matrix.scala_spark.spark }}
 

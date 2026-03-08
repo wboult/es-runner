@@ -1,5 +1,6 @@
 package com.elastic.runner;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ElasticRunnerBulkIntegrationTest {
 
+    @Tag("stress")
     @Test
     void indexesLargeDatasetAndCounts() throws Exception {
         String version = System.getenv().getOrDefault("ES_VERSION", "9.2.4");

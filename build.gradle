@@ -49,6 +49,10 @@ def defaultScala3Version = libsCatalog.findVersion("scala3").get().requiredVersi
 def scalaVersionEffective = (findProperty("scalaVersion") ?: defaultScalaVersion).toString()
 def sparkVersionEffective = (findProperty("sparkVersion") ?: defaultSparkVersion).toString()
 def scala3VersionEffective = (findProperty("scala3Version") ?: defaultScala3Version).toString()
+def excludedJunitTags = System.getProperty("junit.jupiter.excludeTags", "")
+        .split(",")
+        .collect { it.trim() }
+        .findAll { !it.isEmpty() }
 def scalaBinaryVersionEffective = scalaVersionEffective.split("\\.").take(2).join(".")
 if (!(scalaBinaryVersionEffective in ["2.12", "2.13"])) {
     throw new GradleException("Unsupported Scala version: ${scalaVersionEffective}")
@@ -124,7 +128,11 @@ tasks.withType(ScalaCompile).configureEach {
 }
 
 tasks.withType(Test).configureEach {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        if (!excludedJunitTags.isEmpty()) {
+            excludeTags(*excludedJunitTags)
+        }
+    }
     binaryResultsDirectory.set(
             layout.buildDirectory.dir("test-results/${name}/binary-${System.getProperty('user.name', 'user')}")
     )
