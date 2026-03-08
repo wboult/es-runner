@@ -69,7 +69,7 @@ public final class ElasticServer implements AutoCloseable {
                     cleanup();
                 }
             }
-        }, "elastic-runner-shutdown");
+        }, "es-runner-shutdown");
         Runtime.getRuntime().addShutdownHook(this.shutdownHook);
     }
 

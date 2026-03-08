@@ -93,6 +93,7 @@ Still worth doing before flipping the repo public:
 
 ## Notes
 
-- Current GitHub URLs in the repo still point to `wboult/elastic-runner`
-  because the repository itself has not been renamed yet.
-- The docs/site title and public identifiers already use `ES Runner`.
+- GitHub repo name, Pages URL, and public docs links should stay aligned:
+  - repo: `wboult/es-runner`
+  - docs: `https://wboult.github.io/es-runner/`
+- The docs/site title and public identifiers use `ES Runner`.

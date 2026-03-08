@@ -4,12 +4,12 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://wboult.github.io/elastic-runner',
-	base: '/elastic-runner/',
+	site: 'https://wboult.github.io/es-runner',
+	base: '/es-runner/',
 	integrations: [
 		starlight({
 			title: 'ES Runner',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/wboult/elastic-runner' }],
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/wboult/es-runner' }],
 			sidebar: [
 				{
 					label: 'Tutorials',

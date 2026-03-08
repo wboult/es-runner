@@ -10,8 +10,8 @@ We welcome contributions! This guide covers local setup and how to submit a chan
 ## 1. Clone the repo
 
 ```bash
-git clone https://github.com/wboult/elastic-runner.git
-cd elastic-runner
+git clone https://github.com/wboult/es-runner.git
+cd es-runner
 ```
 
 ## 2. Run tests

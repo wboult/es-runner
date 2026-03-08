@@ -29,7 +29,7 @@ class ElasticRunnerSparkIntegrationTest {
     val server = ElasticRunner.start(config)
     try {
       val spark = SparkSession.builder()
-        .appName("elastic-runner-spark-it")
+        .appName("es-runner-spark-it")
         .master("local[1]")
         .config("spark.ui.enabled", "false")
         .config("spark.sql.shuffle.partitions", "1")
