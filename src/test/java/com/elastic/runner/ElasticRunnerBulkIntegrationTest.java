@@ -30,6 +30,7 @@ class ElasticRunnerBulkIntegrationTest {
         try (ElasticServer server = ElasticRunner.start(config)) {
             assertTrue(server.ping());
             server.waitForYellow(Duration.ofSeconds(120));
+            Thread.sleep(Duration.ofSeconds(5).toMillis());
 
             String index = "bulk-test";
             server.createIndex(index, """
@@ -74,11 +75,20 @@ class ElasticRunnerBulkIntegrationTest {
     }
 
     private static String bulkOrFail(ElasticServer server, String ndjson) throws IOException, InterruptedException {
-        try {
-            return server.bulk(ndjson);
-        } catch (IOException e) {
-            throw new IOException("Bulk indexing failed. Elasticsearch log tail:\n" + server.logTail(80), e);
+        IOException lastFailure = null;
+        for (int attempt = 1; attempt <= 5; attempt++) {
+            try {
+                return server.bulk(ndjson);
+            } catch (IOException e) {
+                lastFailure = e;
+                if (attempt == 5) {
+                    break;
+                }
+                server.waitForYellow(Duration.ofSeconds(15));
+                Thread.sleep(Duration.ofSeconds(attempt * 2L).toMillis());
+            }
         }
+        throw new IOException("Bulk indexing failed. Elasticsearch log tail:\n" + server.logTail(80), lastFailure);
     }
 
 }
