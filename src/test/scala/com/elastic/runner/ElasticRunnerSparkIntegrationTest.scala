@@ -11,7 +11,7 @@ class ElasticRunnerSparkIntegrationTest {
 
   @Test
   def sparkSessionWritesToElasticsearch(): Unit = {
-    val version = sys.env.getOrElse("ES_VERSION", "9.2.4")
+    val version = sys.env.getOrElse("ES_VERSION", "9.3.1")
     val workDir = Files.createTempDirectory("es-runner-spark-it-")
     val config = IntegrationTestSupport.config(
       version,

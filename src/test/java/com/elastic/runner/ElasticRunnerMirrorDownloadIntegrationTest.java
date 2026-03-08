@@ -16,7 +16,7 @@ class ElasticRunnerMirrorDownloadIntegrationTest {
         String baseUrl = System.getenv("ES_MIRROR_TEST_BASE_URL");
         Assumptions.assumeTrue(baseUrl != null && !baseUrl.isBlank(), "Mirror test base URL not set");
 
-        String version = System.getenv().getOrDefault("ES_VERSION", "9.2.4");
+        String version = System.getenv().getOrDefault("ES_VERSION", "9.3.1");
         String expectedContent = System.getenv("ES_MIRROR_TEST_EXPECTED_CONTENT");
         Path distrosDir = Files.createTempDirectory("es-runner-mirror-it-");
 

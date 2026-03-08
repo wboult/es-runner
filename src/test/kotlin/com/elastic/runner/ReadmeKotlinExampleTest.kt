@@ -9,7 +9,7 @@ class ReadmeKotlinExampleTest {
 
     @Test
     fun readmeKotlinExampleWorks() {
-        val version = System.getenv().getOrDefault("ES_VERSION", "9.2.4")
+        val version = System.getenv().getOrDefault("ES_VERSION", "9.3.1")
         val workDir = Files.createTempDirectory("es-runner-readme-kotlin-")
         val config = IntegrationTestSupport.configFromExample(
             version,

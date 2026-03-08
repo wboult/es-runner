@@ -46,13 +46,14 @@ This reference lists common `ElasticRunnerException` messages and likely causes.
 - Inspect `server.logTail()`.
 - Check config errors, port collisions, or permissions.
 
-## `No free port found in range`
+## `Timed out waiting for HTTP port bind`
 
-**Meaning**: No available HTTP port was found in the configured range.
+**Meaning**: Elasticsearch did not finish binding its HTTP listener before `startupTimeout`.
 
 **Fix**:
-- Default to `.httpPort(0)` to rely on OS ephemeral port extraction.
-- Stop other processes using those ports.
+- Increase `startupTimeout`.
+- Use a wider `.portRange(start, end)` if the current range is saturated.
+- Inspect `runner.log` to confirm which address Elasticsearch tried to publish.
 
 ## Where to look for logs
 

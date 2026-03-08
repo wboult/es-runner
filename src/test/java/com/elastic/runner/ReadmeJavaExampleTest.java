@@ -12,7 +12,7 @@ class ReadmeJavaExampleTest {
 
     @Test
     void readmeJavaExampleWorks() throws Exception {
-        String version = System.getenv().getOrDefault("ES_VERSION", "9.2.4");
+        String version = System.getenv().getOrDefault("ES_VERSION", "9.3.1");
         Path workDir = Files.createTempDirectory("es-runner-readme-java-");
         ElasticRunnerConfig config = IntegrationTestSupport.configFromExample(
                 version,

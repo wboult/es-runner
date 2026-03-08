@@ -13,7 +13,7 @@ class ElasticRunnerFailureIntegrationTest {
 
     @Test
     void startupFailureCleansPidAndStateFiles() throws Exception {
-        String version = System.getenv().getOrDefault("ES_VERSION", "9.2.4");
+        String version = System.getenv().getOrDefault("ES_VERSION", "9.3.1");
         Path workDir = Files.createTempDirectory("es-runner-failure-it-");
         ElasticRunnerConfig config = IntegrationTestSupport.config(
                 version,
@@ -22,7 +22,9 @@ class ElasticRunnerFailureIntegrationTest {
                 "256m",
                 Duration.ofSeconds(60),
                 true
-        ).withSetting("runner.invalid.setting", "true");
+        ).toBuilder()
+                .setting("runner.invalid.setting", "true")
+                .build();
 
         assertThrows(ElasticRunnerException.class, () -> ElasticRunner.start(config));
 

@@ -10,7 +10,7 @@ class ReadmeScalaExampleTest {
 
   @Test
   def readmeScalaExampleWorks(): Unit = {
-    val version = sys.env.getOrElse("ES_VERSION", "9.2.4")
+    val version = sys.env.getOrElse("ES_VERSION", "9.3.1")
     val workDir = Files.createTempDirectory("es-runner-readme-scala-")
     val config = IntegrationTestSupport.configFromExample(
       version,

@@ -10,7 +10,7 @@ class ReadmeScala3ExampleTest:
 
   @Test
   def readmeScala3ExampleWorks(): Unit =
-    val version = sys.env.getOrElse("ES_VERSION", "9.2.4")
+    val version = sys.env.getOrElse("ES_VERSION", "9.3.1")
     val major = version.takeWhile(_ != '.')
     val workDir = Files.createTempDirectory("es-runner-readme-scala3-")
     val config = IntegrationTestSupport.configFromExample(
@@ -25,7 +25,7 @@ class ReadmeScala3ExampleTest:
     val server = ElasticRunner.start(config)
     try
       val client = server.client()
-      assertTrue(client.clusterHealth().contains("\"status\""))
+      assertTrue(client.clusterHealth().status() != "")
       assertTrue(client.version().startsWith(s"$major."))
     finally
       server.close()

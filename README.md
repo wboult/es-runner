@@ -3,7 +3,7 @@
 The robust, zero-friction local Elasticsearch distribution runner tailored for integration tests and offline tooling. 
 Perfect for CI/CD pipelines without Docker-in-Docker capabilities, bare-metal build nodes, or environments where Testcontainers isn't viable.
 
-It launches a real Elasticsearch ZIP distribution in an isolated OS process, securely allocates ephemeral ports, ensures process cleanup via JVM shutdown hooks, and provides a polished, strongly-typed Java API for readiness checks and cluster interaction.
+It launches a real Elasticsearch ZIP distribution in an isolated OS process, auto-allocates HTTP ports safely, ensures process cleanup via JVM shutdown hooks, and provides a polished, strongly-typed Java API for readiness checks and cluster interaction.
 
 Documentation: https://wboult.github.io/elastic-runner/
 

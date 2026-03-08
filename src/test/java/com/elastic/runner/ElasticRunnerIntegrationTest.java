@@ -12,7 +12,7 @@ class ElasticRunnerIntegrationTest {
     @Test
     void startsAndRespondsToHealthChecks() throws Exception {
         String zipPath = System.getenv("ES_DISTRO_ZIP");
-        String version = System.getenv().getOrDefault("ES_VERSION", "9.2.4");
+        String version = System.getenv().getOrDefault("ES_VERSION", "9.3.1");
 
         Path workDir = Files.createTempDirectory("es-runner-it-");
         ElasticRunnerConfig config = IntegrationTestSupport.config(
@@ -30,6 +30,8 @@ class ElasticRunnerIntegrationTest {
             assertTrue(!server.clusterHealth().status().isEmpty());
             assertTrue(server.clusterName().contains("it-cluster"));
             assertTrue(server.version().startsWith(major + "."));
+            assertTrue(server.httpPort() >= config.portRangeStart());
+            assertTrue(server.httpPort() <= config.portRangeEnd());
         }
     }
 }
