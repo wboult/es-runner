@@ -1,17 +1,46 @@
 # ES Runner
 
-ES Runner launches a real Elasticsearch ZIP distribution in an isolated OS
-process and gives tests or offline tooling a small, direct Java API for
-starting, stopping, and talking to the cluster.
+ES Runner launches a real Elasticsearch or OpenSearch ZIP distribution in an
+isolated OS process and gives tests or offline tooling a small, direct Java API
+for starting, stopping, and talking to the cluster.
 
-It is aimed at environments where you want a real Elasticsearch node but do not
-want to depend on Docker, Testcontainers, or an already-running shared cluster.
+It is aimed at environments where you want a real search node but do not want
+to depend on Docker, Testcontainers, or an already-running shared cluster.
+
+Experimental in-JVM runners also exist in:
+
+- `es-runner-embedded-8` for Elasticsearch `8.19.11`
+- `es-runner-embedded-9` for Elasticsearch `9.3.1`
+- `es-runner-embedded-opensearch-2` for OpenSearch `2.19.4`
+- `es-runner-embedded-opensearch-3` for OpenSearch `3.5.0`
+
+All embedded modules expose the same `ElasticServerHandle` HTTP/query surface as
+the external-process runner and target simple unauthenticated
+HTTP/index/search use cases.
+
+The runtime strategies differ slightly by family:
+
+- Elasticsearch `8`/`9`
+  - stage a filtered embedded home from an extracted distro
+  - use bundled version-specific module profiles
+- OpenSearch `2`
+  - stage config/lib from an extracted distro
+  - load published classpath plugins (`transport-netty4-client`,
+    `analysis-common`)
+- OpenSearch `3`
+  - stage config/lib plus the distro `transport-netty4` module
+  - load published classpath plugins (`analysis-common`) plus the published
+    `opensearch-plugin-classloader` support jar
+
+They also let callers choose which built-in modules are staged and which
+classpath plugins are loaded, so you can boot with a slimmer embedded profile
+when you know which features you actually need.
 
 Documentation: <https://wboult.github.io/es-runner/>
 
 ## Why use it
 
-- runs the official Elasticsearch distribution, not an embedded fork
+- runs the official Elasticsearch or OpenSearch distribution, not an embedded fork
 - works on bare-metal CI agents and restricted environments
 - keeps Elasticsearch in a separate process, so your test JVM stays clean
 - supports downloading distros from official URLs, HTTPS mirrors, and local file paths
@@ -32,12 +61,12 @@ Use something else when:
 ## Requirements
 
 - JDK 17+
-- an Elasticsearch distribution ZIP, or a version plus `download(true)`
+- an Elasticsearch/OpenSearch distribution ZIP, or a version plus `download(true)`
 
-Latest CI-tested Elasticsearch lines:
+Latest verified process-backed lines:
 
-- `9.3.1`
-- `8.19.11`
+- Elasticsearch `9.3.1` and `8.19.11` in CI
+- OpenSearch `3.5.0` and `2.19.4` via local process smoke tests
 
 ## Quick start
 
@@ -70,6 +99,16 @@ ElasticRunner.withServer(builder -> builder
     server -> System.out.println(server.clusterHealth()));
 ```
 
+For OpenSearch, select the distro family:
+
+```java
+ElasticRunner.withServer(builder -> builder
+    .family(DistroFamily.OPENSEARCH)
+    .version("3.5.0")
+    .download(true),
+    server -> System.out.println(server.clusterHealth()));
+```
+
 ## Main API shape
 
 The intended easy path is:
@@ -79,6 +118,68 @@ The intended easy path is:
 - `ElasticServer` for lifecycle plus convenience methods
 - `ElasticClient` for direct HTTP-oriented operations
 - `es-runner-java-client` when you want the official Elasticsearch Java API Client
+
+Embedded mode mirrors that style with:
+
+- `EmbeddedElasticServer.start(...)` or `EmbeddedElasticServer.withServer(...)`
+- `EmbeddedElasticServerConfig.from(builder -> ...)`
+- a versioned embedded server class such as
+  `io.github.wboult.esrunner.embedded.v9.EmbeddedElasticServer`
+- a versioned embedded OpenSearch server class such as
+  `io.github.wboult.esrunner.embedded.opensearch.v3.EmbeddedOpenSearchServer`
+- the same shared `ElasticServerHandle` interface
+
+Example:
+
+```java
+import io.github.wboult.esrunner.embedded.EmbeddedElasticServerConfig;
+import io.github.wboult.esrunner.embedded.v9.EmbeddedElasticServer;
+
+Path esHome = Paths.get("distros/embedded/elasticsearch-9.3.1");
+
+EmbeddedElasticServerConfig embedded = EmbeddedElasticServer.defaultConfig(esHome)
+    .toBuilder()
+    .workDir(Paths.get(".es-embedded"))
+    .clusterName("embedded-local")
+    .portRangeStart(9410)
+    .portRangeEnd(9420)
+    .build();
+
+try (EmbeddedElasticServer server = EmbeddedElasticServer.start(embedded)) {
+    server.createIndex("docs");
+    server.indexDocument("docs", "1", "{\"title\":\"hello\"}");
+    server.refresh("docs");
+    System.out.println(server.countValue("docs"));
+}
+```
+
+To trim the embedded module set:
+
+```java
+EmbeddedElasticServerConfig slim = EmbeddedElasticServer.defaultConfig(esHome)
+    .toBuilder()
+    .removeModules(Set.of(
+        "kibana",
+        "repository-s3",
+        "repository-gcs",
+        "repository-azure",
+        "repository-url"))
+    .build();
+```
+
+To trim the OpenSearch classpath plugin set:
+
+```java
+import io.github.wboult.esrunner.embedded.EmbeddedElasticServerConfig;
+import io.github.wboult.esrunner.embedded.opensearch.v2.EmbeddedOpenSearchServer;
+
+Path openSearchHome = Paths.get("distros/embedded/opensearch-2.19.4");
+
+EmbeddedElasticServerConfig slim = EmbeddedOpenSearchServer.defaultConfig(openSearchHome)
+    .toBuilder()
+    .removeClasspathPlugin(EmbeddedOpenSearchServer.ANALYSIS_COMMON_PLUGIN)
+    .build();
+```
 
 If you need explicit shutdown details:
 
@@ -154,7 +255,9 @@ usage notes.
 `downloadBaseUrl(...)` supports:
 
 - `https://mirror.example.com/elasticsearch/`
+- `https://mirror.example.com/opensearch/`
 - `file:///srv/elasticsearch-mirror/`
+- `file:///srv/opensearch-mirror/`
 
 Examples:
 
@@ -163,6 +266,12 @@ ElasticRunnerConfig mirrorConfig = ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
     .downloadBaseUrl("https://internal-mirror.example.com/elasticsearch/"));
+
+ElasticRunnerConfig openSearchMirrorConfig = ElasticRunnerConfig.from(builder -> builder
+    .family(DistroFamily.OPENSEARCH)
+    .version("3.5.0")
+    .download(true)
+    .downloadBaseUrl("https://internal-mirror.example.com/opensearch/"));
 
 ElasticRunnerConfig fileMirrorConfig = ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
@@ -256,8 +365,9 @@ Useful starting points:
 
 ## Build and test
 
-Unit tests always run. Integration tests require a distro ZIP or download
-configuration.
+Unit tests always run. Process-backed integration tests require a distro ZIP or
+download configuration. Embedded integration tests require extracted distro
+homes.
 
 Examples:
 
@@ -275,6 +385,20 @@ export ES_DISTRO_ZIP=/path/to/elasticsearch-9.3.1.zip
 
 If the system JDK is not compatible, the wrapper uses the pinned JDK 17 in
 `.jdks/` via `gradle.properties`.
+
+The `es-runner-embedded-9` and `es-runner-embedded-opensearch-3` modules
+additionally require a Java 21 toolchain.
+
+Embedded examples:
+
+```powershell
+$env:ES_EMBEDDED_HOME_8 = "C:\path\to\elasticsearch-8.19.11"
+$env:ES_EMBEDDED_HOME_9 = "C:\path\to\elasticsearch-9.3.1"
+$env:OPENSEARCH_EMBEDDED_HOME_2 = "C:\path\to\opensearch-2.19.4"
+$env:OPENSEARCH_EMBEDDED_HOME_3 = "C:\path\to\opensearch-3.5.0"
+.\gradlew.bat :es-runner-embedded-8:test :es-runner-embedded-9:test
+.\gradlew.bat :es-runner-embedded-opensearch-2:test :es-runner-embedded-opensearch-3:test
+```
 
 ## Public release readiness
 

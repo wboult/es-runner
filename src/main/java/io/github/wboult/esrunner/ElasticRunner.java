@@ -22,17 +22,17 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
- * Entry point for resolving Elasticsearch distributions and starting
- * local process-based clusters.
+ * Entry point for resolving Elasticsearch and OpenSearch distributions and
+ * starting local process-based clusters.
  */
 public final class ElasticRunner {
     private ElasticRunner() {
     }
 
     /**
-     * Starts Elasticsearch from a local ZIP archive using default settings.
+     * Starts a distro from a local ZIP archive using default settings.
      *
-     * @param distroZip Elasticsearch ZIP archive
+     * @param distroZip distro ZIP archive
      * @return running server handle
      */
     public static ElasticServer start(Path distroZip) {
@@ -48,6 +48,18 @@ public final class ElasticRunner {
      */
     public static ElasticServer start(String version) {
         return start(ElasticRunnerConfig.defaults().toBuilder().version(version).build());
+    }
+
+    /**
+     * Starts one distro family for the given version using its default
+     * download resolution rules.
+     *
+     * @param family distro family
+     * @param version distro version
+     * @return running server handle
+     */
+    public static ElasticServer start(DistroFamily family, String version) {
+        return start(ElasticRunnerConfig.defaults(family).toBuilder().version(version).build());
     }
 
     /**
@@ -124,7 +136,7 @@ public final class ElasticRunner {
     }
 
     /**
-     * Starts Elasticsearch using the provided configuration.
+     * Starts a process-backed search server using the provided configuration.
      *
      * @param config immutable runner configuration
      * @return running server handle
@@ -132,6 +144,7 @@ public final class ElasticRunner {
     public static ElasticServer start(ElasticRunnerConfig config) {
         Objects.requireNonNull(config, "config");
         Path zip = resolveDistroZipInternal(config);
+        DistroFamily family = DistroFamily.infer(zip).orElse(config.family());
 
         String version = config.version() != null ? config.version() : DistroVersion.fromZip(zip);
         Path workDir = config.workDir().toAbsolutePath();
@@ -140,9 +153,9 @@ public final class ElasticRunner {
 
         Path homeDir;
         try {
-            homeDir = DistroLayout.prepare(zip, versionDir);
+            homeDir = DistroLayout.prepare(zip, versionDir, family);
         } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to prepare Elasticsearch distribution.", e);
+            throw new ElasticRunnerException("Failed to prepare " + family.displayName() + " distribution.", e);
         }
 
         Path dataDir = versionDir.resolve("data");
@@ -153,17 +166,17 @@ public final class ElasticRunner {
         String httpPortSetting = resolveHttpPortSetting(config);
 
         Path configDir = homeDir.resolve("config");
-        Path configFile = configDir.resolve("elasticsearch.yml");
-        writeConfig(config, httpPortSetting, dataDir, logsDir, configFile);
+        Path configFile = configDir.resolve(family.configFileName());
+        writeConfig(config, family, httpPortSetting, dataDir, logsDir, configFile);
 
         if (!config.plugins().isEmpty()) {
-            installPlugins(config.plugins(), homeDir, logsDir, config.quiet());
+            installPlugins(config.plugins(), homeDir, logsDir, config.quiet(), family);
         }
 
         Path logFile = logsDir.resolve("runner.log");
         Path pidFile = versionDir.resolve("es.pid");
         Path stateFile = versionDir.resolve("state.json");
-        Process process = startProcess(homeDir, configDir, config, pidFile);
+        Process process = startProcess(homeDir, configDir, config, pidFile, family);
         Thread logThread = new Thread(new StreamGobbler(process.getInputStream(), logFile, config.quiet()),
                 "es-runner-log");
         logThread.setDaemon(true);
@@ -179,7 +192,7 @@ public final class ElasticRunner {
                     .connectTimeout(Duration.ofSeconds(2))
                     .build();
 
-            waitForReady(httpClient, baseUri, config.startupTimeout(), process, logFile);
+            waitForReady(httpClient, baseUri, config.startupTimeout(), process, logFile, family);
 
             long serverPid = readServerPid(pidFile).orElse(process.pid());
 
@@ -233,7 +246,7 @@ public final class ElasticRunner {
         }
         Path distrosDir = config.distrosDir().toAbsolutePath();
         createDirs(distrosDir);
-        DistroDescriptor descriptor = DistroDescriptor.forVersion(config.version());
+        DistroDescriptor descriptor = DistroDescriptor.forVersion(config.family(), config.version());
         Path archive = distrosDir.resolve(descriptor.fileName());
         if (config.download() || !Files.exists(archive)) {
             download(descriptor.downloadUri(config.downloadBaseUrl()), archive);
@@ -266,6 +279,7 @@ public final class ElasticRunner {
     }
 
     private static void writeConfig(ElasticRunnerConfig config,
+                                    DistroFamily family,
                                     String httpPortSetting,
                                     Path dataDir,
                                     Path logsDir,
@@ -278,15 +292,16 @@ public final class ElasticRunner {
         try {
             ConfigWriter.write(configFile, settings);
         } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to write elasticsearch.yml", e);
+            throw new ElasticRunnerException("Failed to write " + family.configFileName(), e);
         }
     }
 
     private static void installPlugins(List<String> plugins,
                                        Path homeDir,
                                        Path logsDir,
-                                       boolean quiet) {
-        Path pluginScript = homeDir.resolve("bin").resolve(Os.executableName("elasticsearch-plugin"));
+                                       boolean quiet,
+                                       DistroFamily family) {
+        Path pluginScript = homeDir.resolve("bin").resolve(Os.executableName(family.pluginScriptBaseName()));
         for (String plugin : plugins) {
             List<String> command = Os.commandFor(pluginScript);
             List<String> commandWithArgs = new java.util.ArrayList<>(command);
@@ -318,8 +333,9 @@ public final class ElasticRunner {
     private static Process startProcess(Path homeDir,
                                         Path configDir,
                                         ElasticRunnerConfig config,
-                                        Path pidFile) {
-        Path script = homeDir.resolve("bin").resolve(Os.executableName("elasticsearch"));
+                                        Path pidFile,
+                                        DistroFamily family) {
+        Path script = homeDir.resolve("bin").resolve(Os.executableName(family.launcherBaseName()));
         List<String> command = Os.commandFor(script);
         command = new java.util.ArrayList<>(command);
         command.add("-p");
@@ -328,12 +344,12 @@ public final class ElasticRunner {
         builder.directory(homeDir.toFile());
         builder.redirectErrorStream(true);
         Map<String, String> env = builder.environment();
-        env.put("ES_PATH_CONF", configDir.toString());
-        env.put("ES_JAVA_OPTS", "-Xms" + config.heap() + " -Xmx" + config.heap());
+        env.put(family.pathConfEnvVar(), configDir.toString());
+        env.put(family.javaOptsEnvVar(), "-Xms" + config.heap() + " -Xmx" + config.heap());
         try {
             return builder.start();
         } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to start Elasticsearch process.", e);
+            throw new ElasticRunnerException("Failed to start " + family.displayName() + " process.", e);
         }
     }
 
@@ -341,12 +357,13 @@ public final class ElasticRunner {
                                      URI baseUri,
                                      Duration timeout,
                                      Process process,
-                                     Path logFile) {
+                                     Path logFile,
+                                     DistroFamily family) {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
             if (!process.isAlive()) {
                 String logTail = LogTail.read(logFile, 20);
-                throw new ElasticRunnerException("Elasticsearch process exited early. " + logTail);
+                throw new ElasticRunnerException(family.displayName() + " process exited early. " + logTail);
             }
             try {
                 HttpRequest request = HttpRequest.newBuilder(baseUri)
@@ -359,14 +376,14 @@ public final class ElasticRunner {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new ElasticRunnerException("Interrupted while waiting for Elasticsearch.", e);
+                throw new ElasticRunnerException("Interrupted while waiting for " + family.displayName() + ".", e);
             } catch (IOException ignored) {
                 // Retry until timeout.
             }
             sleep(500);
         }
         String logTail = LogTail.read(logFile, 20);
-        throw new ElasticRunnerException("Timed out waiting for Elasticsearch. " + logTail);
+        throw new ElasticRunnerException("Timed out waiting for " + family.displayName() + ". " + logTail);
     }
 
     private static void writeState(Path stateFile, RunnerState state) {
@@ -430,7 +447,7 @@ public final class ElasticRunner {
         while (Instant.now().isBefore(deadline)) {
             if (!process.isAlive()) {
                 String logTail = LogTail.read(logFile, 20);
-                throw new ElasticRunnerException("Elasticsearch exited unexpectedly before binding HTTP port: " + logTail);
+                throw new ElasticRunnerException("Search server exited unexpectedly before binding HTTP port: " + logTail);
             }
             try {
                 if (Files.exists(logFile)) {

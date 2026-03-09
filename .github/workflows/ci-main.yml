@@ -115,3 +115,106 @@ jobs:
           ES_DISTRO_DOWNLOAD: "true"
         run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew scala3Test
 
+  embedded-jdk17:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache embedded distros (JDK 17)
+        uses: actions/cache@v4
+        with:
+          path: distros/embedded
+          key: embedded-jdk17-${{ runner.os }}-es8.19.11-os2.19.4
+
+      - name: Prime embedded distros (JDK 17)
+        run: |
+          mkdir -p distros/embedded
+          es_archive="distros/embedded/elasticsearch-8.19.11-linux-x86_64.tar.gz"
+          if [ ! -f "$es_archive" ]; then
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.19.11-linux-x86_64.tar.gz" -o "$es_archive"
+          fi
+          if [ ! -d "distros/embedded/elasticsearch-8.19.11" ]; then
+            tar -xzf "$es_archive" -C distros/embedded
+          fi
+
+          os_archive="distros/embedded/opensearch-2.19.4-linux-x64.tar.gz"
+          if [ ! -f "$os_archive" ]; then
+            curl -fsSL "https://artifacts.opensearch.org/releases/bundle/opensearch/2.19.4/opensearch-2.19.4-linux-x64.tar.gz" -o "$os_archive"
+          fi
+          if [ ! -d "distros/embedded/opensearch-2.19.4" ]; then
+            tar -xzf "$os_archive" -C distros/embedded
+          fi
+
+      - name: Run embedded tests (JDK 17)
+        env:
+          ES_EMBEDDED_HOME_8: ${{ github.workspace }}/distros/embedded/elasticsearch-8.19.11
+          OPENSEARCH_EMBEDDED_HOME_2: ${{ github.workspace }}/distros/embedded/opensearch-2.19.4
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          :es-runner-embedded-common:test
+          :es-runner-embedded-8:test
+          :es-runner-embedded-opensearch-2:test
+
+  embedded-jdk21:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Cache embedded distros (JDK 21)
+        uses: actions/cache@v4
+        with:
+          path: distros/embedded
+          key: embedded-jdk21-${{ runner.os }}-es9.3.1-os3.5.0
+
+      - name: Prime embedded distros (JDK 21)
+        run: |
+          mkdir -p distros/embedded
+          es_archive="distros/embedded/elasticsearch-9.3.1-linux-x86_64.tar.gz"
+          if [ ! -f "$es_archive" ]; then
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-9.3.1-linux-x86_64.tar.gz" -o "$es_archive"
+          fi
+          if [ ! -d "distros/embedded/elasticsearch-9.3.1" ]; then
+            tar -xzf "$es_archive" -C distros/embedded
+          fi
+
+          os_archive="distros/embedded/opensearch-3.5.0-linux-x64.tar.gz"
+          if [ ! -f "$os_archive" ]; then
+            curl -fsSL "https://artifacts.opensearch.org/releases/bundle/opensearch/3.5.0/opensearch-3.5.0-linux-x64.tar.gz" -o "$os_archive"
+          fi
+          if [ ! -d "distros/embedded/opensearch-3.5.0" ]; then
+            tar -xzf "$os_archive" -C distros/embedded
+          fi
+
+      - name: Run embedded tests (JDK 21)
+        env:
+          ES_EMBEDDED_HOME_9: ${{ github.workspace }}/distros/embedded/elasticsearch-9.3.1
+          OPENSEARCH_EMBEDDED_HOME_3: ${{ github.workspace }}/distros/embedded/opensearch-3.5.0
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          :es-runner-embedded-9:test
+          :es-runner-embedded-opensearch-3:test
+

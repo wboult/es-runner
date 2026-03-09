@@ -25,12 +25,23 @@ final class IntegrationTestSupport {
                                       String heap,
                                       Duration startupTimeout,
                                       boolean quiet) {
-        String zipPath = System.getenv("ES_DISTRO_ZIP");
-        boolean download = Boolean.parseBoolean(System.getenv().getOrDefault("ES_DISTRO_DOWNLOAD", "false"));
-        Path distrosDir = Path.of(System.getenv().getOrDefault("ES_DISTROS_DIR", "distros"));
-        String baseUrl = System.getenv("ES_DISTRO_BASE_URL");
+        return config(DistroFamily.ELASTICSEARCH, version, workDir, clusterName, heap, startupTimeout, quiet);
+    }
 
-        ElasticRunnerConfig base = ElasticRunnerConfig.defaults().toBuilder()
+    static ElasticRunnerConfig config(DistroFamily family,
+                                      String version,
+                                      Path workDir,
+                                      String clusterName,
+                                      String heap,
+                                      Duration startupTimeout,
+                                      boolean quiet) {
+        String prefix = envPrefix(family);
+        String zipPath = System.getenv(prefix + "_DISTRO_ZIP");
+        boolean download = Boolean.parseBoolean(System.getenv().getOrDefault(prefix + "_DISTRO_DOWNLOAD", "false"));
+        Path distrosDir = Path.of(System.getenv().getOrDefault(prefix + "_DISTROS_DIR", "distros"));
+        String baseUrl = System.getenv(prefix + "_DISTRO_BASE_URL");
+
+        ElasticRunnerConfig base = ElasticRunnerConfig.defaults(family).toBuilder()
                 .workDir(workDir)
                 .clusterName(clusterName)
                 .heap(heap)
@@ -40,11 +51,11 @@ final class IntegrationTestSupport {
 
         if (zipPath != null && !zipPath.isBlank()) {
             Path zip = Path.of(zipPath);
-            Assumptions.assumeTrue(Files.exists(zip), "Elasticsearch distro ZIP not found");
+            Assumptions.assumeTrue(Files.exists(zip), family.displayName() + " distro ZIP not found");
             return base.toBuilder().distroZip(zip).build();
         }
 
-        DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
+        DistroDescriptor descriptor = DistroDescriptor.forVersion(family, version);
         Path localZip = distrosDir.resolve(descriptor.fileName());
         if (Files.exists(localZip)) {
             return base.toBuilder().distroZip(localZip).build();
@@ -61,7 +72,7 @@ final class IntegrationTestSupport {
             return config;
         }
 
-        Assumptions.assumeTrue(false, "Elasticsearch distro ZIP not found and downloads disabled");
+        Assumptions.assumeTrue(false, family.displayName() + " distro ZIP not found and downloads disabled");
         return base;
     }
 
@@ -71,24 +82,43 @@ final class IntegrationTestSupport {
                                                  Duration startupTimeout,
                                                  boolean quiet,
                                                  Consumer<ElasticRunnerConfig.Builder> customize) {
-        String zipPath = System.getenv("ES_DISTRO_ZIP");
-        boolean download = Boolean.parseBoolean(System.getenv().getOrDefault("ES_DISTRO_DOWNLOAD", "false"));
-        Path distrosDir = Path.of(System.getenv().getOrDefault("ES_DISTROS_DIR", "distros"));
-        String baseUrl = System.getenv("ES_DISTRO_BASE_URL");
+        return configFromExample(
+                DistroFamily.ELASTICSEARCH,
+                version,
+                workDir,
+                clusterName,
+                startupTimeout,
+                quiet,
+                customize
+        );
+    }
+
+    static ElasticRunnerConfig configFromExample(DistroFamily family,
+                                                 String version,
+                                                 Path workDir,
+                                                 String clusterName,
+                                                 Duration startupTimeout,
+                                                 boolean quiet,
+                                                 Consumer<ElasticRunnerConfig.Builder> customize) {
+        String prefix = envPrefix(family);
+        String zipPath = System.getenv(prefix + "_DISTRO_ZIP");
+        boolean download = Boolean.parseBoolean(System.getenv().getOrDefault(prefix + "_DISTRO_DOWNLOAD", "false"));
+        Path distrosDir = Path.of(System.getenv().getOrDefault(prefix + "_DISTROS_DIR", "distros"));
+        String baseUrl = System.getenv(prefix + "_DISTRO_BASE_URL");
 
         Path localZip = null;
         if (zipPath == null || zipPath.isBlank()) {
-            DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
+            DistroDescriptor descriptor = DistroDescriptor.forVersion(family, version);
             localZip = distrosDir.resolve(descriptor.fileName());
             if (!download && !Files.exists(localZip)) {
-                Assumptions.assumeTrue(false, "Elasticsearch distro ZIP not found and downloads disabled");
+                Assumptions.assumeTrue(false, family.displayName() + " distro ZIP not found and downloads disabled");
             }
         }
 
         Path distroZip = null;
         if (zipPath != null && !zipPath.isBlank()) {
             distroZip = Path.of(zipPath);
-            Assumptions.assumeTrue(Files.exists(distroZip), "Elasticsearch distro ZIP not found");
+            Assumptions.assumeTrue(Files.exists(distroZip), family.displayName() + " distro ZIP not found");
         } else if (localZip != null && Files.exists(localZip)) {
             distroZip = localZip;
         }
@@ -96,7 +126,8 @@ final class IntegrationTestSupport {
         Path finalDistroZip = distroZip;
         Path finalLocalZip = localZip;
         return ElasticRunnerConfig.from(builder -> {
-            builder.workDir(workDir)
+            builder.family(family)
+                    .workDir(workDir)
                     .clusterName(clusterName)
                     .startupTimeout(startupTimeout)
                     .quiet(quiet);
@@ -118,21 +149,25 @@ final class IntegrationTestSupport {
     }
 
     private static void assumeDownloadAvailable(String version, String baseUrl) {
-        String effectiveBaseUrl = (baseUrl == null || baseUrl.isBlank())
-                ? ElasticRunnerConfig.defaults().downloadBaseUrl()
-                : baseUrl;
-        String key = version + "|" + effectiveBaseUrl;
-        Boolean available = DOWNLOAD_AVAILABILITY.get(key);
-        if (available == null) {
-            available = checkDownloadAvailable(version, effectiveBaseUrl);
-            DOWNLOAD_AVAILABILITY.put(key, available);
-        }
-        Assumptions.assumeTrue(available, "Elasticsearch distro not found at " + effectiveBaseUrl);
+        assumeDownloadAvailable(DistroFamily.ELASTICSEARCH, version, baseUrl);
     }
 
-    private static boolean checkDownloadAvailable(String version, String baseUrl) {
+    private static void assumeDownloadAvailable(DistroFamily family, String version, String baseUrl) {
+        String effectiveBaseUrl = (baseUrl == null || baseUrl.isBlank())
+                ? ElasticRunnerConfig.defaults(family).downloadBaseUrl()
+                : baseUrl;
+        String key = family.name() + "|" + version + "|" + effectiveBaseUrl;
+        Boolean available = DOWNLOAD_AVAILABILITY.get(key);
+        if (available == null) {
+            available = checkDownloadAvailable(family, version, effectiveBaseUrl);
+            DOWNLOAD_AVAILABILITY.put(key, available);
+        }
+        Assumptions.assumeTrue(available, family.displayName() + " distro not found at " + effectiveBaseUrl);
+    }
+
+    private static boolean checkDownloadAvailable(DistroFamily family, String version, String baseUrl) {
         try {
-            DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
+            DistroDescriptor descriptor = DistroDescriptor.forVersion(family, version);
             URI uri = descriptor.downloadUri(baseUrl);
             String scheme = uri.getScheme();
             if ("file".equalsIgnoreCase(scheme)) {
@@ -150,5 +185,9 @@ final class IntegrationTestSupport {
         } catch (Exception ignored) {
             return true;
         }
+    }
+
+    private static String envPrefix(DistroFamily family) {
+        return family == DistroFamily.OPENSEARCH ? "OPENSEARCH" : "ES";
     }
 }

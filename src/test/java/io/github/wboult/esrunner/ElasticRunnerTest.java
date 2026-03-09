@@ -40,6 +40,23 @@ class ElasticRunnerTest {
     }
 
     @Test
+    void resolveDistroZipUsesOpenSearchVersionAndDistrosDir() throws IOException {
+        Path distrosDir = Files.createTempDirectory("es-runner-distros");
+        String version = "3.5.0";
+        DistroDescriptor descriptor = DistroDescriptor.forVersion(DistroFamily.OPENSEARCH, version);
+        Path zip = distrosDir.resolve(descriptor.fileName()).toAbsolutePath();
+        Files.writeString(zip, "fake");
+
+        ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+                .family(DistroFamily.OPENSEARCH)
+                .version(version)
+                .distrosDir(distrosDir)
+                .download(false));
+
+        assertEquals(zip, ElasticRunner.resolveDistroZip(config));
+    }
+
+    @Test
     void resolveDistroZipDownloadsFromFileMirror() throws IOException {
         String version = "9.2.4";
         DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
@@ -49,6 +66,28 @@ class ElasticRunnerTest {
         Files.writeString(mirroredZip, "mirror-zip");
 
         ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+                .version(version)
+                .distrosDir(distrosDir)
+                .download(true)
+                .downloadBaseUrl(mirrorDir.toUri().toString()));
+
+        Path resolved = ElasticRunner.resolveDistroZip(config);
+
+        assertEquals(distrosDir.resolve(descriptor.fileName()).toAbsolutePath(), resolved);
+        assertEquals("mirror-zip", Files.readString(resolved));
+    }
+
+    @Test
+    void resolveDistroZipDownloadsOpenSearchFromFileMirror() throws IOException {
+        String version = "2.19.4";
+        DistroDescriptor descriptor = DistroDescriptor.forVersion(DistroFamily.OPENSEARCH, version);
+        Path mirrorDir = Files.createTempDirectory("es-runner-mirror");
+        Path distrosDir = Files.createTempDirectory("es-runner-distros");
+        Path mirroredZip = mirrorDir.resolve(descriptor.fileName());
+        Files.writeString(mirroredZip, "mirror-zip");
+
+        ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+                .family(DistroFamily.OPENSEARCH)
                 .version(version)
                 .distrosDir(distrosDir)
                 .download(true)

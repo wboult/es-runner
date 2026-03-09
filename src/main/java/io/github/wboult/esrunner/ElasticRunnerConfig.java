@@ -13,28 +13,30 @@ import java.util.function.UnaryOperator;
 
 /**
  * Immutable configuration for resolving a distro archive and starting one
- * Elasticsearch node.
+ * local search node.
  *
+ * @param family distro family to resolve and launch
  * @param distroZip local ZIP archive to use instead of version-based lookup
- * @param version Elasticsearch version used for download or cache resolution
+ * @param version distro version used for download or cache resolution
  * @param distrosDir local distro cache directory
  * @param download whether the distro should be downloaded even if cached
  * @param downloadBaseUrl base URL or mirror prefix used for downloads
  * @param workDir working directory used for extracted files, logs, and state
- * @param clusterName cluster name written into {@code elasticsearch.yml}
+ * @param clusterName cluster name written into the family config file
  * @param httpPort fixed HTTP port, or {@code 0} to use the configured range
  * @param portRangeStart start of the HTTP port range used when {@code httpPort}
  *                       is zero
  * @param portRangeEnd end of the HTTP port range used when {@code httpPort} is
  *                     zero
- * @param heap heap size passed to Elasticsearch for both Xms and Xmx
+ * @param heap heap size passed to the launched process for both Xms and Xmx
  * @param startupTimeout startup timeout for process readiness
  * @param shutdownTimeout shutdown timeout before forced termination
- * @param settings additional Elasticsearch settings
+ * @param settings additional server settings
  * @param plugins plugins to install before startup
  * @param quiet whether process output should stay quiet on stdout/stderr
  */
 public record ElasticRunnerConfig(
+        DistroFamily family,
         Path distroZip,
         String version,
         Path distrosDir,
@@ -55,8 +57,9 @@ public record ElasticRunnerConfig(
     /**
      * Validates and normalizes configuration values.
      *
+     * @param family distro family
      * @param distroZip local ZIP archive
-     * @param version Elasticsearch version
+     * @param version distro version
      * @param distrosDir distro cache directory
      * @param download download flag
      * @param downloadBaseUrl download base URL or mirror prefix
@@ -68,11 +71,12 @@ public record ElasticRunnerConfig(
      * @param heap heap size
      * @param startupTimeout startup timeout
      * @param shutdownTimeout shutdown timeout
-     * @param settings Elasticsearch settings
+     * @param settings server settings
      * @param plugins plugins to install
      * @param quiet quiet flag
      */
     public ElasticRunnerConfig {
+        family = family == null ? DistroFamily.ELASTICSEARCH : family;
         Objects.requireNonNull(workDir, "workDir");
         Objects.requireNonNull(clusterName, "clusterName");
         Objects.requireNonNull(heap, "heap");
@@ -94,12 +98,24 @@ public record ElasticRunnerConfig(
      * @return default configuration
      */
     public static ElasticRunnerConfig defaults() {
+        return defaults(DistroFamily.ELASTICSEARCH);
+    }
+
+    /**
+     * Returns the default single-node configuration used as the starting point
+     * for one distro family.
+     *
+     * @param family distro family
+     * @return default configuration
+     */
+    public static ElasticRunnerConfig defaults(DistroFamily family) {
         return new ElasticRunnerConfig(
+                family,
                 null,
                 null,
                 Paths.get("distros"),
                 false,
-                "https://artifacts.elastic.co/downloads/elasticsearch/",
+                family.defaultDownloadBaseUrl(),
                 Paths.get(".es"),
                 "local-es",
                 0,
@@ -108,7 +124,7 @@ public record ElasticRunnerConfig(
                 "256m",
                 Duration.ofSeconds(60),
                 Duration.ofSeconds(20),
-                defaultSettings(),
+                family.defaultSettings(),
                 List.of(),
                 false
         );
@@ -121,6 +137,16 @@ public record ElasticRunnerConfig(
      */
     public static Builder builder() {
         return new Builder(defaults());
+    }
+
+    /**
+     * Returns a mutable builder seeded from the defaults for one distro family.
+     *
+     * @param family distro family
+     * @return new builder
+     */
+    public static Builder builder(DistroFamily family) {
+        return new Builder(defaults(family));
     }
 
     /**
@@ -144,17 +170,11 @@ public record ElasticRunnerConfig(
         return new Builder(this);
     }
 
-    private static Map<String, String> defaultSettings() {
-        Map<String, String> defaults = new LinkedHashMap<>();
-        defaults.put("discovery.type", "single-node");
-        defaults.put("xpack.security.enabled", "false");
-        return defaults;
-    }
-
     /**
      * Mutable builder for {@link ElasticRunnerConfig}.
      */
     public static final class Builder {
+        private DistroFamily family;
         private Path distroZip;
         private String version;
         private Path distrosDir;
@@ -173,6 +193,7 @@ public record ElasticRunnerConfig(
         private boolean quiet;
 
         private Builder(ElasticRunnerConfig base) {
+            this.family = base.family();
             this.distroZip = base.distroZip();
             this.version = base.version();
             this.distrosDir = base.distrosDir();
@@ -192,9 +213,34 @@ public record ElasticRunnerConfig(
         }
 
         /**
+         * Sets the distro family. If the download URL or settings still match
+         * the previous defaults, they are swapped to the new family's defaults
+         * too so a simple family change stays ergonomic.
+         *
+         * @param family distro family
+         * @return this builder
+         */
+        public Builder family(DistroFamily family) {
+            Objects.requireNonNull(family, "family");
+            DistroFamily previous = this.family;
+            if (previous == family) {
+                return this;
+            }
+            if (previous != null && Objects.equals(downloadBaseUrl, previous.defaultDownloadBaseUrl())) {
+                this.downloadBaseUrl = family.defaultDownloadBaseUrl();
+            }
+            if (previous != null && settings.equals(previous.defaultSettings())) {
+                this.settings.clear();
+                this.settings.putAll(family.defaultSettings());
+            }
+            this.family = family;
+            return this;
+        }
+
+        /**
          * Sets the local ZIP archive to use.
          *
-         * @param distroZip Elasticsearch ZIP archive
+         * @param distroZip distro ZIP archive
          * @return this builder
          */
         public Builder distroZip(Path distroZip) {
@@ -203,7 +249,7 @@ public record ElasticRunnerConfig(
         }
 
         /**
-         * Sets the Elasticsearch version used for download or cache lookup.
+         * Sets the distro version used for download or cache lookup.
          *
          * @param version Elasticsearch version
          * @return this builder
@@ -259,7 +305,7 @@ public record ElasticRunnerConfig(
         }
 
         /**
-         * Sets the Elasticsearch cluster name.
+         * Sets the local cluster name.
          *
          * @param clusterName cluster name
          * @return this builder
@@ -295,7 +341,7 @@ public record ElasticRunnerConfig(
         }
 
         /**
-         * Sets the Elasticsearch heap size for both Xms and Xmx.
+         * Sets the server heap size for both Xms and Xmx.
          *
          * @param heap heap size such as {@code 512m}
          * @return this builder
@@ -328,7 +374,7 @@ public record ElasticRunnerConfig(
         }
 
         /**
-         * Replaces all extra Elasticsearch settings.
+         * Replaces all extra server settings.
          *
          * @param settings settings map
          * @return this builder
@@ -340,7 +386,7 @@ public record ElasticRunnerConfig(
         }
 
         /**
-         * Adds or overrides one Elasticsearch setting.
+         * Adds or overrides one server setting.
          *
          * @param key setting key
          * @param value setting value
@@ -392,6 +438,7 @@ public record ElasticRunnerConfig(
          */
         public ElasticRunnerConfig build() {
             return new ElasticRunnerConfig(
+                    family,
                     distroZip,
                     version,
                     distrosDir,

@@ -1,6 +1,6 @@
 ---
 title: Use cloud storage mirrors
-description: Download Elasticsearch distros from HTTPS or file mirrors, with guidance for S3, GCS, and Azure Blob via pre-signed URLs.
+description: Download Elasticsearch or OpenSearch distros from HTTPS or file mirrors, with guidance for S3, GCS, and Azure Blob via pre-signed URLs.
 ---
 
 ES Runner can download distro archives from:
@@ -22,6 +22,12 @@ ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
     .downloadBaseUrl("https://internal-mirror.example.com/elasticsearch/"));
+
+ElasticRunnerConfig.from(builder -> builder
+    .family(DistroFamily.OPENSEARCH)
+    .version("3.5.0")
+    .download(true)
+    .downloadBaseUrl("https://internal-mirror.example.com/opensearch/"));
 ```
 
 If the base URL includes a shared query string (e.g. a SAS token), ES Runner
@@ -34,6 +40,12 @@ ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
     .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
+
+ElasticRunnerConfig.from(builder -> builder
+    .family(DistroFamily.OPENSEARCH)
+    .version("3.5.0")
+    .download(true)
+    .downloadBaseUrl("file:///srv/mirrors/opensearch/"));
 ```
 
 ## Cloud storage via pre-signed / SAS URLs
