@@ -1,0 +1,28 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'io.github.wboult'
+version = '0.1.0'
+description = 'Shared embedded Elasticsearch support for version-specific embedded runners.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+dependencies {
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = false
+    }
+}

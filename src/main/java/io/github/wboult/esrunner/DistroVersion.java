@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 final class DistroVersion {
     private static final Pattern VERSION_PATTERN =
-            Pattern.compile("elasticsearch-([0-9]+(?:\\.[0-9]+)*)", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("(?:elasticsearch|opensearch)-([0-9]+(?:\\.[0-9]+)*)", Pattern.CASE_INSENSITIVE);
 
     private DistroVersion() {
     }

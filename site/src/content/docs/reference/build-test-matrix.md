@@ -27,6 +27,10 @@ CI runs multiple combinations of Elasticsearch/Scala/Spark versions and includes
 | `ES_DISTROS_DIR` | Directory for ZIPs | `distros` |
 | `ES_DISTRO_BASE_URL` | Mirror base URL | `https://mirror.example.com/elasticsearch/` |
 | `ES_VERSION` | Version used by example tests | `9.3.1` |
+| `OPENSEARCH_DISTRO_ZIP` | Path to a local OpenSearch ZIP | `/path/to/opensearch-3.5.0.zip` |
+| `OPENSEARCH_DISTRO_DOWNLOAD` | Allow OpenSearch downloads | `true` |
+| `OPENSEARCH_DISTROS_DIR` | Directory for OpenSearch ZIPs | `distros` |
+| `OPENSEARCH_DISTRO_BASE_URL` | OpenSearch mirror base URL | `https://mirror.example.com/opensearch/` |
 
 ## Local runs
 
@@ -42,8 +46,14 @@ export ES_DISTRO_DOWNLOAD=true
 export ES_VERSION=9.3.1
 ```
 
+For the optional OpenSearch smoke test:
+
+```bash
+export OPENSEARCH_DISTROS_DIR=distros/embedded
+./gradlew test --tests io.github.wboult.esrunner.OpenSearchRunnerIntegrationTest
+```
+
 ## Related
 
 - [Troubleshooting](../../how-to/troubleshooting/)
 - [Compatibility matrix](../compatibility/)
-

@@ -20,6 +20,15 @@ class DistroDescriptorTest {
     }
 
     @Test
+    void buildsOpenSearchFileNameFromVersionAndOs() {
+        DistroDescriptor descriptor = DistroDescriptor.forVersion(DistroFamily.OPENSEARCH, "3.5.0");
+        String fileName = descriptor.fileName();
+
+        assertTrue(fileName.startsWith("opensearch-3.5.0-"));
+        assertTrue(fileName.endsWith("." + Os.archiveExtension()));
+    }
+
+    @Test
     void preservesQueryStringWhenBuildingDownloadUri() {
         DistroDescriptor descriptor = DistroDescriptor.forVersion("9.2.4");
 

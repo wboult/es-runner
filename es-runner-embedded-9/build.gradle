@@ -1,0 +1,75 @@
+/**
+ * Experimental: Elasticsearch 9.3.1 embedded in-process runner.
+ *
+ * Strategy: "filesystem-modules" - esHome points at an extracted ES distribution.
+ * Node loads modules directly from esHome/modules/ on the filesystem. No module
+ * jars need to be on the Gradle classpath.
+ *
+ * Key dep: org.elasticsearch:elasticsearch:9.3.1 - published to
+ * artifacts.elastic.co/maven/.
+ *
+ * Tests require ES_EMBEDDED_HOME_9 pointing at an extracted 9.3.x distribution.
+ * Export ES_EMBEDDED_HOME_9=/path/to/elasticsearch-9.3.1 (NOT inside a zip -
+ * extracted dir)
+ */
+plugins {
+    id 'java-library'
+}
+
+group = 'io.github.wboult'
+version = '0.1.0'
+description = 'Experimental: run Elasticsearch 9.3.x embedded inside the current JVM.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+// We deliberately do NOT pull in the root project's Scala/Spark test machinery.
+dependencies {
+    api(project(':'))
+    api(project(':es-runner-embedded-common'))
+
+    // Core ES server - provides Node, Settings, Environment, InternalSettingsPreparer,
+    // HttpServerTransport, and the rest of the bootstrap surface.
+    api("org.elasticsearch:elasticsearch:9.3.1")
+
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+// ES 8.x/9.x still requires many --add-opens, and ES 9.x needs Java 21.
+def esJvmArgs = [
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio.channels=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio.file=ALL-UNNAMED",
+        "--add-opens=java.base/java.time=ALL-UNNAMED",
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+        "--add-opens=java.management/sun.management=ALL-UNNAMED",
+        "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
+        "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
+        "-Dlog4j2.disable.jmx=true",
+        "-Des.enforce.bootstrap.checks=false",
+        "-Des.bootstrap.memory_lock.check=false",
+]
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    jvmArgs(*esJvmArgs)
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = false
+    }
+}

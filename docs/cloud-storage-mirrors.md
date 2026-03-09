@@ -1,7 +1,7 @@
 # Cloud Storage Mirrors
 
-ES Runner can resolve and download Elasticsearch distro archives from
-HTTPS mirrors and local file paths.
+ES Runner can resolve and download Elasticsearch and OpenSearch distro archives
+from HTTPS mirrors and local file paths.
 
 Supported `downloadBaseUrl(...)` schemes:
 
@@ -32,6 +32,12 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
     .downloadBaseUrl("https://internal-mirror.example.com/elasticsearch/"));
+
+ElasticRunnerConfig openSearchConfig = ElasticRunnerConfig.from(builder -> builder
+    .family(DistroFamily.OPENSEARCH)
+    .version("3.5.0")
+    .download(true)
+    .downloadBaseUrl("https://internal-mirror.example.com/opensearch/"));
 ```
 
 ## Local / shared file mirrors
@@ -43,6 +49,12 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
     .version("9.3.1")
     .download(true)
     .downloadBaseUrl("file:///srv/mirrors/elasticsearch/"));
+
+ElasticRunnerConfig openSearchConfig = ElasticRunnerConfig.from(builder -> builder
+    .family(DistroFamily.OPENSEARCH)
+    .version("3.5.0")
+    .download(true)
+    .downloadBaseUrl("file:///srv/mirrors/opensearch/"));
 ```
 
 ## Cloud storage workarounds

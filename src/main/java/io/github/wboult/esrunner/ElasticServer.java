@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Handle for one running Elasticsearch process started by {@link ElasticRunner}.
  */
-public final class ElasticServer implements AutoCloseable {
+public final class ElasticServer implements ElasticServerHandle {
     private final ElasticRunnerConfig config;
     private final Process process;
     private final Path homeDir;
@@ -80,6 +80,11 @@ public final class ElasticServer implements AutoCloseable {
      */
     public ElasticRunnerConfig config() {
         return config;
+    }
+
+    @Override
+    public ElasticServerType type() {
+        return ElasticServerType.PROCESS;
     }
 
     /**
