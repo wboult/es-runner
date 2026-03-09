@@ -280,7 +280,7 @@ ElasticRunnerConfig fileMirrorConfig = ElasticRunnerConfig.from(builder -> build
 ```
 
 For private S3, GCS, or Azure Blob buckets, generate a pre-signed / SAS HTTPS
-URL and use it directly — these work with the built-in `https://` downloader.
+URL and use it directly. These work with the built-in `https://` downloader.
 See [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md) for
 per-provider instructions, and
 [docs/cloud-storage-extension-plan.md](docs/cloud-storage-extension-plan.md)
@@ -290,7 +290,8 @@ for the planned native SDK-based extension modules.
 
 ES Runner includes an incubating Gradle plugin for build-scoped shared
 Elasticsearch clusters. It starts one node per cluster definition, reuses it
-across projects/suites in the build, and injects a per-suite namespace so
+across projects/suites in the build, waits for yellow cluster health before
+handing tests the connection details, and injects a per-suite namespace so
 parallel suites do not collide.
 
 Current source-tree plugin id:
@@ -305,7 +306,27 @@ This is an independent OSS library and is not affiliated with Elastic. The code
 uses the owner-controlled `io.github.wboult` namespace for packages,
 coordinates, and Gradle plugin ids.
 
-Root build example:
+Current setup status:
+
+- the plugin already works in this repo and in composite builds
+- Plugin Portal and Maven Central publication are still pending
+
+Before publication, the easiest way to try it is a composite build. In your
+consumer `settings.gradle`:
+
+```groovy
+pluginManagement {
+    includeBuild("../es-runner")
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+Then apply the plugin in the root build:
 
 ```groovy
 plugins {
@@ -319,6 +340,7 @@ elasticTestClusters {
             download.set(true)
             clusterName.set("shared-it")
             quiet.set(true)
+            startupTimeoutMillis.set(180_000L)
         }
     }
 
@@ -326,6 +348,33 @@ elasticTestClusters {
         matchingName("integrationTest") {
             useCluster("integration")
             namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+        matchingName("smokeTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+    }
+}
+```
+
+Subprojects define suites normally. All matching suite tasks reuse the same
+shared ES9 distro/process for the build:
+
+```groovy
+subprojects {
+    apply plugin: 'java'
+
+    testing {
+        suites {
+            withType(org.gradle.api.plugins.jvm.JvmTestSuite).configureEach {
+                useJUnitJupiter()
+                dependencies {
+                    implementation("io.github.wboult:es-runner-gradle-test-support:${version}")
+                }
+            }
+
+            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite)
+            register("smokeTest", org.gradle.api.plugins.jvm.JvmTestSuite)
         }
     }
 }
@@ -342,6 +391,23 @@ client.createIndex(ordersIndex);
 client.indexDocument(ordersIndex, "1", "{\"status\":\"new\"}");
 client.refresh(ordersIndex);
 ```
+
+Namespace behavior:
+
+- tests inside one suite task can share state
+- different suite tasks get different physical names by default
+- the same logical `orders` name becomes different actual indices such as:
+  - `erabc123_app_integrationtest-orders`
+  - `erabc123_app_smoketest-orders`
+  - `erabc123_search_integrationtest-orders`
+  - `erabc123_search_smoketest-orders`
+
+That lets multiple projects and suites share one node without data collisions
+or stale test data leaking across suites.
+
+Shared test-cluster defaults also disable Elasticsearch disk-threshold
+allocation checks, which avoids single-node local builds getting stuck red on
+machines with low free-disk percentage.
 
 See [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
 for the usage guide and

@@ -25,6 +25,25 @@ The plugin wires test tasks. The helper artifact keeps test code clean by
 turning injected system properties into an `ElasticClient` plus namespace-aware
 resource names.
 
+## Current availability
+
+The plugin and helper module already work in this repo and in composite builds.
+Plugin Portal and Maven Central publication are still pending.
+
+Until publication, the correct setup is a composite build:
+
+```groovy
+pluginManagement {
+    includeBuild("../es-runner")
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
 ## Recommended build layout
 
 Apply the plugin once in the root build:
@@ -43,6 +62,7 @@ elasticTestClusters {
             workDir.set(layout.rootProject.layout.buildDirectory.dir("elastic-test-clusters/integration").get().asFile.absolutePath)
             clusterName.set("shared-it")
             quiet.set(true)
+            startupTimeoutMillis.set(180_000L)
         }
     }
 
@@ -51,25 +71,32 @@ elasticTestClusters {
             useCluster("integration")
             namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
+        matchingName("smokeTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
     }
 }
 ```
 
-Then define the suites normally in subprojects:
+Then define the suites normally in subprojects. A realistic setup can have
+multiple projects and multiple suite tasks all sharing one ES9 node:
 
 ```groovy
 subprojects {
     apply plugin: 'java'
 
-    dependencies {
-        testImplementation "io.github.wboult:es-runner-gradle-test-support:${project.version}"
-    }
-
     testing {
         suites {
-            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite) {
+            withType(org.gradle.api.plugins.jvm.JvmTestSuite).configureEach {
                 useJUnitJupiter()
+                dependencies {
+                    implementation("io.github.wboult:es-runner-gradle-test-support:${project.version}")
+                }
             }
+
+            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite)
+            register("smokeTest", org.gradle.api.plugins.jvm.JvmTestSuite)
         }
     }
 }
@@ -98,6 +125,11 @@ client.refresh(ordersIndex);
 
 The helper prefixes logical resource names with the injected suite namespace,
 so tests can use stable logical names without colliding with other suites.
+
+The plugin starts the cluster lazily and waits for yellow health before it
+injects `elastic.runner.baseUri` into suite tasks, so the first suite does not
+have to add its own startup polling just to survive initial contact with a
+fresh single-node cluster.
 
 ## Injected system properties
 
@@ -131,6 +163,17 @@ Current modes:
 
 `SUITE` is the recommended default for integration automation.
 
+Example:
+
+- build id: `erabc123`
+- `:app:integrationTest` using `env.index("orders")`
+  - physical index: `erabc123_app_integrationtest-orders`
+- `:search:smokeTest` using `env.index("orders")`
+  - physical index: `erabc123_search_smoketest-orders`
+
+That lets tests within one suite intentionally share state, while different
+projects and suites can reuse the same node without colliding.
+
 ## Cluster configuration
 
 Cluster definitions map closely to `ElasticRunnerConfig`. Common properties:
@@ -151,6 +194,14 @@ Cluster definitions map closely to `ElasticRunnerConfig`. Common properties:
 - `settings`
 - `plugins`
 - `quiet`
+
+Shared test-cluster defaults also add:
+
+- `cluster.routing.allocation.disk.threshold_enabled=false`
+
+That keeps local single-node builds from getting stuck red on machines with a
+low free-disk percentage, which is a common source of confusing laptop and CI
+failures.
 
 Example using an internal HTTPS mirror:
 

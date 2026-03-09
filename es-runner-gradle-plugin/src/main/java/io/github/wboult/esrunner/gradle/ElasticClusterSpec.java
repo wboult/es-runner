@@ -9,6 +9,8 @@ import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
 import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * DSL model for one shared Elasticsearch cluster definition.
@@ -61,6 +63,8 @@ public abstract class ElasticClusterSpec {
         this.quiet = objects.property(Boolean.class);
 
         ElasticRunnerConfig defaults = ElasticRunnerConfig.defaults();
+        Map<String, String> defaultSettings = new LinkedHashMap<>(defaults.settings());
+        defaultSettings.put("cluster.routing.allocation.disk.threshold_enabled", "false");
         this.distrosDir.convention(layout.getProjectDirectory()
                 .dir(".gradle/elasticsearch/distros")
                 .getAsFile()
@@ -77,7 +81,7 @@ public abstract class ElasticClusterSpec {
         this.heap.convention(defaults.heap());
         this.startupTimeoutMillis.convention(defaults.startupTimeout().toMillis());
         this.shutdownTimeoutMillis.convention(defaults.shutdownTimeout().toMillis());
-        this.settings.convention(defaults.settings());
+        this.settings.convention(defaultSettings);
         this.plugins.convention(defaults.plugins());
         this.quiet.convention(defaults.quiet());
     }

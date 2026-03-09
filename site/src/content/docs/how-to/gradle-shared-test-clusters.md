@@ -12,6 +12,24 @@ Use it when you want:
 - multiple Gradle projects to share the same cluster
 - suite-level namespaces so parallel suites do not collide
 
+## Use a composite build today
+
+The plugin and helper module work now, but Plugin Portal and Maven Central
+publication are still pending. Until then, include ES Runner as a composite
+build:
+
+```groovy
+pluginManagement {
+    includeBuild("../es-runner")
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
 ## Apply the plugin in the root build
 
 ```groovy
@@ -26,11 +44,16 @@ elasticTestClusters {
             download.set(true)
             clusterName.set("shared-it")
             quiet.set(true)
+            startupTimeoutMillis.set(180_000L)
         }
     }
 
     suites {
         matchingName("integrationTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+        matchingName("smokeTest") {
             useCluster("integration")
             namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
@@ -44,15 +67,17 @@ elasticTestClusters {
 subprojects {
     apply plugin: 'java'
 
-    dependencies {
-        testImplementation "io.github.wboult:es-runner-gradle-test-support:${project.version}"
-    }
-
     testing {
         suites {
-            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite) {
+            withType(org.gradle.api.plugins.jvm.JvmTestSuite).configureEach {
                 useJUnitJupiter()
+                dependencies {
+                    implementation("io.github.wboult:es-runner-gradle-test-support:${project.version}")
+                }
             }
+
+            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite)
+            register("smokeTest", org.gradle.api.plugins.jvm.JvmTestSuite)
         }
     }
 }
@@ -77,7 +102,9 @@ client.indexDocument(orders, "1", "{\"status\":\"new\"}");
 client.refresh(orders);
 ```
 
-The helper prefixes logical resource names with the suite namespace.
+The helper prefixes logical resource names with the suite namespace, and the
+plugin waits for yellow cluster health before injecting `elastic.runner.baseUri`
+into suite tasks.
 
 ## What gets injected
 
@@ -99,6 +126,15 @@ Bound test tasks receive these system properties:
 With `SUITE`, tests within the same suite can share state, but parallel suites
 stay isolated from each other.
 
+Example:
+
+- `:app:integrationTest` using `env.index("orders")`
+  - `erabc123_app_integrationtest-orders`
+- `:search:smokeTest` using `env.index("orders")`
+  - `erabc123_search_smoketest-orders`
+
+So one shared ES9 cluster can safely back multiple projects and suite tasks.
+
 ## Configure mirrors and private distros
 
 Cluster definitions accept the same distro settings as the core library:
@@ -108,6 +144,10 @@ Cluster definitions accept the same distro settings as the core library:
 - `download`
 - `downloadBaseUrl`
 - `distrosDir`
+
+Shared test-cluster defaults also disable Elasticsearch disk-threshold
+allocation checks, which avoids single-node local builds getting stuck red on
+machines with a low free-disk percentage.
 
 That means you can point shared Gradle clusters at:
 
