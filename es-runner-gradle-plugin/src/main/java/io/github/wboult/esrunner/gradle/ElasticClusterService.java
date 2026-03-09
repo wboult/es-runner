@@ -79,6 +79,11 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
                 }
                 ElasticServer started = ElasticRunner.start(toConfig());
                 try {
+                    Duration startupTimeout = Duration.ofMillis(getParameters().getStartupTimeoutMillis().get());
+                    if (!started.client().waitForYellow(startupTimeout)) {
+                        throw new IllegalStateException("Shared cluster '" + getParameters().getName().get()
+                                + "' did not reach yellow health within " + startupTimeout + ".");
+                    }
                     metadata = new ElasticClusterMetadata(
                             started.baseUri().toString(),
                             started.httpPort(),
@@ -90,7 +95,8 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
                     } catch (Exception suppressed) {
                         e.addSuppressed(suppressed);
                     }
-                    throw e;
+                    throw new IllegalStateException("Failed to start shared cluster '"
+                            + getParameters().getName().get() + "'.", e);
                 }
                 server = started;
             }

@@ -6,12 +6,18 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,217 +25,164 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ElasticSharedTestClustersPluginFunctionalTest {
+    private static final String FIXTURE_ROOT = "fixtures/shared-cluster-multiproject";
+
     Path projectDir;
 
     @Test
-    void sharesOneClusterAcrossProjectsAndInjectsSuiteNamespaces() throws IOException {
+    void sharesOneEs9ClusterAcrossProjectsAndSuites() throws IOException {
         projectDir = Files.createTempDirectory("es-runner-gradle-plugin-it");
+        boolean success = false;
         try {
-            Path distroArchive = localDistroArchive();
-            Assumptions.assumeTrue(distroArchive != null, "Local Elasticsearch distro archive not found");
+            Path repoRoot = repoRoot();
+            Path distroArchive = localElasticsearch9Archive(repoRoot);
+            Assumptions.assumeTrue(distroArchive != null, "Local Elasticsearch 9 distro archive not found");
 
-            write(projectDir.resolve("settings.gradle"), """
-                    rootProject.name = 'fixture'
-                    include('app', 'search')
-
-                    dependencyResolutionManagement {
-                        repositories {
-                            mavenCentral()
-                        }
-                    }
-                    """);
-            write(projectDir.resolve("gradle.properties"), """
-                    org.gradle.daemon=false
-                    org.gradle.vfs.watch=false
-                    """);
-
-            String escapedZip = distroArchive.toAbsolutePath().toString().replace("\\", "\\\\");
-            String buildGradle = """
-                    import org.gradle.api.plugins.jvm.JvmTestSuite
-
-                    plugins {
-                        id 'io.github.wboult.es-runner.shared-test-clusters'
-                    }
-
-                    elasticTestClusters {
-                        clusters {
-                            register("integration") {
-                                distroZip('%s')
-                                clusterName.set("shared-it")
-                                startupTimeoutMillis.set(180_000L)
-                                quiet.set(true)
-                            }
-                        }
-                        suites {
-                            matchingName("integrationTest") {
-                                useCluster("integration")
-                                namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
-                            }
-                        }
-                    }
-
-                    subprojects {
-                        apply plugin: 'java'
-
-                        java {
-                            toolchain {
-                                languageVersion = JavaLanguageVersion.of(17)
-                            }
-                        }
-
-                        testing {
-                            suites {
-                                register("integrationTest", JvmTestSuite) {
-                                    useJUnitJupiter()
-                                }
-                            }
-                        }
-
-                        tasks.named("check") {
-                            dependsOn(tasks.named("integrationTest"))
-                        }
-                    }
-                    """.formatted(escapedZip);
-            write(projectDir.resolve("build.gradle"), buildGradle);
-
-            write(projectDir.resolve("app/src/integrationTest/java/example/SharedClusterSuiteTest.java"), testClassSource());
-            write(projectDir.resolve("search/src/integrationTest/java/example/SharedClusterSuiteTest.java"), testClassSource());
+            copyFixture(projectDir, Map.of(
+                    "@REPO_ROOT@", repoRoot.toString().replace("\\", "/"),
+                    "@DISTRO_ZIP@", distroArchive.toAbsolutePath().toString().replace("\\", "\\\\"),
+                    "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
+            ));
 
             BuildResult result = GradleRunner.create()
                     .withProjectDir(projectDir.toFile())
-                    .withArguments(":app:integrationTest", ":search:integrationTest", "--parallel", "--stacktrace")
+                    .withArguments(
+                            ":app:integrationTest",
+                            ":app:smokeTest",
+                            ":search:integrationTest",
+                            ":search:smokeTest",
+                            "--stacktrace"
+                    )
                     .withPluginClasspath()
                     .forwardOutput()
                     .build();
 
             assertEquals(SUCCESS, result.task(":app:integrationTest").getOutcome());
+            assertEquals(SUCCESS, result.task(":app:smokeTest").getOutcome());
             assertEquals(SUCCESS, result.task(":search:integrationTest").getOutcome());
+            assertEquals(SUCCESS, result.task(":search:smokeTest").getOutcome());
 
-            List<String> appInfo = Files.readAllLines(projectDir.resolve("app/build/es-runner-info.txt"));
-            List<String> searchInfo = Files.readAllLines(projectDir.resolve("search/build/es-runner-info.txt"));
+            List<Properties> metadata = List.of(
+                    loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties")),
+                    loadProperties(projectDir.resolve("app/build/es-runner/app-smoke.properties")),
+                    loadProperties(projectDir.resolve("search/build/es-runner/search-integration.properties")),
+                    loadProperties(projectDir.resolve("search/build/es-runner/search-smoke.properties"))
+            );
 
-            assertEquals(appInfo.get(0), searchInfo.get(0), "baseUri should be shared across projects");
-            assertNotEquals(appInfo.get(1), searchInfo.get(1), "suite namespaces should differ across projects");
-            assertTrue(appInfo.get(1).contains("app_integrationtest"));
-            assertTrue(searchInfo.get(1).contains("search_integrationtest"));
+            String sharedBaseUri = metadata.get(0).getProperty("baseUri");
+            metadata.forEach(properties -> {
+                assertEquals("shared-es9", properties.getProperty("clusterName"));
+                assertEquals(sharedBaseUri, properties.getProperty("baseUri"));
+            });
+
+            List<String> namespaces = metadata.stream()
+                    .map(properties -> properties.getProperty("namespace"))
+                    .toList();
+            assertEquals(4, namespaces.stream().distinct().count(), "suite namespaces should all differ");
+
+            assertTrue(metadata.get(0).getProperty("namespace").contains("app_integrationtest"));
+            assertTrue(metadata.get(1).getProperty("namespace").contains("app_smoketest"));
+            assertTrue(metadata.get(2).getProperty("namespace").contains("search_integrationtest"));
+            assertTrue(metadata.get(3).getProperty("namespace").contains("search_smoketest"));
+
+            assertNotEquals(
+                    metadata.get(0).getProperty("namespace"),
+                    metadata.get(1).getProperty("namespace"),
+                    "app integration and smoke suites should not share a namespace"
+            );
+            assertNotEquals(
+                    metadata.get(2).getProperty("namespace"),
+                    metadata.get(3).getProperty("namespace"),
+                    "search integration and smoke suites should not share a namespace"
+            );
+
+            success = true;
         } finally {
-            deleteTempDir(projectDir);
+            if (success) {
+                deleteTempDir(projectDir);
+            } else {
+                System.err.println("Preserving failed fixture at " + projectDir);
+            }
         }
     }
 
-    private Path localDistroArchive() throws IOException {
+    private Path repoRoot() {
         Path current = Path.of(System.getProperty("user.dir")).toAbsolutePath();
         for (Path candidate = current; candidate != null; candidate = candidate.getParent()) {
+            if (Files.exists(candidate.resolve("settings.gradle"))
+                    && Files.isDirectory(candidate.resolve("es-runner-gradle-plugin"))
+                    && Files.isDirectory(candidate.resolve("es-runner-gradle-test-support"))) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("Unable to locate repo root from " + current);
+    }
+
+    private Path localElasticsearch9Archive(Path repoRoot) throws IOException {
+        List<Path> candidates = new ArrayList<>();
+        for (Path candidate = repoRoot; candidate != null; candidate = candidate.getParent()) {
             Path distros = candidate.resolve("distros");
             if (!Files.isDirectory(distros)) {
                 continue;
             }
-            try (var stream = Files.list(distros)) {
-                Path zip = stream
+            try (var stream = Files.walk(distros, 2)) {
+                stream.filter(Files::isRegularFile)
                         .filter(path -> {
                             String name = path.getFileName().toString();
-                            return name.endsWith(".zip") || name.endsWith(".tar.gz");
+                            return (name.endsWith(".zip") || name.endsWith(".tar.gz"))
+                                    && name.contains("elasticsearch-9.3.1");
                         })
-                        .sorted(Comparator.comparing(path -> path.getFileName().toString()))
-                        .findFirst()
-                        .orElse(null);
-                if (zip != null) {
-                    return zip;
-                }
+                        .forEach(candidates::add);
             }
         }
-        return null;
+        return candidates.stream()
+                .sorted(Comparator.comparing(path -> path.getFileName().toString()))
+                .findFirst()
+                .orElse(null);
     }
 
-    private String testClassSource() {
-        return """
-                package example;
+    private String rootVersion(Path repoRoot) throws IOException {
+        String buildScript = Files.readString(repoRoot.resolve("build.gradle"));
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("version\\s*=\\s*'([^']+)'")
+                .matcher(buildScript);
+        if (!matcher.find()) {
+            throw new IllegalStateException("Unable to determine root version from build.gradle");
+        }
+        return matcher.group(1);
+    }
 
-                import org.junit.jupiter.api.MethodOrderer;
-                import org.junit.jupiter.api.Order;
-                import org.junit.jupiter.api.Test;
-                import org.junit.jupiter.api.TestMethodOrder;
+    private void copyFixture(Path targetRoot, Map<String, String> replacements) throws IOException {
+        Path fixtureRoot = repoRoot()
+                .resolve("es-runner-gradle-plugin")
+                .resolve("src/test/resources")
+                .resolve(FIXTURE_ROOT);
+        Files.walkFileTree(fixtureRoot, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                Files.createDirectories(targetRoot.resolve(fixtureRoot.relativize(dir).toString()));
+                return FileVisitResult.CONTINUE;
+            }
 
-                import java.net.URI;
-                import java.net.http.HttpClient;
-                import java.net.http.HttpRequest;
-                import java.net.http.HttpResponse;
-                import java.nio.charset.StandardCharsets;
-                import java.nio.file.Files;
-                import java.nio.file.Path;
-
-                import static org.junit.jupiter.api.Assertions.assertEquals;
-                import static org.junit.jupiter.api.Assertions.assertTrue;
-
-                @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-                class SharedClusterSuiteTest {
-                    private static final HttpClient CLIENT = HttpClient.newHttpClient();
-
-                    @Test
-                    @Order(1)
-                    void createsNamespacedIndexAndDocument() throws Exception {
-                        String baseUri = requiredUri("elastic.runner.baseUri");
-                        String namespace = requiredProperty("elastic.runner.namespace");
-                        String index = namespace + "-orders";
-
-                        send("PUT", baseUri + index, "{\\"settings\\":{\\"index.number_of_replicas\\":0}}");
-                        send("PUT", baseUri + index + "/_doc/1", "{\\"status\\":\\"new\\"}");
-                        send("POST", baseUri + index + "/_refresh", null);
-
-                        String count = send("GET", baseUri + index + "/_count", null);
-                        assertTrue(count.contains("\\"count\\":1"));
-
-                        Files.createDirectories(Path.of("build"));
-                        Files.writeString(
-                                Path.of("build/es-runner-info.txt"),
-                                baseUri + System.lineSeparator() + namespace,
-                                StandardCharsets.UTF_8
-                        );
-                    }
-
-                    @Test
-                    @Order(2)
-                    void canReadSharedSuiteStateUsingSameNamespace() throws Exception {
-                        String baseUri = requiredUri("elastic.runner.baseUri");
-                        String namespace = requiredProperty("elastic.runner.namespace");
-                        String index = namespace + "-orders";
-                        String count = send("GET", baseUri + index + "/_count", null);
-                        assertTrue(count.contains("\\"count\\":1"));
-                    }
-
-                    private static String requiredProperty(String key) {
-                        String value = System.getProperty(key);
-                        if (value == null || value.isBlank()) {
-                            throw new IllegalStateException("Missing system property: " + key);
-                        }
-                        return value;
-                    }
-
-                    private static String requiredUri(String key) {
-                        String value = requiredProperty(key);
-                        return value.endsWith("/") ? value : value + "/";
-                    }
-
-                    private static String send(String method, String uri, String body) throws Exception {
-                        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(uri));
-                        if (body == null) {
-                            builder.method(method, HttpRequest.BodyPublishers.noBody());
-                        } else {
-                            builder.header("Content-Type", "application/json");
-                            builder.method(method, HttpRequest.BodyPublishers.ofString(body));
-                        }
-                        HttpResponse<String> response = CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-                        assertTrue(response.statusCode() >= 200 && response.statusCode() < 300,
-                                () -> method + " " + uri + " => " + response.statusCode() + " " + response.body());
-                        return response.body();
-                    }
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path target = targetRoot.resolve(fixtureRoot.relativize(file).toString());
+                String content = Files.readString(file);
+                for (Map.Entry<String, String> replacement : replacements.entrySet()) {
+                    content = content.replace(replacement.getKey(), replacement.getValue());
                 }
-                """;
+                Files.writeString(target, content, StandardCharsets.UTF_8);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
-    private void write(Path path, String content) throws IOException {
-        Files.createDirectories(path.getParent());
-        Files.writeString(path, content);
+    private Properties loadProperties(Path path) throws IOException {
+        Properties properties = new Properties();
+        try (InputStream input = Files.newInputStream(path)) {
+            properties.load(input);
+        }
+        return properties;
     }
 
     private void deleteTempDir(Path dir) {
@@ -243,17 +196,17 @@ class ElasticSharedTestClustersPluginFunctionalTest {
             try {
                 Files.walkFileTree(dir, new SimpleFileVisitor<>() {
                     @Override
-                    public java.nio.file.FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {
                         Files.deleteIfExists(file);
-                        return java.nio.file.FileVisitResult.CONTINUE;
+                        return FileVisitResult.CONTINUE;
                     }
 
                     @Override
-                    public java.nio.file.FileVisitResult postVisitDirectory(Path directory, IOException exc)
+                    public FileVisitResult postVisitDirectory(Path directory, IOException exc)
                             throws IOException {
                         Files.deleteIfExists(directory);
-                        return java.nio.file.FileVisitResult.CONTINUE;
+                        return FileVisitResult.CONTINUE;
                     }
                 });
                 return;
