@@ -2,11 +2,20 @@ rootProject.name = 'es-runner'
 include('es-runner-gradle-plugin')
 include('es-runner-gradle-test-support')
 include('es-runner-java-client')
+
+// Experimental embedded runners live under one parent directory to keep the
+// main repo layout focused on the process-backed path.
 include('es-runner-embedded-common')
 include('es-runner-embedded-8')
 include('es-runner-embedded-9')
 include('es-runner-embedded-opensearch-2')
 include('es-runner-embedded-opensearch-3')
+
+project(':es-runner-embedded-common').projectDir = file('experimental/embedded/es-runner-embedded-common')
+project(':es-runner-embedded-8').projectDir = file('experimental/embedded/es-runner-embedded-8')
+project(':es-runner-embedded-9').projectDir = file('experimental/embedded/es-runner-embedded-9')
+project(':es-runner-embedded-opensearch-2').projectDir = file('experimental/embedded/es-runner-embedded-opensearch-2')
+project(':es-runner-embedded-opensearch-3').projectDir = file('experimental/embedded/es-runner-embedded-opensearch-3')
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
