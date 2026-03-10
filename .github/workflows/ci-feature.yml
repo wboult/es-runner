@@ -115,6 +115,52 @@ jobs:
           ES_DISTRO_DOWNLOAD: "true"
         run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew scala3Test
 
+  opensearch-process:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os_version: ["3.5.0", "2.19.4"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache OpenSearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: opensearch-distro-${{ runner.os }}-${{ matrix.os_version }}
+
+      - name: Prime local OpenSearch distro
+        run: |
+          mkdir -p distros
+          archive="distros/opensearch-${{ matrix.os_version }}-linux-x64.tar.gz"
+          if [ ! -f "$archive" ]; then
+            curl -fsSL "https://artifacts.opensearch.org/releases/bundle/opensearch/${{ matrix.os_version }}/opensearch-${{ matrix.os_version }}-linux-x64.tar.gz" -o "$archive"
+          fi
+
+      - name: Run OpenSearch smoke tests
+        env:
+          OPENSEARCH_VERSION: ${{ matrix.os_version }}
+          OPENSEARCH_DISTROS_DIR: distros
+          OPENSEARCH_DISTRO_DOWNLOAD: "true"
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          :test
+          --tests io.github.wboult.esrunner.OpenSearchRunnerIntegrationTest
+          --tests io.github.wboult.esrunner.ReadmeOpenSearchExampleTest
+
   embedded-jdk17:
     runs-on: ubuntu-latest
     steps:

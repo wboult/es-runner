@@ -28,8 +28,8 @@ final class DistroDescriptor {
     }
 
     URI downloadUri(String baseUrl) {
-        URI base = URI.create(baseUrl);
-        String path = base.getPath() == null ? "" : base.getPath();
+        URI base = URI.create(baseUrl.replace("{version}", version));
+        String path = base.getPath() == null ? "" : base.getPath().replace("{version}", version);
         String normalizedPath = path.endsWith("/") ? path : path + "/";
         String downloadPath = normalizedPath + fileName();
         try {
