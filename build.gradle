@@ -36,6 +36,7 @@ plugins {
     id 'java-library'
     id 'scala'
     id 'org.jetbrains.kotlin.jvm' version '1.9.24'
+    id 'maven-publish'
 }
 
 group = 'io.github.wboult'
@@ -160,5 +161,22 @@ tasks.register("scala3Test", Test) {
 
 tasks.named("check").configure {
     dependsOn tasks.named("scala3Test")
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        def sampleRepoUrl = providers.gradleProperty("sampleRepoUrl").orNull
+        if (sampleRepoUrl != null) {
+            maven {
+                name = "sampleRepo"
+                url = uri(sampleRepoUrl)
+            }
+        }
+    }
 }
 

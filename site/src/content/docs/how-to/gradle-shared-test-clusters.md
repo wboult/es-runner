@@ -30,6 +30,12 @@ dependencyResolutionManagement {
 }
 ```
 
+A checked-in consumer sample also lives in
+`samples/gradle-shared-cluster-multiproject/`. It uses normal plugin/helper
+coordinates and can be pointed at a local Maven repo with
+`-PesRunnerRepositoryUrl=...` before publication, then at published artifacts
+later with only `-PesRunnerVersion=...`.
+
 ## Apply the plugin in the root build
 
 ```groovy
@@ -163,6 +169,7 @@ S3, GCS, and Azure Blob buckets.
 
 ## Related
 
+- `samples/gradle-shared-cluster-multiproject/`
 - [Shared cluster best practices](../gradle-shared-test-cluster-best-practices/)
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Configuration reference](../../reference/configuration/)

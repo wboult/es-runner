@@ -279,6 +279,8 @@ Current setup status:
 
 - the plugin already works in this repo and in composite builds
 - Plugin Portal and Maven Central publication are still pending
+- a checked-in published-artifact-style sample lives in
+  `samples/gradle-shared-cluster-multiproject/`
 
 Before publication, the easiest way to try it is a composite build. In your
 consumer `settings.gradle`:
@@ -373,6 +375,12 @@ Namespace behavior:
 
 That lets multiple projects and suites share one node without data collisions
 or stale test data leaking across suites.
+
+There is also a realistic multi-project sample in
+[`samples/gradle-shared-cluster-multiproject`](samples/gradle-shared-cluster-multiproject)
+that consumes the plugin/helper through normal coordinates. Before publication,
+point it at a local Maven repo with `-PesRunnerRepositoryUrl=...`; after
+publication, it can run with just `-PesRunnerVersion=...`.
 
 Shared test-cluster defaults also disable Elasticsearch disk-threshold
 allocation checks, which avoids single-node local builds getting stuck red on
