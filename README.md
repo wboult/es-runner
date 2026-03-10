@@ -117,6 +117,23 @@ try {
 }
 ```
 
+## Startup failure diagnostics
+
+When startup fails, ES Runner writes a diagnostics file alongside the normal
+runner log:
+
+```text
+<workDir>/<version>/logs/startup-diagnostics.txt
+```
+
+The thrown `ElasticRunnerException` includes the resolved archive path, the
+resolved download URI when version-based resolution was used, the process exit
+code when available, a recent log tail, and the path to that diagnostics file.
+
+The diagnostics file also captures the effective runner config, redacts common
+secret-like setting values, and adds common remediation hints for startup
+failures.
+
 ## Official Java API Client
 
 If you want the standard typed Java client instead of the small built-in

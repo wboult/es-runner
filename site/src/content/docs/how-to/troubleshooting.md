@@ -3,7 +3,8 @@ title: Troubleshooting
 description: Diagnose common failures and recover quickly.
 ---
 
-This guide helps you resolve common issues when starting Elasticsearch with ES Runner.
+This guide helps you resolve common issues when starting Elasticsearch or
+OpenSearch with ES Runner.
 
 ## Distro ZIP not found
 
@@ -12,7 +13,7 @@ This guide helps you resolve common issues when starting Elasticsearch with ES R
 **Fix**:
 - Provide an explicit ZIP path with `.distroZip(...)`, or
 - Enable downloads with `.download(true)` and ensure network access, or
-- Set `ES_DISTRO_DOWNLOAD=true` in CI.
+- Set `ES_DISTRO_DOWNLOAD=true` / `OPENSEARCH_DISTRO_DOWNLOAD=true` in CI.
 
 ## Download fails
 
@@ -21,24 +22,40 @@ This guide helps you resolve common issues when starting Elasticsearch with ES R
 **Fix**:
 - Verify the version exists.
 - Confirm your `downloadBaseUrl` points to a mirror with the correct filename.
+- Check the resolved download URI in `startup-diagnostics.txt`.
 
 ## Port collisions
 
-**Symptom**: Elasticsearch fails to start and logs show `BindException`.
+**Symptom**: The node fails to start and logs show `BindException`.
 
 **Fix**:
 - Use `.httpPort(0)` (default) and a safe range with `.portRange(9200, 9300)`.
 - Ensure each server gets its own `workDir`.
+- Inspect `startup-diagnostics.txt` to see the resolved port settings.
 
 ## Process exits early
 
-**Symptom**: `Elasticsearch process exited early` with log tail.
+**Symptom**: `Elasticsearch process exited early` or `OpenSearch process
+exited early`.
 
 **Fix**:
-- Inspect `server.logTail()` for the root cause.
+- Inspect the `startup-diagnostics.txt` path printed in the exception first.
+- Inspect `server.logTail()` for the root cause when you still have a server
+  handle.
 - Check JVM heap settings (`heap`) and disk permissions.
 
-## Cluster won�t form
+## Startup times out
+
+**Symptom**: `Timed out waiting for Elasticsearch`, `Timed out waiting for
+OpenSearch`, or `Timed out waiting for HTTP port bind`.
+
+**Fix**:
+- Open `<workDir>/<version>/logs/startup-diagnostics.txt`.
+- Check the resolved archive path and download URI in the diagnostics output.
+- Increase `startupTimeout` or `heap` if the node is starting slowly.
+- Widen the HTTP port range if the machine may already have other local nodes.
+
+## Cluster won't form
 
 **Symptom**: Two nodes start but remain separate.
 
@@ -51,4 +68,3 @@ This guide helps you resolve common issues when starting Elasticsearch with ES R
 
 - [Error messages reference](../../reference/errors/)
 - [Configuration reference](../../reference/configuration/)
-
