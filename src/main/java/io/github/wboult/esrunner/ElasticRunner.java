@@ -143,46 +143,43 @@ public final class ElasticRunner {
      */
     public static ElasticServer start(ElasticRunnerConfig config) {
         Objects.requireNonNull(config, "config");
-        Path zip = resolveDistroZipInternal(config);
-        DistroFamily family = DistroFamily.infer(zip).orElse(config.family());
-
-        String version = config.version() != null ? config.version() : DistroVersion.fromZip(zip);
+        ResolvedDistro resolvedDistro = resolveDistroInternal(config);
+        Path zip = resolvedDistro.archive();
+        DistroFamily family = DistroFamily.infer(zip).orElse(resolvedDistro.family());
+        String version = resolvedDistro.version();
         Path workDir = config.workDir().toAbsolutePath();
         Path versionDir = workDir.resolve(version);
         createDirs(versionDir);
 
         Path homeDir;
-        try {
-            homeDir = DistroLayout.prepare(zip, versionDir, family);
-        } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to prepare " + family.displayName() + " distribution.", e);
-        }
-
-        Path dataDir = versionDir.resolve("data");
-        Path logsDir = versionDir.resolve("logs");
-        createDirs(dataDir);
-        createDirs(logsDir);
-
-        String httpPortSetting = resolveHttpPortSetting(config);
-
-        Path configDir = homeDir.resolve("config");
-        Path configFile = configDir.resolve(family.configFileName());
-        writeConfig(config, family, httpPortSetting, dataDir, logsDir, configFile);
-
-        if (!config.plugins().isEmpty()) {
-            installPlugins(config.plugins(), homeDir, logsDir, config.quiet(), family);
-        }
-
-        Path logFile = logsDir.resolve("runner.log");
+        Path logFile = versionDir.resolve("logs").resolve("runner.log");
         Path pidFile = versionDir.resolve("es.pid");
         Path stateFile = versionDir.resolve("state.json");
-        Process process = startProcess(homeDir, configDir, config, pidFile, family);
-        Thread logThread = new Thread(new StreamGobbler(process.getInputStream(), logFile, config.quiet()),
-                "es-runner-log");
-        logThread.setDaemon(true);
-        logThread.start();
-
+        Process process = null;
+        Thread logThread = null;
         try {
+            homeDir = DistroLayout.prepare(zip, versionDir, family);
+            Path dataDir = versionDir.resolve("data");
+            Path logsDir = versionDir.resolve("logs");
+            createDirs(dataDir);
+            createDirs(logsDir);
+
+            String httpPortSetting = resolveHttpPortSetting(config);
+
+            Path configDir = homeDir.resolve("config");
+            Path configFile = configDir.resolve(family.configFileName());
+            writeConfig(config, family, httpPortSetting, dataDir, logsDir, configFile);
+
+            if (!config.plugins().isEmpty()) {
+                installPlugins(config.plugins(), homeDir, logsDir, config.quiet(), family);
+            }
+
+            process = startProcess(homeDir, configDir, config, pidFile, family);
+            logThread = new Thread(new StreamGobbler(process.getInputStream(), logFile, config.quiet()),
+                    "es-runner-log");
+            logThread.setDaemon(true);
+            logThread.start();
+
             int actualPort = config.httpPort() > 0
                     ? config.httpPort()
                     : waitForHttpPortBinding(process, logFile, config.startupTimeout());
@@ -220,9 +217,19 @@ public final class ElasticRunner {
                     startTime,
                     logThread
             );
+        } catch (IOException e) {
+            throw StartupFailureDiagnostics.wrap(
+                    new ElasticRunnerException("Failed to prepare " + family.displayName() + " distribution.", e),
+                    config,
+                    family,
+                    resolvedDistro,
+                    versionDir,
+                    logFile,
+                    process
+            );
         } catch (RuntimeException e) {
             cleanupFailedStart(process, pidFile, stateFile, logThread);
-            throw e;
+            throw StartupFailureDiagnostics.wrap(e, config, family, resolvedDistro, versionDir, logFile, process);
         }
     }
 
@@ -234,12 +241,15 @@ public final class ElasticRunner {
      */
     public static Path resolveDistroZip(ElasticRunnerConfig config) {
         Objects.requireNonNull(config, "config");
-        return resolveDistroZipInternal(config);
+        return resolveDistroInternal(config).archive();
     }
 
-    private static Path resolveDistroZipInternal(ElasticRunnerConfig config) {
+    private static ResolvedDistro resolveDistroInternal(ElasticRunnerConfig config) {
         if (config.distroZip() != null) {
-            return requireZip(config.distroZip());
+            Path archive = requireZip(config.distroZip());
+            DistroFamily family = DistroFamily.infer(archive).orElse(config.family());
+            String version = config.version() != null ? config.version() : DistroVersion.fromZip(archive);
+            return new ResolvedDistro(family, version, archive, "explicit-distroZip", null, null);
         }
         if (config.version() == null || config.version().isBlank()) {
             throw new ElasticRunnerException("version or distroZip is required.");
@@ -248,10 +258,19 @@ public final class ElasticRunner {
         createDirs(distrosDir);
         DistroDescriptor descriptor = DistroDescriptor.forVersion(config.family(), config.version());
         Path archive = distrosDir.resolve(descriptor.fileName());
-        if (config.download() || !Files.exists(archive)) {
-            download(descriptor.downloadUri(config.downloadBaseUrl()), archive);
+        java.net.URI downloadUri = descriptor.downloadUri(config.downloadBaseUrl());
+        boolean downloaded = config.download() || !Files.exists(archive);
+        if (downloaded) {
+            download(downloadUri, archive);
         }
-        return requireZip(archive);
+        return new ResolvedDistro(
+                config.family(),
+                config.version(),
+                requireZip(archive),
+                downloaded ? "version-download" : "local-distros-cache",
+                config.downloadBaseUrl(),
+                downloadUri
+        );
     }
 
     private static Path requireZip(Path zip) {
@@ -362,8 +381,7 @@ public final class ElasticRunner {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
             if (!process.isAlive()) {
-                String logTail = LogTail.read(logFile, 20);
-                throw new ElasticRunnerException(family.displayName() + " process exited early. " + logTail);
+                throw new ElasticRunnerException(family.displayName() + " process exited early.");
             }
             try {
                 HttpRequest request = HttpRequest.newBuilder(baseUri)
@@ -382,8 +400,7 @@ public final class ElasticRunner {
             }
             sleep(500);
         }
-        String logTail = LogTail.read(logFile, 20);
-        throw new ElasticRunnerException("Timed out waiting for " + family.displayName() + ". " + logTail);
+        throw new ElasticRunnerException("Timed out waiting for " + family.displayName() + ".");
     }
 
     private static void writeState(Path stateFile, RunnerState state) {
@@ -399,9 +416,11 @@ public final class ElasticRunner {
                                            Path stateFile,
                                            Thread logThread) {
         try {
-            long serverPid = readServerPid(pidFile).orElse(process.pid());
-            ProcessTree.terminate(process, serverPid, Duration.ofSeconds(10));
-            if (logThread.isAlive()) {
+            if (process != null) {
+                long serverPid = readServerPid(pidFile).orElse(process.pid());
+                ProcessTree.terminate(process, serverPid, Duration.ofSeconds(10));
+            }
+            if (logThread != null && logThread.isAlive()) {
                 logThread.join(TimeUnit.SECONDS.toMillis(2));
             }
         } catch (InterruptedException ignored) {
@@ -446,8 +465,7 @@ public final class ElasticRunner {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
             if (!process.isAlive()) {
-                String logTail = LogTail.read(logFile, 20);
-                throw new ElasticRunnerException("Search server exited unexpectedly before binding HTTP port: " + logTail);
+                throw new ElasticRunnerException("Search server exited unexpectedly before binding HTTP port.");
             }
             try {
                 if (Files.exists(logFile)) {
@@ -460,8 +478,7 @@ public final class ElasticRunner {
             }
             sleep(500);
         }
-        String logTail = LogTail.read(logFile, 20);
-        throw new ElasticRunnerException("Timed out waiting for HTTP port bind: " + logTail);
+        throw new ElasticRunnerException("Timed out waiting for HTTP port bind.");
     }
 
     static OptionalInt findHttpPublishPort(List<String> lines) {
