@@ -44,6 +44,7 @@ class SearchSmokeTest {
         Files.createDirectories(Path.of("build", "es-runner"));
         Properties properties = new Properties();
         properties.setProperty("baseUri", ENV.baseUri().toString());
+        properties.setProperty("buildId", ENV.buildId());
         properties.setProperty("namespace", ENV.namespace());
         properties.setProperty("suiteId", ENV.suiteId());
         properties.setProperty("clusterName", ENV.clusterName());

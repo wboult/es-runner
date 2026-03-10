@@ -151,6 +151,54 @@ class ElasticSharedTestClustersPluginFunctionalTest {
         }
     }
 
+    @Test
+    void repeatedBuildInvocationsReuseTheFixtureAndRotateBuildNamespaces() throws IOException {
+        projectDir = Files.createTempDirectory("es-runner-gradle-plugin-repeat-it");
+        boolean success = false;
+        try {
+            Path repoRoot = repoRoot();
+            Path distroArchive = localElasticsearch9Archive(repoRoot);
+            Assumptions.assumeTrue(distroArchive != null, "Local Elasticsearch 9 distro archive not found");
+
+            copyFixture(projectDir, Map.of(
+                    "@REPO_ROOT@", repoRoot.toString().replace("\\", "/"),
+                    "@DISTRO_ZIP@", distroArchive.toAbsolutePath().toString().replace("\\", "\\\\"),
+                    "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
+            ));
+
+            BuildResult first = GradleRunner.create()
+                    .withProjectDir(projectDir.toFile())
+                    .withArguments(":app:integrationTest", "--rerun-tasks", "--stacktrace")
+                    .withPluginClasspath()
+                    .forwardOutput()
+                    .build();
+            assertEquals(SUCCESS, first.task(":app:integrationTest").getOutcome());
+            Properties firstMetadata = loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties"));
+
+            BuildResult second = GradleRunner.create()
+                    .withProjectDir(projectDir.toFile())
+                    .withArguments(":app:integrationTest", "--rerun-tasks", "--stacktrace")
+                    .withPluginClasspath()
+                    .forwardOutput()
+                    .build();
+            assertEquals(SUCCESS, second.task(":app:integrationTest").getOutcome());
+            Properties secondMetadata = loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties"));
+
+            assertNotEquals(firstMetadata.getProperty("buildId"), secondMetadata.getProperty("buildId"));
+            assertNotEquals(firstMetadata.getProperty("namespace"), secondMetadata.getProperty("namespace"));
+            assertEquals("shared-es9", secondMetadata.getProperty("clusterName"));
+            assertTrue(Files.exists(projectDir.resolve("build/elastic-test-clusters/sharedEs9")));
+
+            success = true;
+        } finally {
+            if (success) {
+                deleteTempDir(projectDir);
+            } else {
+                System.err.println("Preserving failed fixture at " + projectDir);
+            }
+        }
+    }
+
     private Path repoRoot() {
         Path current = Path.of(System.getProperty("user.dir")).toAbsolutePath();
         for (Path candidate = current; candidate != null; candidate = candidate.getParent()) {

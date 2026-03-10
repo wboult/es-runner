@@ -100,6 +100,30 @@ class ElasticRunnerTest {
     }
 
     @Test
+    void resolveDistroZipOverwritesCorruptCachedArchiveWhenDownloadIsForced() throws IOException {
+        String version = "9.2.4";
+        DistroDescriptor descriptor = DistroDescriptor.forVersion(version);
+        Path mirrorDir = Files.createTempDirectory("es-runner-mirror");
+        Path distrosDir = Files.createTempDirectory("es-runner-distros");
+        Path cachedZip = distrosDir.resolve(descriptor.fileName());
+        Path mirroredZip = mirrorDir.resolve(descriptor.fileName());
+
+        Files.writeString(cachedZip, "corrupt-zip");
+        Files.writeString(mirroredZip, "healthy-zip");
+
+        ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+                .version(version)
+                .distrosDir(distrosDir)
+                .download(true)
+                .downloadBaseUrl(mirrorDir.toUri().toString()));
+
+        Path resolved = ElasticRunner.resolveDistroZip(config);
+
+        assertEquals(cachedZip.toAbsolutePath(), resolved);
+        assertEquals("healthy-zip", Files.readString(resolved));
+    }
+
+    @Test
     void resolveHttpPortSettingUsesConfiguredRangeForDynamicPorts() {
         assertEquals("9200-9300", ElasticRunner.resolveHttpPortSetting(ElasticRunnerConfig.defaults()));
     }
