@@ -379,7 +379,9 @@ allocation checks, which avoids single-node local builds getting stuck red on
 machines with low free-disk percentage.
 
 See [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
-for the usage guide and
+for the usage guide,
+[docs/gradle-shared-test-cluster-best-practices.md](docs/gradle-shared-test-cluster-best-practices.md)
+for namespacing, cleanup, and suite design, and
 [docs/gradle-shared-cluster-plugin-design.md](docs/gradle-shared-cluster-plugin-design.md)
 for the design rationale.
 
@@ -409,6 +411,7 @@ Examples and deeper guides live in:
 Useful starting points:
 
 - [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
+- [docs/gradle-shared-test-cluster-best-practices.md](docs/gradle-shared-test-cluster-best-practices.md)
 - [docs/official-java-client.md](docs/official-java-client.md)
 - [docs/run-opensearch.md](docs/run-opensearch.md)
 - [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md)

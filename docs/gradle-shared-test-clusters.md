@@ -133,6 +133,9 @@ and non-bound test tasks do not pay startup cost just because the plugin is
 applied, while the first real suite still does not need its own startup
 polling to survive initial contact with a fresh single-node cluster.
 
+See [docs/gradle-shared-test-cluster-best-practices.md](docs/gradle-shared-test-cluster-best-practices.md)
+for concrete guidance on namespacing, cleanup, and suite boundaries.
+
 ## Injected system properties
 
 Bound test tasks receive:
