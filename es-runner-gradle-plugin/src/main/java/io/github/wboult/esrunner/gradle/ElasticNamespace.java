@@ -1,18 +1,16 @@
 package io.github.wboult.esrunner.gradle;
 
-import org.gradle.api.tasks.testing.Test;
-
 import java.util.Locale;
 
 final class ElasticNamespace {
     private ElasticNamespace() {
     }
 
-    static String namespace(String buildId, Test task, NamespaceMode mode) {
-        String projectPart = sanitize(task.getProject().getPath());
+    static String namespace(String buildId, String projectPath, String taskName, NamespaceMode mode) {
+        String projectPart = sanitize(projectPath);
         return switch (mode) {
             case PROJECT -> buildId + "_" + projectPart;
-            case SUITE -> buildId + "_" + projectPart + "_" + sanitize(task.getName());
+            case SUITE -> buildId + "_" + projectPart + "_" + sanitize(taskName);
         };
     }
 

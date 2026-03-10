@@ -199,9 +199,10 @@ for the planned native SDK-based extension modules.
 
 ES Runner includes an incubating Gradle plugin for build-scoped shared
 Elasticsearch clusters. It starts one node per cluster definition, reuses it
-across projects/suites in the build, waits for yellow cluster health before
-handing tests the connection details, and injects a per-suite namespace so
-parallel suites do not collide.
+across projects/suites in the build, only boots it when a bound test task
+actually forks, waits for yellow cluster health before handing tests the
+connection details, and injects a per-suite namespace so parallel suites do
+not collide.
 
 Current source-tree plugin id:
 

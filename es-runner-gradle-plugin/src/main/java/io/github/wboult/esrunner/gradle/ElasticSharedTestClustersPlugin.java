@@ -50,21 +50,14 @@ public final class ElasticSharedTestClustersPlugin implements Plugin<Project> {
             }
 
             task.usesService(service);
-            task.doFirst(ignored -> {
-                ElasticClusterMetadata metadata = service.get().metadata();
-                String namespace = ElasticNamespace.namespace(
-                        extension.getBuildId(),
-                        task,
-                        binding.getNamespaceMode().get()
-                );
-                task.systemProperty("elastic.runner.baseUri", metadata.baseUri());
-                task.systemProperty("elastic.runner.httpPort", Integer.toString(metadata.httpPort()));
-                task.systemProperty("elastic.runner.clusterName", metadata.clusterName());
-                task.systemProperty("elastic.runner.buildId", extension.getBuildId());
-                task.systemProperty("elastic.runner.suiteId", task.getPath());
-                task.systemProperty("elastic.runner.namespace", namespace);
-                task.systemProperty("elastic.runner.resourcePrefix", namespace);
-            });
+            task.getJvmArgumentProviders().add(new ElasticClusterJvmArgumentProvider(
+                    service,
+                    extension.getBuildId(),
+                    task.getPath(),
+                    task.getProject().getPath(),
+                    task.getName(),
+                    binding.getNamespaceMode().get()
+            ));
         }));
     }
 
