@@ -30,6 +30,11 @@ resource names.
 The plugin and helper module already work in this repo and in composite builds.
 Plugin Portal and Maven Central publication are still pending.
 
+A checked-in consumer sample lives at
+`samples/gradle-shared-cluster-multiproject/`. It uses normal plugin/helper
+coordinates instead of `includeBuild`, so it is the closest approximation of
+how a published consumer build will look.
+
 Until publication, the correct setup is a composite build:
 
 ```groovy
@@ -43,6 +48,14 @@ dependencyResolutionManagement {
     }
 }
 ```
+
+If you want to prove the published-artifact flow before release, run the sample
+with:
+
+- `-PesRunnerVersion=...`
+- `-PesRunnerRepositoryUrl=file:///...` pointing at a Maven repo containing the
+  ES Runner core/helper/plugin artifacts
+- optionally `-PesDistroZip=/path/to/elasticsearch-9.3.1.zip`
 
 ## Recommended build layout
 

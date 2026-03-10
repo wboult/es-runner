@@ -1,5 +1,6 @@
 plugins {
     id 'java-gradle-plugin'
+    id 'maven-publish'
 }
 
 group = rootProject.group
@@ -35,5 +36,17 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
     testLogging {
         events "passed", "skipped", "failed"
+    }
+}
+
+publishing {
+    repositories {
+        def sampleRepoUrl = providers.gradleProperty("sampleRepoUrl").orNull
+        if (sampleRepoUrl != null) {
+            maven {
+                name = "sampleRepo"
+                url = uri(sampleRepoUrl)
+            }
+        }
     }
 }

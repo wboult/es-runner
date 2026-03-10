@@ -1,0 +1,65 @@
+plugins {
+    id 'io.github.wboult.es-runner.shared-test-clusters'
+}
+
+def esRunnerVersion = providers.gradleProperty("esRunnerVersion").orElse("0.1.0").get()
+def esVersion = providers.gradleProperty("esVersion").orElse("9.3.1").get()
+def esDistroZip = providers.gradleProperty("esDistroZip").orNull
+
+allprojects {
+    group = 'example'
+    version = '0.1.0'
+}
+
+elasticTestClusters {
+    clusters {
+        register("integration") {
+            clusterName.set("sample-shared-es9")
+            quiet.set(true)
+            startupTimeoutMillis.set(180_000L)
+            distrosDir.set(rootProject.file(".gradle/elasticsearch/distros").absolutePath)
+            workDir.set(layout.buildDirectory.dir("elastic-test-clusters/integration").get().asFile.absolutePath)
+            if (esDistroZip != null) {
+                distroZip.set(esDistroZip)
+                download.set(false)
+            } else {
+                version.set(esVersion)
+                download.set(true)
+            }
+        }
+    }
+
+    suites {
+        matchingName("integrationTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+        matchingName("smokeTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    dependencies {
+        testImplementation(platform("org.junit:junit-bom:5.12.0"))
+        testImplementation("org.junit.jupiter:junit-jupiter")
+    }
+
+    testing {
+        suites {
+            withType(org.gradle.api.plugins.jvm.JvmTestSuite).configureEach {
+                useJUnitJupiter()
+                dependencies {
+                    implementation("io.github.wboult:es-runner-gradle-test-support:${esRunnerVersion}")
+                }
+            }
+
+            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite)
+            register("smokeTest", org.gradle.api.plugins.jvm.JvmTestSuite)
+        }
+    }
+}
