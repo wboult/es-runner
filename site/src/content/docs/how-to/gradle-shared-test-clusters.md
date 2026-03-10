@@ -105,7 +105,8 @@ client.refresh(orders);
 The helper prefixes logical resource names with the suite namespace, and the
 plugin only starts the shared cluster when a bound test task actually forks.
 It waits for yellow cluster health before injecting `elastic.runner.baseUri`
-into that suite task.
+into that suite task. Applying the plugin alone does not start Elasticsearch,
+and tasks like `classes`, `jar`, or unrelated test tasks stay cold.
 
 ## What gets injected
 
@@ -162,6 +163,7 @@ S3, GCS, and Azure Blob buckets.
 
 ## Related
 
+- [Shared cluster best practices](../gradle-shared-test-cluster-best-practices/)
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Configuration reference](../../reference/configuration/)
 
