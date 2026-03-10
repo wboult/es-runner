@@ -37,7 +37,7 @@ Use something else when:
 Latest verified process-backed lines:
 
 - Elasticsearch `9.3.1` and `8.19.11` in CI
-- OpenSearch `3.5.0` and `2.19.4` via local process smoke tests
+- OpenSearch `3.5.0` and `2.19.4` in CI smoke tests
 
 ## Quick start
 
@@ -78,6 +78,20 @@ ElasticRunner.withServer(builder -> builder
     .version("3.5.0")
     .download(true),
     server -> System.out.println(server.clusterHealth()));
+```
+
+If you want to start from the OpenSearch family defaults directly:
+
+```java
+ElasticRunnerConfig config = ElasticRunnerConfig.defaults(DistroFamily.OPENSEARCH)
+    .toBuilder()
+    .version("3.5.0")
+    .download(true)
+    .build();
+
+try (ElasticServer server = ElasticRunner.start(config)) {
+    System.out.println(server.version());
+}
 ```
 
 ## Main API shape
@@ -194,6 +208,34 @@ See [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md) for
 per-provider instructions, and
 [docs/cloud-storage-extension-plan.md](docs/cloud-storage-extension-plan.md)
 for the planned native SDK-based extension modules.
+
+## Process-backed OpenSearch
+
+OpenSearch is a first-class part of the process-backed runner now, not just an
+embedded experiment.
+
+- current verified OpenSearch lines: `3.5.0` and `2.19.4`
+- process-backed OpenSearch smoke tests run in CI
+- OpenSearch uses the same API surface as Elasticsearch, with
+  `DistroFamily.OPENSEARCH` selecting the family-specific defaults
+
+Quick example:
+
+```java
+ElasticRunner.withServer(builder -> builder
+        .family(DistroFamily.OPENSEARCH)
+        .version("3.5.0")
+        .download(true),
+    server -> {
+        server.createIndex("docs");
+        server.indexDocument("docs", "1", "{\"title\":\"hello\"}");
+        server.refresh("docs");
+        System.out.println(server.search("docs", "{\"query\":{\"match\":{\"title\":\"hello\"}}}"));
+    });
+```
+
+See [docs/run-opensearch.md](docs/run-opensearch.md) for the process-backed
+OpenSearch guide.
 
 ## Gradle shared test clusters
 
@@ -351,6 +393,7 @@ Useful starting points:
 
 - [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
 - [docs/official-java-client.md](docs/official-java-client.md)
+- [docs/run-opensearch.md](docs/run-opensearch.md)
 - [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md)
 - [site/src/content/docs/tutorials/getting-started.md](site/src/content/docs/tutorials/getting-started.md)
 - [site/src/content/docs/reference/api.md](site/src/content/docs/reference/api.md)

@@ -26,7 +26,7 @@ class ElasticRunnerConfigTest {
         assertEquals(DistroFamily.OPENSEARCH, config.family());
         assertEquals("single-node", config.settings().get("discovery.type"));
         assertEquals("true", config.settings().get("plugins.security.disabled"));
-        assertEquals("https://artifacts.opensearch.org/releases/bundle/opensearch/", config.downloadBaseUrl());
+        assertEquals("https://artifacts.opensearch.org/releases/bundle/opensearch/{version}/", config.downloadBaseUrl());
     }
 
     @Test
@@ -37,7 +37,7 @@ class ElasticRunnerConfigTest {
                 .build();
 
         assertEquals(DistroFamily.OPENSEARCH, config.family());
-        assertEquals("https://artifacts.opensearch.org/releases/bundle/opensearch/", config.downloadBaseUrl());
+        assertEquals("https://artifacts.opensearch.org/releases/bundle/opensearch/{version}/", config.downloadBaseUrl());
         assertFalse(config.settings().containsKey("xpack.security.enabled"));
         assertEquals("true", config.settings().get("plugins.security.disabled"));
     }

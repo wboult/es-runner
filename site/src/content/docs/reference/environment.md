@@ -16,6 +16,7 @@ ES Runner itself does not depend on environment variables at runtime, but tests 
 | `OPENSEARCH_DISTRO_DOWNLOAD` | Allow OpenSearch downloads in tests | `true` |
 | `OPENSEARCH_DISTROS_DIR` | Directory containing OpenSearch ZIPs | `distros` |
 | `OPENSEARCH_DISTRO_BASE_URL` | OpenSearch mirror base URL | `https://mirror.example.com/opensearch/` |
+| `OPENSEARCH_VERSION` | OpenSearch version for example/smoke tests | `3.5.0` |
 
 ## Related
 

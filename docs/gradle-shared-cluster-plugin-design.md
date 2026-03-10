@@ -229,8 +229,9 @@ Responsibilities:
 For every bound `Test` task:
 
 - mark the task as using the build service
-- resolve the assigned cluster handle lazily
-- inject system properties just before execution
+- resolve the assigned cluster handle lazily only when the task actually forks
+  its test JVM
+- inject system properties into that forked test process
 
 This avoids ad hoc start/stop tasks and lets Gradle own lifecycle ordering.
 

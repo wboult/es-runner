@@ -98,7 +98,7 @@ The intended lifecycle is:
 
 1. register cluster definitions in the root build
 2. bind `JvmTestSuite` or `Test` tasks to those definitions
-3. lazily start a cluster the first time a consuming task runs
+3. lazily start a cluster only when a bound test task actually forks its JVM
 4. inject connection + namespace properties into each test task
 5. close all clusters automatically when the build ends
 

@@ -23,7 +23,7 @@ public enum DistroFamily {
     OPENSEARCH(
             "OpenSearch",
             "opensearch",
-            "https://artifacts.opensearch.org/releases/bundle/opensearch/",
+            "https://artifacts.opensearch.org/releases/bundle/opensearch/{version}/",
             "opensearch.yml",
             "opensearch",
             "opensearch-plugin",

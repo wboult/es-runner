@@ -29,6 +29,16 @@ class DistroDescriptorTest {
     }
 
     @Test
+    void buildsOfficialOpenSearchDownloadUriWithVersionSegment() {
+        DistroDescriptor descriptor = DistroDescriptor.forVersion(DistroFamily.OPENSEARCH, "3.5.0");
+
+        URI uri = descriptor.downloadUri(DistroFamily.OPENSEARCH.defaultDownloadBaseUrl());
+
+        assertTrue(uri.toString().contains("/opensearch/3.5.0/"));
+        assertTrue(uri.toString().endsWith("/" + descriptor.fileName()));
+    }
+
+    @Test
     void preservesQueryStringWhenBuildingDownloadUri() {
         DistroDescriptor descriptor = DistroDescriptor.forVersion("9.2.4");
 

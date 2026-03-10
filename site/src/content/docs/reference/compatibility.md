@@ -12,7 +12,7 @@ This matrix reflects what is actively verified. Other combinations may work but 
 | JDK | 17 (required) |
 | OS | Ubuntu (CI). Windows/macOS should work with a compatible ZIP and JDK. |
 | Elasticsearch | 9.3.1, 8.19.11 (CI matrix) |
-| OpenSearch | 3.5.0, 2.19.4 (local process smoke) |
+| OpenSearch | 3.5.0, 2.19.4 (CI process smoke) |
 
 ## Scala / Spark (CI matrix)
 
@@ -27,7 +27,7 @@ This matrix reflects what is actively verified. Other combinations may work but 
 - When running Scala 3 tests, CI uses Scala 3.x libraries.
 - CI intentionally tracks only the latest supported Elasticsearch 9.x patch and latest supported Elasticsearch 8.x patch to avoid matrix explosion.
 - Embedded Elasticsearch 8/9 and embedded OpenSearch 2/3 smoke coverage now runs in CI.
-- OpenSearch process-backed startup and CRUD/search smoke coverage currently runs locally, not in the public CI matrix.
+- OpenSearch process-backed startup and CRUD/search smoke coverage now runs in CI for the latest supported 3.x and 2.x lines.
 - If you rely on Spark integrations, pin Scala/Spark versions as shown above.
 
 ## Related

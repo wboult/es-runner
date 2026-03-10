@@ -9,6 +9,8 @@ CI runs multiple combinations of Elasticsearch/Scala/Spark versions and includes
 
 - `test` (Java/Scala unit + integration tests)
 - `scala3Test` (Scala 3 tests)
+- `opensearch-process` (latest OpenSearch 3.x and 2.x smoke tests)
+- `embedded-jdk17` / `embedded-jdk21` (experimental embedded smoke tests)
 
 ## Test categories
 
@@ -17,6 +19,8 @@ CI runs multiple combinations of Elasticsearch/Scala/Spark versions and includes
 | Unit | `test` | Always runs. |
 | Integration | `test` | Skips if no distro ZIP and downloads disabled. |
 | Scala 3 | `scala3Test` | Runs separate Scala 3 test set. |
+| OpenSearch smoke | `test --tests io.github.wboult.esrunner.OpenSearchRunnerIntegrationTest --tests io.github.wboult.esrunner.ReadmeOpenSearchExampleTest` | Runs latest supported OpenSearch 3.x and 2.x process-backed smoke tests. |
+| Embedded smoke | `:es-runner-embedded-*` | Experimental embedded runners across ES/OpenSearch majors. |
 
 ## Environment variables
 
@@ -31,6 +35,7 @@ CI runs multiple combinations of Elasticsearch/Scala/Spark versions and includes
 | `OPENSEARCH_DISTRO_DOWNLOAD` | Allow OpenSearch downloads | `true` |
 | `OPENSEARCH_DISTROS_DIR` | Directory for OpenSearch ZIPs | `distros` |
 | `OPENSEARCH_DISTRO_BASE_URL` | OpenSearch mirror base URL | `https://mirror.example.com/opensearch/` |
+| `OPENSEARCH_VERSION` | OpenSearch version used by example/smoke tests | `3.5.0` |
 
 ## Local runs
 
@@ -46,11 +51,14 @@ export ES_DISTRO_DOWNLOAD=true
 export ES_VERSION=9.3.1
 ```
 
-For the optional OpenSearch smoke test:
+For the OpenSearch smoke tests:
 
 ```bash
-export OPENSEARCH_DISTROS_DIR=distros/embedded
-./gradlew test --tests io.github.wboult.esrunner.OpenSearchRunnerIntegrationTest
+export OPENSEARCH_DISTRO_DOWNLOAD=true
+export OPENSEARCH_VERSION=3.5.0
+./gradlew test \
+  --tests io.github.wboult.esrunner.OpenSearchRunnerIntegrationTest \
+  --tests io.github.wboult.esrunner.ReadmeOpenSearchExampleTest
 ```
 
 ## Related

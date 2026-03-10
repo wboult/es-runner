@@ -62,7 +62,7 @@ final class IntegrationTestSupport {
         }
 
         if (download) {
-            assumeDownloadAvailable(version, baseUrl);
+            assumeDownloadAvailable(family, version, baseUrl);
             ElasticRunnerConfig config = base.toBuilder().version(version)
                     .distrosDir(distrosDir)
                     .download(true).build();
@@ -134,7 +134,7 @@ final class IntegrationTestSupport {
             if (finalDistroZip != null) {
                 builder.distroZip(finalDistroZip);
             } else {
-                assumeDownloadAvailable(version, baseUrl);
+                assumeDownloadAvailable(family, version, baseUrl);
                 builder.version(version)
                         .distrosDir(distrosDir)
                         .download(download);
