@@ -2,6 +2,7 @@ package io.github.wboult.esrunner.gradle;
 
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
+import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +22,7 @@ import java.util.Properties;
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,6 +30,49 @@ class ElasticSharedTestClustersPluginFunctionalTest {
     private static final String FIXTURE_ROOT = "fixtures/shared-cluster-multiproject";
 
     Path projectDir;
+
+    @Test
+    void doesNotStartClusterWhenBuildRunsNoBoundTestTask() throws IOException {
+        projectDir = Files.createTempDirectory("es-runner-gradle-plugin-it");
+        boolean success = false;
+        try {
+            Path repoRoot = repoRoot();
+
+            copyFixture(projectDir, Map.of(
+                    "@REPO_ROOT@", repoRoot.toString().replace("\\", "/"),
+                    "@DISTRO_ZIP@", projectDir.resolve("unused-elasticsearch-9.3.1.zip")
+                            .toAbsolutePath()
+                            .toString()
+                            .replace("\\", "\\\\"),
+                    "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
+            ));
+
+            BuildResult result = GradleRunner.create()
+                    .withProjectDir(projectDir.toFile())
+                    .withArguments(":app:classes", "--stacktrace")
+                    .withPluginClasspath()
+                    .forwardOutput()
+                    .build();
+
+            TaskOutcome outcome = result.task(":app:classes").getOutcome();
+            assertTrue(
+                    outcome == SUCCESS || outcome == TaskOutcome.UP_TO_DATE,
+                    "expected :app:classes to complete without running any bound test task"
+            );
+            assertFalse(
+                    Files.exists(projectDir.resolve("build/elastic-test-clusters/sharedEs9")),
+                    "shared cluster should stay cold when no bound test task runs"
+            );
+
+            success = true;
+        } finally {
+            if (success) {
+                deleteTempDir(projectDir);
+            } else {
+                System.err.println("Preserving failed fixture at " + projectDir);
+            }
+        }
+    }
 
     @Test
     void sharesOneEs9ClusterAcrossProjectsAndSuites() throws IOException {

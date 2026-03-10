@@ -103,8 +103,9 @@ client.refresh(orders);
 ```
 
 The helper prefixes logical resource names with the suite namespace, and the
-plugin waits for yellow cluster health before injecting `elastic.runner.baseUri`
-into suite tasks.
+plugin only starts the shared cluster when a bound test task actually forks.
+It waits for yellow cluster health before injecting `elastic.runner.baseUri`
+into that suite task.
 
 ## What gets injected
 

@@ -126,10 +126,12 @@ client.refresh(ordersIndex);
 The helper prefixes logical resource names with the injected suite namespace,
 so tests can use stable logical names without colliding with other suites.
 
-The plugin starts the cluster lazily and waits for yellow health before it
-injects `elastic.runner.baseUri` into suite tasks, so the first suite does not
-have to add its own startup polling just to survive initial contact with a
-fresh single-node cluster.
+The plugin starts the cluster lazily only when a bound test task actually
+forks a JVM, and waits for yellow health before it injects
+`elastic.runner.baseUri` into that suite. That means unrelated Gradle tasks
+and non-bound test tasks do not pay startup cost just because the plugin is
+applied, while the first real suite still does not need its own startup
+polling to survive initial contact with a fresh single-node cluster.
 
 ## Injected system properties
 
