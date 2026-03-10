@@ -1,6 +1,7 @@
 # Embedded JVM Search Servers (Experimental)
 
-The embedded runner is now split across five Gradle subprojects:
+The embedded runner is now split across five Gradle subprojects under
+`experimental/embedded/`:
 
 - `es-runner-embedded-common`
 - `es-runner-embedded-8`
@@ -288,10 +289,10 @@ normal CI build is not affected.
 All embedded modules still use internal Java APIs that require explicit
 `--add-opens` grants. These are set in:
 
-- `es-runner-embedded-8/build.gradle`
-- `es-runner-embedded-9/build.gradle`
-- `es-runner-embedded-opensearch-2/build.gradle`
-- `es-runner-embedded-opensearch-3/build.gradle`
+- `experimental/embedded/es-runner-embedded-8/build.gradle`
+- `experimental/embedded/es-runner-embedded-9/build.gradle`
+- `experimental/embedded/es-runner-embedded-opensearch-2/build.gradle`
+- `experimental/embedded/es-runner-embedded-opensearch-3/build.gradle`
 
 The earlier `-Des.distribution.type=integ_test_zip` attempt turned out to be
 wrong for a real extracted distribution. The current build does not set that
@@ -300,26 +301,26 @@ flag.
 ## Architecture
 
 ```text
-es-runner-embedded-common/
+experimental/embedded/es-runner-embedded-common/
 |-- EmbeddedElasticServerConfig.java
 |-- EmbeddedHome.java
 `-- EmbeddedModuleProfile.java
 
-es-runner-embedded-8/
+experimental/embedded/es-runner-embedded-8/
 |-- EmbeddedElasticServer.java
 |-- EmbeddedNode.java
 `-- embedded-profile.properties
 
-es-runner-embedded-9/
+experimental/embedded/es-runner-embedded-9/
 |-- EmbeddedElasticServer.java
 |-- EmbeddedNode.java
 `-- embedded-profile.properties
 
-es-runner-embedded-opensearch-2/
+experimental/embedded/es-runner-embedded-opensearch-2/
 |-- EmbeddedOpenSearchServer.java
 `-- EmbeddedNode.java
 
-es-runner-embedded-opensearch-3/
+experimental/embedded/es-runner-embedded-opensearch-3/
 |-- EmbeddedOpenSearchServer.java
 `-- EmbeddedNode.java
 ```
