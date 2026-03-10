@@ -69,6 +69,26 @@ class ElasticServerStopTest {
         assertFalse(Files.exists(tempDir.resolve("state.json")));
     }
 
+    @Test
+    void stopWithResultPreservesInterruptStatusAndStillCleansFiles() throws IOException {
+        Path tempDir = Files.createTempDirectory("elastic-server-stop-interrupted");
+        StubProcess process = StubProcess.forceOnly();
+        ElasticServer server = serverFor(process, tempDir);
+
+        Thread.currentThread().interrupt();
+        try {
+            StopResult result = server.stopWithResult(Duration.ofMillis(10));
+
+            assertTrue(result.wasRunning());
+            assertTrue(result.forced());
+            assertTrue(Thread.currentThread().isInterrupted());
+            assertFalse(Files.exists(tempDir.resolve("es.pid")));
+            assertFalse(Files.exists(tempDir.resolve("state.json")));
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
     private static ElasticServer serverFor(StubProcess process, Path tempDir) throws IOException {
         Path logFile = tempDir.resolve("runner.log");
         Path pidFile = tempDir.resolve("es.pid");

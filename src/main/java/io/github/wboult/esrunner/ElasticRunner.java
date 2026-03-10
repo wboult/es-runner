@@ -418,7 +418,7 @@ public final class ElasticRunner {
         try {
             if (process != null) {
                 long serverPid = readServerPid(pidFile).orElse(process.pid());
-                ProcessTree.terminate(process, serverPid, Duration.ofSeconds(10));
+                terminateFailedStartProcess(process, serverPid, Duration.ofSeconds(10));
             }
             if (logThread != null && logThread.isAlive()) {
                 logThread.join(TimeUnit.SECONDS.toMillis(2));
@@ -428,6 +428,30 @@ public final class ElasticRunner {
         } finally {
             deleteIfExists(pidFile);
             deleteIfExists(stateFile);
+        }
+    }
+
+    private static void terminateFailedStartProcess(Process process, long serverPid, Duration timeout) {
+        try {
+            ProcessTree.terminate(process, serverPid, timeout);
+        } catch (LinkageError ignored) {
+            terminateDirect(process, timeout);
+        }
+    }
+
+    private static void terminateDirect(Process process, Duration timeout) {
+        if (!process.isAlive()) {
+            return;
+        }
+        process.destroy();
+        try {
+            if (process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
+                return;
+            }
+            process.destroyForcibly();
+            process.waitFor(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
