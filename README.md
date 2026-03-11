@@ -12,6 +12,7 @@ It is aimed at environments where you want a real search node but do not want
 to depend on Docker, Testcontainers, or an already-running shared cluster.
 
 Documentation: <https://wboult.github.io/es-runner/>
+Contributor setup: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Why ES Runner instead of Testcontainers or custom scripts?
 
