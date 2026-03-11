@@ -78,7 +78,7 @@ does not publish to Central or the Plugin Portal.
    - the GitHub release exists
    - the Maven Central coordinates resolve
    - the Plugin Portal plugin resolves
-   - the sample build in `samples/gradle-shared-cluster-multiproject/` works
+   - the sample build in `samples/gradle-shared-cluster-automation-harness/` works
      against the published version
 
 Example:
@@ -105,5 +105,5 @@ After the first real release, verify both consumption paths:
 - library coordinates from Maven Central
 - Gradle plugin id from the Plugin Portal
 
-The checked-in sample at `samples/gradle-shared-cluster-multiproject/` is the
+The checked-in sample at `samples/gradle-shared-cluster-automation-harness/` is the
 intended smoke test for that.

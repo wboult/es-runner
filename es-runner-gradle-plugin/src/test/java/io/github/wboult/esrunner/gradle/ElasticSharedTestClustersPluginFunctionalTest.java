@@ -14,8 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -80,7 +78,7 @@ class ElasticSharedTestClustersPluginFunctionalTest {
         boolean success = false;
         try {
             Path repoRoot = repoRoot();
-            Path distroArchive = localElasticsearch9Archive(repoRoot);
+            Path distroArchive = TestDistroArchives.localElasticsearch9Archive(repoRoot);
             Assumptions.assumeTrue(distroArchive != null, "Local Elasticsearch 9 distro archive not found");
 
             copyFixture(projectDir, Map.of(
@@ -157,7 +155,7 @@ class ElasticSharedTestClustersPluginFunctionalTest {
         boolean success = false;
         try {
             Path repoRoot = repoRoot();
-            Path distroArchive = localElasticsearch9Archive(repoRoot);
+            Path distroArchive = TestDistroArchives.localElasticsearch9Archive(repoRoot);
             Assumptions.assumeTrue(distroArchive != null, "Local Elasticsearch 9 distro archive not found");
 
             copyFixture(projectDir, Map.of(
@@ -209,29 +207,6 @@ class ElasticSharedTestClustersPluginFunctionalTest {
             }
         }
         throw new IllegalStateException("Unable to locate repo root from " + current);
-    }
-
-    private Path localElasticsearch9Archive(Path repoRoot) throws IOException {
-        List<Path> candidates = new ArrayList<>();
-        for (Path candidate = repoRoot; candidate != null; candidate = candidate.getParent()) {
-            Path distros = candidate.resolve("distros");
-            if (!Files.isDirectory(distros)) {
-                continue;
-            }
-            try (var stream = Files.walk(distros, 2)) {
-                stream.filter(Files::isRegularFile)
-                        .filter(path -> {
-                            String name = path.getFileName().toString();
-                            return (name.endsWith(".zip") || name.endsWith(".tar.gz"))
-                                    && name.contains("elasticsearch-9.3.1");
-                        })
-                        .forEach(candidates::add);
-            }
-        }
-        return candidates.stream()
-                .sorted(Comparator.comparing(path -> path.getFileName().toString()))
-                .findFirst()
-                .orElse(null);
     }
 
     private String rootVersion(Path repoRoot) throws IOException {

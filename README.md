@@ -287,8 +287,8 @@ Current setup status:
 - the plugin already works in this repo and in composite builds
 - the release workflow now wires Maven Central and Gradle Plugin Portal publication
 - live publication still requires repo secrets plus a claimed Central namespace
-- a checked-in published-artifact-style sample lives in
-  `samples/gradle-shared-cluster-multiproject/`
+- a checked-in published-artifact-style automation harness sample lives in
+  `samples/gradle-shared-cluster-automation-harness/`
 
 Before publication, the easiest way to try it is a composite build. In your
 consumer `settings.gradle`:
@@ -384,11 +384,13 @@ Namespace behavior:
 That lets multiple projects and suites share one node without data collisions
 or stale test data leaking across suites.
 
-There is also a realistic multi-project sample in
-[`samples/gradle-shared-cluster-multiproject`](samples/gradle-shared-cluster-multiproject)
-that consumes the plugin/helper through normal coordinates. Before publication,
-point it at a local Maven repo with `-PesRunnerRepositoryUrl=...`; after
-publication, it can run with just `-PesRunnerVersion=...`.
+There is also a realistic multi-project automation harness sample in
+[`samples/gradle-shared-cluster-automation-harness`](samples/gradle-shared-cluster-automation-harness)
+that consumes the plugin/helper through normal coordinates. It includes a
+small internal support subproject, seeded order fixtures, and a negative-path
+suite that proves raw non-namespaced access fails. Before publication, point it
+at a local Maven repo with `-PesRunnerRepositoryUrl=...`; after publication,
+it can run with just `-PesRunnerVersion=...`.
 
 Shared test-cluster defaults also disable Elasticsearch disk-threshold
 allocation checks, which avoids single-node local builds getting stuck red on

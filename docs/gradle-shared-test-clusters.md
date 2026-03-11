@@ -33,7 +33,7 @@ publication, but until the first live release you should still treat
 composite-build and local-repo consumption as the default path.
 
 A checked-in consumer sample lives at
-`samples/gradle-shared-cluster-multiproject/`. It uses normal plugin/helper
+`samples/gradle-shared-cluster-automation-harness/`. It uses normal plugin/helper
 coordinates instead of `includeBuild`, so it is the closest approximation of
 how a published consumer build will look.
 
@@ -58,6 +58,12 @@ with:
 - `-PesRunnerRepositoryUrl=file:///...` pointing at a Maven repo containing the
   ES Runner core/helper/plugin artifacts
 - optionally `-PesDistroZip=/path/to/elasticsearch-9.3.1.zip`
+
+That sample is intentionally more realistic than the TestKit fixture:
+
+- it has a small internal `automation-support` subproject
+- it bulk-loads fixture orders into namespaced indices
+- it includes a negative-path suite that proves raw non-namespaced access fails
 
 ## Recommended build layout
 

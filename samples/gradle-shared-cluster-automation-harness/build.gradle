@@ -1,3 +1,5 @@
+import org.gradle.api.plugins.jvm.JvmTestSuite
+
 plugins {
     id 'io.github.wboult.es-runner.shared-test-clusters'
 }
@@ -5,6 +7,7 @@ plugins {
 def esRunnerVersion = providers.gradleProperty("esRunnerVersion").orElse("0.1.0").get()
 def esVersion = providers.gradleProperty("esVersion").orElse("9.3.1").get()
 def esDistroZip = providers.gradleProperty("esDistroZip").orNull
+def automationProjects = [project(":app"), project(":search")]
 
 allprojects {
     group = 'example'
@@ -13,12 +16,12 @@ allprojects {
 
 elasticTestClusters {
     clusters {
-        register("integration") {
+        register("automationHarness") {
             clusterName.set("sample-shared-es9")
             quiet.set(true)
             startupTimeoutMillis.set(180_000L)
             distrosDir.set(rootProject.file(".gradle/elasticsearch/distros").absolutePath)
-            workDir.set(layout.buildDirectory.dir("elastic-test-clusters/integration").get().asFile.absolutePath)
+            workDir.set(layout.buildDirectory.dir("elastic-test-clusters/automation-harness").get().asFile.absolutePath)
             if (esDistroZip != null) {
                 distroZip.set(esDistroZip)
                 download.set(false)
@@ -31,18 +34,38 @@ elasticTestClusters {
 
     suites {
         matchingName("integrationTest") {
-            useCluster("integration")
+            useCluster("automationHarness")
             namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
         matchingName("smokeTest") {
-            useCluster("integration")
+            useCluster("automationHarness")
             namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
     }
 }
 
-subprojects {
+project(":automation-support") {
+    apply plugin: 'java-library'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    dependencies {
+        api("io.github.wboult:es-runner-gradle-test-support:${esRunnerVersion}")
+    }
+}
+
+configure(automationProjects) {
     apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
 
     dependencies {
         testImplementation(platform("org.junit:junit-bom:5.12.0"))
@@ -51,15 +74,20 @@ subprojects {
 
     testing {
         suites {
-            withType(org.gradle.api.plugins.jvm.JvmTestSuite).configureEach {
+            withType(JvmTestSuite).configureEach {
                 useJUnitJupiter()
                 dependencies {
-                    implementation("io.github.wboult:es-runner-gradle-test-support:${esRunnerVersion}")
+                    implementation(project(":automation-support"))
                 }
             }
 
-            register("integrationTest", org.gradle.api.plugins.jvm.JvmTestSuite)
-            register("smokeTest", org.gradle.api.plugins.jvm.JvmTestSuite)
+            register("integrationTest", JvmTestSuite)
+            register("smokeTest", JvmTestSuite)
         }
+    }
+
+    tasks.named("check") {
+        dependsOn(tasks.named("integrationTest"))
+        dependsOn(tasks.named("smokeTest"))
     }
 }
