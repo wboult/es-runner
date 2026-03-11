@@ -3,7 +3,22 @@ title: ES Runner Documentation
 description: Documentation for ES Runner, organized with the Diataxis framework.
 ---
 
-ES Runner launches official Elasticsearch ZIP distributions in a local process, waits for readiness, and provides a small Java API for interaction. These docs are organized with the **Diataxis** framework so you can choose the style that fits your goal.
+ES Runner launches official Elasticsearch or OpenSearch ZIP distributions in a
+local process, waits for readiness, and provides a small Java API for
+interaction. These docs are organized with the **Diataxis** framework so you
+can choose the style that fits your goal.
+
+## Why this instead of Testcontainers or custom scripts?
+
+ES Runner is aimed at the cases where a real local node is useful but Docker is
+not the right default:
+
+- **Use ES Runner** when you want process-backed realism, Docker-free CI, or a
+  shared build-scoped cluster for multiple Gradle suites and subprojects.
+- **Use Testcontainers** when Docker is already standard and you want
+  container-level isolation as the main abstraction.
+- **Use custom scripts** only if your lifecycle is so narrow that you do not
+  need reusable download, cleanup, diagnostics, or namespacing support.
 
 ## Release status
 
@@ -22,6 +37,20 @@ If you want to verify the publication flow now, start with:
 - **How-to Guides**: solve a specific task (cluster setup, mirrors, plugins, CI).
 - **Reference**: look up configuration keys, APIs, and compatibility.
 - **Explanation**: understand design decisions, tradeoffs, and policies.
+
+## Common starting points
+
+- **Just start one local node**:
+  [Getting started](tutorials/getting-started/) or
+  [First single-node server](tutorials/first-server/)
+- **Share one cluster across Gradle suites/projects**:
+  [Use shared Gradle test clusters](how-to/gradle-shared-test-clusters/)
+- **Run OpenSearch instead of Elasticsearch**:
+  [Configuration reference](reference/configuration/) and
+  [Compatibility matrix](reference/compatibility/)
+- **Tune mirrors, cache, and startup costs**:
+  [Use a download mirror](how-to/use-a-mirror/) and
+  [Performance guidance](explanation/performance/)
 
 ## Quick links
 

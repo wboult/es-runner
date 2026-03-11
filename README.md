@@ -13,6 +13,28 @@ to depend on Docker, Testcontainers, or an already-running shared cluster.
 
 Documentation: <https://wboult.github.io/es-runner/>
 
+## Why ES Runner instead of Testcontainers or custom scripts?
+
+Use ES Runner when you want a real search node but Docker is the wrong fit:
+
+- bare-metal or locked-down CI agents where Docker is unavailable or unwanted
+- local automation that should stay close to the official ZIP distribution
+- multi-project Gradle builds that should share one build-scoped node instead
+  of paying repeated startup cost per suite
+- process-level realism without maintaining your own download, extract, config,
+  health-check, and shutdown scripts
+
+Compared with common alternatives:
+
+- **Testcontainers** is stronger when Docker is already standard and you want
+  container-level isolation as the default
+- **hand-rolled scripts** are fine for one build, but ES Runner packages the
+  distro lifecycle, cleanup, diagnostics, namespacing, and Gradle sharing into
+  one maintained library
+- **embedded JVM servers** can be useful for experiments, but ES Runner treats
+  separate-process startup as the stable default because it is closer to how
+  Elasticsearch and OpenSearch are meant to run
+
 ## Install and release status
 
 The release workflow, signing, Maven metadata, and Gradle plugin publication
@@ -64,6 +86,24 @@ flow described in [docs/releasing.md](docs/releasing.md) and
 - keeps Elasticsearch in a separate process, so your test JVM stays clean
 - supports downloading distros from official URLs, HTTPS mirrors, and local file paths
 - includes an incubating Gradle plugin for build-scoped shared test clusters
+
+## Start with the path that matches your use case
+
+- **One JVM test suite or offline tool**:
+  start with the [First single-node server](https://wboult.github.io/es-runner/tutorials/first-server/)
+  tutorial and the [getting started](https://wboult.github.io/es-runner/tutorials/getting-started/)
+  walkthrough
+- **A Gradle build with multiple suites or subprojects**:
+  use [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
+  for one shared cluster plus per-suite namespaces
+- **OpenSearch instead of Elasticsearch**:
+  switch the distro family and follow the same process-backed flow documented in
+  the [compatibility](https://wboult.github.io/es-runner/reference/compatibility/)
+  and [configuration](https://wboult.github.io/es-runner/reference/configuration/)
+  docs
+- **Mirror, cache, or CI tuning**:
+  use [docs/performance.md](docs/performance.md) and
+  [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md)
 
 ## When not to use it
 
