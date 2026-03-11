@@ -138,6 +138,47 @@ jobs:
           publishReleasePublicationsToMavenLocal
           :es-runner-gradle-plugin:validatePlugins
 
+  plugin-install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache Elasticsearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: es-distro-${{ runner.os }}-9.3.1
+
+      - name: Prime local Elasticsearch distro
+        run: |
+          mkdir -p distros
+          archive="distros/elasticsearch-9.3.1-linux-x86_64.tar.gz"
+          if [ ! -f "$archive" ]; then
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-9.3.1-linux-x86_64.tar.gz" -o "$archive"
+          fi
+
+      - name: Run plugin install integration test
+        env:
+          ES_VERSION: "9.3.1"
+          ES_DISTROS_DIR: distros
+          ES_DISTRO_DOWNLOAD: "true"
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          :test
+          --tests io.github.wboult.esrunner.ElasticRunnerPluginInstallIntegrationTest
+
   opensearch-process:
     runs-on: ubuntu-latest
     strategy:

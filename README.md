@@ -262,6 +262,21 @@ try (ManagedElasticsearchClient managed = ElasticJavaClients.create(server, buil
 See [docs/official-java-client.md](docs/official-java-client.md) for the full
 usage notes.
 
+## Plugin install
+
+ES Runner can install Elasticsearch plugins before startup:
+
+```java
+ElasticRunner.withServer(builder -> builder
+        .version("9.3.1")
+        .download(true)
+        .plugin("analysis-icu"),
+    server -> System.out.println(server.get("/_nodes/plugins")));
+```
+
+See [site/src/content/docs/how-to/install-plugins.md](site/src/content/docs/how-to/install-plugins.md)
+for a real analyzer example and the current plugin-install CI coverage.
+
 ## Mirrors and private distros
 
 `downloadBaseUrl(...)` supports:
