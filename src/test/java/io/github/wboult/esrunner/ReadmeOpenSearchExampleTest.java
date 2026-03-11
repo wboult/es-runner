@@ -28,6 +28,7 @@ class ReadmeOpenSearchExampleTest {
             ElasticClient client = server.client();
             assertTrue(!client.clusterHealth().status().isEmpty());
             assertTrue(client.version().startsWith(version.substring(0, version.indexOf('.')) + "."));
+            SearchWorkflowAssertions.assertRealisticOrderWorkflow(server, "readme-opensearch");
         }
     }
 }

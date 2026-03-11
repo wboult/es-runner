@@ -10,8 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ElasticRunnerIntegrationTest {
 
     @Test
-    void startsAndRespondsToHealthChecks() throws Exception {
-        String zipPath = System.getenv("ES_DISTRO_ZIP");
+    void startsAndRunsRealisticIndexingFlow() throws Exception {
         String version = System.getenv().getOrDefault("ES_VERSION", "9.3.1");
 
         Path workDir = Files.createTempDirectory("es-runner-it-");
@@ -32,6 +31,7 @@ class ElasticRunnerIntegrationTest {
             assertTrue(server.version().startsWith(major + "."));
             assertTrue(server.httpPort() >= config.portRangeStart());
             assertTrue(server.httpPort() <= config.portRangeEnd());
+            SearchWorkflowAssertions.assertRealisticOrderWorkflow(server, "runner-it");
         }
     }
 }

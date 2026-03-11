@@ -101,6 +101,71 @@ try (ElasticServer server = ElasticRunner.start(config)) {
 }
 ```
 
+## Realistic indexing flow
+
+For something closer to a real automation or integration-test harness, create a
+template, let it shape a concrete index, bulk seed a few documents, then query
+through an alias:
+
+```java
+ElasticRunner.withServer(builder -> builder
+        .version("9.3.1")
+        .download(true),
+    server -> {
+        server.putIndexTemplate("orders-template", """
+                {
+                  "index_patterns": ["orders-*"],
+                  "template": {
+                    "settings": {
+                      "index": {
+                        "number_of_replicas": 0
+                      }
+                    },
+                    "mappings": {
+                      "properties": {
+                        "customer": { "type": "keyword" },
+                        "region": { "type": "keyword" },
+                        "status": { "type": "keyword" },
+                        "description": { "type": "text" },
+                        "total": { "type": "double" }
+                      }
+                    },
+                    "aliases": {
+                      "orders-read": {}
+                    }
+                  }
+                }
+                """);
+        server.createIndex("orders-2026-03");
+        server.bulk("""
+                {"index":{"_index":"orders-2026-03","_id":"o-100"}}
+                {"customer":"acme","region":"eu","status":"shipped","description":"overnight bike delivery","total":120.5}
+                {"index":{"_index":"orders-2026-03","_id":"o-101"}}
+                {"customer":"acme","region":"eu","status":"pending","description":"standard helmet delivery","total":45.0}
+                {"index":{"_index":"orders-2026-03","_id":"o-102"}}
+                {"customer":"globex","region":"us","status":"shipped","description":"overnight gloves delivery","total":75.25}
+                """);
+        server.refresh("orders-2026-03");
+
+        System.out.println(server.search("orders-read", """
+                {
+                  "query": {
+                    "term": {
+                      "status": "shipped"
+                    }
+                  },
+                  "aggs": {
+                    "orders_by_region": {
+                      "terms": {
+                        "field": "region"
+                      }
+                    }
+                  }
+                }
+                """));
+    });
+```
+
 ## Main API shape
 
 The intended easy path is:
@@ -251,10 +316,38 @@ ElasticRunner.withServer(builder -> builder
         .version("3.5.0")
         .download(true),
     server -> {
-        server.createIndex("docs");
-        server.indexDocument("docs", "1", "{\"title\":\"hello\"}");
-        server.refresh("docs");
-        System.out.println(server.search("docs", "{\"query\":{\"match\":{\"title\":\"hello\"}}}"));
+        server.putIndexTemplate("orders-template", """
+                {
+                  "index_patterns": ["orders-*"],
+                  "template": {
+                    "settings": {
+                      "index": {
+                        "number_of_replicas": 0
+                      }
+                    },
+                    "aliases": {
+                      "orders-read": {}
+                    }
+                  }
+                }
+                """);
+        server.createIndex("orders-2026-03");
+        server.bulk("""
+                {"index":{"_index":"orders-2026-03","_id":"o-100"}}
+                {"status":"shipped","region":"eu","description":"overnight bike delivery"}
+                {"index":{"_index":"orders-2026-03","_id":"o-101"}}
+                {"status":"pending","region":"eu","description":"standard helmet delivery"}
+                """);
+        server.refresh("orders-2026-03");
+        System.out.println(server.search("orders-read", """
+                {
+                  "query": {
+                    "match": {
+                      "description": "overnight"
+                    }
+                  }
+                }
+                """));
     });
 ```
 
