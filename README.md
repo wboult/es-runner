@@ -29,6 +29,9 @@ Use something else when:
 - you need production topology simulation beyond what a small local cluster can
   reasonably provide
 
+See [docs/performance.md](docs/performance.md) for the startup cost model,
+shared-cluster savings, and mirror/cache guidance.
+
 ## Requirements
 
 - JDK 17+
