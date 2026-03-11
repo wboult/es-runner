@@ -12,6 +12,7 @@ The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 
 - `test`
 - `scala3Test`
+- `plugin-install`
 - `opensearch-process`
 - `embedded-jdk17`
 - `embedded-jdk21`
@@ -22,6 +23,7 @@ The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 | --- | --- | --- |
 | `test` | `17` | Main Java/Scala/unit/integration coverage, Gradle plugin tests, and Scala/Spark matrix against Elasticsearch `9.3.1` and `8.19.11`. |
 | `scala3Test` | `17` | Scala 3 coverage against Elasticsearch `9.3.1`. |
+| `plugin-install` | `17` | Real plugin-install coverage against Elasticsearch `9.3.1` and the published `analysis-icu` plugin. |
 | `opensearch-process` | `21` | Process-backed OpenSearch smoke tests for `3.5.0` and `2.19.4`, including README-style flows. |
 | `embedded-jdk17` | `17` | Experimental embedded Elasticsearch `8.19.11` and OpenSearch `2.19.4`. |
 | `embedded-jdk21` | `21` | Experimental embedded Elasticsearch `9.3.1` and OpenSearch `3.5.0`. |

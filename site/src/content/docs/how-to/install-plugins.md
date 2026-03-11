@@ -3,7 +3,8 @@ title: Install plugins
 description: Install Elasticsearch plugins before startup.
 ---
 
-ES Runner can install plugins before it starts Elasticsearch. Plugins are installed into the extracted distro.
+ES Runner can install plugins before it starts Elasticsearch. Plugins are
+installed into the extracted distro.
 
 ## Install a single plugin
 
@@ -16,7 +17,7 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
     .clusterName("plugins"));
 
 try (ElasticServer server = ElasticRunner.start(config)) {
-    System.out.println(server.clusterHealth().status());
+    System.out.println(server.get("/_nodes/plugins"));
 }
 ```
 
@@ -31,10 +32,62 @@ ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
     .clusterName("plugins"));
 ```
 
+## Realistic plugin flow
+
+If you want to prove the plugin is actually usable, create an index that uses a
+plugin-provided analyzer or filter:
+
+```java
+ElasticRunner.withServer(builder -> builder
+        .version("9.3.1")
+        .download(true)
+        .plugin("analysis-icu"),
+    server -> {
+        server.createIndex("icu-docs", """
+                {
+                  "settings": {
+                    "index": {
+                      "number_of_replicas": 0
+                    },
+                    "analysis": {
+                      "analyzer": {
+                        "folding": {
+                          "tokenizer": "standard",
+                          "filter": ["lowercase", "icu_folding"]
+                        }
+                      }
+                    }
+                  },
+                  "mappings": {
+                    "properties": {
+                      "title": {
+                        "type": "text",
+                        "analyzer": "folding"
+                      }
+                    }
+                  }
+                }
+                """);
+        server.indexDocument("icu-docs", "1", "{\"title\":\"Caf\u00e9 Cr\u00e8me\"}");
+        server.refresh("icu-docs");
+        System.out.println(server.search("icu-docs", """
+                {
+                  "query": {
+                    "match": {
+                      "title": "cafe creme"
+                    }
+                  }
+                }
+                """));
+    });
+```
+
 ## Notes
 
 - Plugin installation is performed **before** Elasticsearch starts.
 - Failures surface as `ElasticRunnerException` with a plugin log file path.
+- CI runs a real plugin-install integration test against the published
+  `analysis-icu` plugin on Elasticsearch `9.3.1`.
 
 ## Related
 

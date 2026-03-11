@@ -121,7 +121,7 @@ final class SearchWorkflowAssertions {
         assertTrue(aggregationResponse.contains("\"key\":\"us\""));
     }
 
-    private static void assertSearchTotal(String json, long expected) {
+    static void assertSearchTotal(String json, long expected) {
         Matcher matcher = SEARCH_TOTAL_PATTERN.matcher(json);
         assertTrue(matcher.find(), "Expected search total in response: " + json);
         assertEquals(expected, Long.parseLong(matcher.group(1)));
