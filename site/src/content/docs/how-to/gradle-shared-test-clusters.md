@@ -114,6 +114,20 @@ It waits for yellow cluster health before injecting `elastic.runner.baseUri`
 into that suite task. Applying the plugin alone does not start Elasticsearch,
 and tasks like `classes`, `jar`, or unrelated test tasks stay cold.
 
+## Lazy startup behavior
+
+Applying the plugin does not start Elasticsearch by itself.
+
+The shared cluster stays cold for commands such as:
+
+- `./gradlew classes`
+- `./gradlew jar`
+- `./gradlew :someProject:test` when that task is not bound to a shared cluster
+
+The cluster only boots when Gradle actually executes a bound suite task and
+forks its test JVM. That keeps ordinary development tasks fast while still
+giving integration suites a build-scoped shared node when they really run.
+
 ## What gets injected
 
 Bound test tasks receive these system properties:
