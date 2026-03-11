@@ -236,13 +236,21 @@ class ElasticSharedTestClustersPluginFunctionalTest {
 
     private String rootVersion(Path repoRoot) throws IOException {
         String buildScript = Files.readString(repoRoot.resolve("build.gradle"));
-        java.util.regex.Matcher matcher = java.util.regex.Pattern
+        java.util.regex.Matcher literalMatcher = java.util.regex.Pattern
                 .compile("version\\s*=\\s*'([^']+)'")
                 .matcher(buildScript);
-        if (!matcher.find()) {
-            throw new IllegalStateException("Unable to determine root version from build.gradle");
+        if (literalMatcher.find()) {
+            return literalMatcher.group(1);
         }
-        return matcher.group(1);
+
+        java.util.regex.Matcher propertyMatcher = java.util.regex.Pattern
+                .compile("version\\s*=\\s*providers\\.gradleProperty\\(\"releaseVersion\"\\)\\.orElse\\(\"([^\"]+)\"\\)\\.get\\(\\)")
+                .matcher(buildScript);
+        if (propertyMatcher.find()) {
+            return propertyMatcher.group(1);
+        }
+
+        throw new IllegalStateException("Unable to determine root version from build.gradle");
     }
 
     private void copyFixture(Path targetRoot, Map<String, String> replacements) throws IOException {

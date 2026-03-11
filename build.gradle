@@ -37,11 +37,88 @@ plugins {
     id 'scala'
     id 'org.jetbrains.kotlin.jvm' version '1.9.24'
     id 'maven-publish'
+    id 'signing'
 }
 
 group = 'io.github.wboult'
-version = '0.1.0'
+version = providers.gradleProperty("releaseVersion").orElse("0.1.0").get()
 description = 'Local Elasticsearch distribution runner for tests and tooling.'
+
+def centralPublishingEnabled = providers.gradleProperty("enableCentralPublishing")
+        .map { it.toBoolean() }
+        .orElse(false)
+def centralPortalUsername = providers.gradleProperty("centralPortalUsername")
+        .orElse(providers.environmentVariable("CENTRAL_PORTAL_USERNAME"))
+def centralPortalPassword = providers.gradleProperty("centralPortalPassword")
+        .orElse(providers.environmentVariable("CENTRAL_PORTAL_PASSWORD"))
+
+ext.configurePomMetadata = { publication, Project targetProject, String publicationName = targetProject.name, String publicationDescription = targetProject.description ->
+    publication.pom {
+        name = publicationName
+        description = publicationDescription
+        url = 'https://github.com/wboult/es-runner'
+        licenses {
+            license {
+                name = 'MIT License'
+                url = 'https://opensource.org/license/mit/'
+            }
+        }
+        developers {
+            developer {
+                id = 'wboult'
+                name = 'Will Boulter'
+                url = 'https://github.com/wboult'
+            }
+        }
+        scm {
+            connection = 'scm:git:https://github.com/wboult/es-runner.git'
+            developerConnection = 'scm:git:ssh://git@github.com/wboult/es-runner.git'
+            url = 'https://github.com/wboult/es-runner'
+        }
+    }
+}
+
+ext.configurePublishingRepositories = { repositoryHandler ->
+    def sampleRepoUrl = providers.gradleProperty("sampleRepoUrl").orNull
+    if (sampleRepoUrl != null) {
+        repositoryHandler.maven {
+            name = "sampleRepo"
+            url = uri(sampleRepoUrl)
+        }
+    }
+
+    if (centralPublishingEnabled.get() || (centralPortalUsername.isPresent() && centralPortalPassword.isPresent())) {
+        repositoryHandler.maven {
+            name = "ossrhStagingApi"
+            url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
+            credentials {
+                username = centralPortalUsername.orNull
+                password = centralPortalPassword.orNull
+            }
+        }
+    }
+}
+
+ext.configureSigning = { Project targetProject ->
+    def signingKey = targetProject.providers.gradleProperty("signingKey")
+            .orElse(targetProject.providers.environmentVariable("SIGNING_KEY"))
+            .orNull
+    def signingPassword = targetProject.providers.gradleProperty("signingPassword")
+            .orElse(targetProject.providers.environmentVariable("SIGNING_PASSWORD"))
+            .orNull
+
+    targetProject.signing {
+        required = false
+        if (signingKey != null && signingPassword != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign(targetProject.publishing.publications)
+        }
+    }
+
+    targetProject.tasks.withType(org.gradle.plugins.signing.Sign).configureEach {
+        onlyIf { signingKey != null && signingPassword != null }
+    }
+}
 
 def libsCatalog = project.extensions.getByType(org.gradle.api.artifacts.VersionCatalogsExtension).named("libs")
 def defaultScalaVersion = libsCatalog.findVersion("scala").get().requiredVersion
@@ -167,16 +244,47 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            rootProject.ext.configurePomMetadata(delegate, project, 'ES Runner', project.description)
         }
     }
     repositories {
-        def sampleRepoUrl = providers.gradleProperty("sampleRepoUrl").orNull
-        if (sampleRepoUrl != null) {
-            maven {
-                name = "sampleRepo"
-                url = uri(sampleRepoUrl)
-            }
-        }
+        rootProject.ext.configurePublishingRepositories(delegate)
+    }
+}
+
+rootProject.ext.configureSigning(project)
+
+def resolvedPublicationVersion = version.toString()
+
+tasks.register("printResolvedVersion") {
+    description = "Prints the version that will be used for publication."
+    group = "help"
+    doLast {
+        println(resolvedPublicationVersion)
+    }
+}
+
+tasks.register("publishReleasePublicationsToMavenLocal") {
+    description = "Publishes the release artifacts for all publishable modules to Maven Local."
+    group = "publishing"
+    dependsOn(
+            tasks.named("publishToMavenLocal"),
+            project(":es-runner-java-client").tasks.named("publishToMavenLocal"),
+            project(":es-runner-gradle-test-support").tasks.named("publishToMavenLocal"),
+            project(":es-runner-gradle-plugin").tasks.named("publishToMavenLocal")
+    )
+}
+
+if (centralPublishingEnabled.get() || (centralPortalUsername.isPresent() && centralPortalPassword.isPresent())) {
+    tasks.register("publishReleasePublicationsToCentralStaging") {
+        description = "Publishes the release artifacts for all publishable modules to the Sonatype OSSRH staging compatibility service."
+        group = "publishing"
+        dependsOn(
+                tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
+                project(":es-runner-java-client").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
+                project(":es-runner-gradle-test-support").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
+                project(":es-runner-gradle-plugin").tasks.named("publishAllPublicationsToOssrhStagingApiRepository")
+        )
     }
 }
 

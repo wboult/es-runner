@@ -1,15 +1,19 @@
 plugins {
     id 'java-gradle-plugin'
-    id 'maven-publish'
+    id 'com.gradle.plugin-publish' version '2.0.0'
+    id 'signing'
 }
 
 group = rootProject.group
 version = rootProject.version
+description = 'Shared Gradle test clusters and suite namespacing for ES Runner.'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 dependencies {
@@ -22,12 +26,15 @@ dependencies {
 }
 
 gradlePlugin {
+    website = 'https://github.com/wboult/es-runner'
+    vcsUrl = 'https://github.com/wboult/es-runner'
     plugins {
         elasticRunnerSharedTestClusters {
             id = 'io.github.wboult.es-runner.shared-test-clusters'
             implementationClass = 'io.github.wboult.esrunner.gradle.ElasticSharedTestClustersPlugin'
             displayName = 'ES Runner Shared Test Clusters'
             description = 'Shares Elasticsearch test clusters across Gradle projects and suites.'
+            tags.set(['elasticsearch', 'opensearch', 'gradle', 'testing'])
         }
     }
 }
@@ -40,13 +47,12 @@ tasks.withType(Test).configureEach {
 }
 
 publishing {
+    publications.withType(MavenPublication).configureEach {
+        rootProject.ext.configurePomMetadata(delegate, project, 'ES Runner Gradle Plugin', project.description)
+    }
     repositories {
-        def sampleRepoUrl = providers.gradleProperty("sampleRepoUrl").orNull
-        if (sampleRepoUrl != null) {
-            maven {
-                name = "sampleRepo"
-                url = uri(sampleRepoUrl)
-            }
-        }
+        rootProject.ext.configurePublishingRepositories(delegate)
     }
 }
+
+rootProject.ext.configureSigning(project)

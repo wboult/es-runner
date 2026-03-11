@@ -30,9 +30,9 @@ eventually published.
 
 ## Remaining blockers before a first public artifact release
 
-### 1. Add real publishing
+### 1. Configure live release secrets and namespace ownership
 
-The build still needs publication wiring for:
+The build and workflows are now wired for:
 
 - Maven Central
 - Gradle Plugin Portal
@@ -40,33 +40,25 @@ The build still needs publication wiring for:
 - complete generated POM metadata
 - release workflow automation
 
-Until that exists, the repo can become public, but it is not ready for a
-polished first published release.
+What still needs owner setup is:
 
-### 2. Add publication metadata
+- claim and verify the `io.github.wboult` Central namespace
+- create Central Portal user tokens
+- create Plugin Portal publish credentials
+- add the signing key/password and publish tokens as GitHub secrets
 
-Every published module should have:
+### 2. Exercise the first real tag release
 
-- name
-- description
-- URL
-- license metadata
-- developer metadata
-- SCM metadata
+The release workflow now exists at `.github/workflows/release.yml`, but the
+first real release should still be treated as a dress rehearsal:
 
-This is still missing from the Gradle build.
+- create a fresh tag such as `v0.1.0`
+- verify Central publication finishes cleanly
+- verify Plugin Portal publication finishes cleanly
+- verify the GitHub release is created with the expected notes
+- run the checked-in consumer sample against the newly published coordinates
 
-### 3. Add a consume-the-published-artifact smoke test
-
-Before the first release tag, add one small external-consumer smoke test that
-uses:
-
-- the published library coordinates
-- the published Gradle plugin id
-
-That catches packaging mistakes that normal source-tree tests do not.
-
-### 4. Decide how much API is truly public
+### 3. Decide how much API is truly public
 
 The API is in much better shape now, but before `1.0` it is still worth
 reviewing whether some currently public types should stay public, especially:
@@ -74,22 +66,20 @@ reviewing whether some currently public types should stay public, especially:
 - `RunnerState`
 - the full Gradle plugin DSL surface
 
-### 5. Final public repo polish
+### 4. Final public repo polish
 
 Still worth doing before flipping the repo public:
 
 - set the GitHub repo description and topics
-- enable GitHub Pages for the docs site if it is not already enabled
 - add a social preview image
 - sanity-check README wording one last time from a first-time-user perspective
 
 ## Recommended next order
 
-1. make the repo public with the renamed namespace and MIT license in place
-2. wire Maven Central publishing and signing
-3. wire Gradle Plugin Portal publication
-4. add a published-artifact smoke test
-5. cut the first release only after those pieces are green
+1. add the required GitHub secrets and Central namespace ownership
+2. run the release workflow from a real tag
+3. validate the published coordinates with the checked-in consumer sample
+4. only then announce the first public artifact release
 
 ## Notes
 
@@ -97,3 +87,4 @@ Still worth doing before flipping the repo public:
   - repo: `wboult/es-runner`
   - docs: `https://wboult.github.io/es-runner/`
 - The docs/site title and public identifiers use `ES Runner`.
+- The release workflow docs live in `docs/releasing.md`.
