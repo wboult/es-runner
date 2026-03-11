@@ -39,6 +39,10 @@ Latest verified process-backed lines:
 - Elasticsearch `9.3.1` and `8.19.11` in CI
 - OpenSearch `3.5.0` and `2.19.4` in CI smoke tests
 
+See [site/src/content/docs/reference/compatibility.md](site/src/content/docs/reference/compatibility.md)
+for the exact support policy, verified JDK/Gradle lines, and what is still
+experimental.
+
 ## Quick start
 
 ```java

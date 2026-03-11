@@ -17,9 +17,14 @@ Report security issues privately. See `SECURITY.md` for contact details and resp
 
 ## Support window
 
-- JDK 17 is required.
-- CI validates against a fixed set of Elasticsearch versions; see the compatibility matrix.
-- Older versions may work but are not guaranteed.
+- The primary supported path is the process-backed runner.
+- Core published modules target Java 17 bytecode.
+- CI validates a fixed set of Elasticsearch/OpenSearch/JDK combinations; see
+  the compatibility policy for the exact current lines.
+- Experimental embedded runners are intentionally outside the normal support
+  contract even though they have smoke coverage in CI.
+- Older patch lines may work, but once CI moves to a newer latest patch in a
+  major line they are no longer considered supported.
 
 ## Related
 

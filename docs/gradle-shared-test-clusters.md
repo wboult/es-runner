@@ -146,6 +146,20 @@ and non-bound test tasks do not pay startup cost just because the plugin is
 applied, while the first real suite still does not need its own startup
 polling to survive initial contact with a fresh single-node cluster.
 
+## Lazy startup behavior
+
+Applying the plugin does not start Elasticsearch on its own.
+
+The cluster stays cold for commands such as:
+
+- `./gradlew classes`
+- `./gradlew jar`
+- `./gradlew :someProject:test` when that task is not bound to a shared cluster
+
+The cluster starts only when Gradle actually executes a bound test task and
+forks its test JVM. This keeps normal development tasks fast while preserving
+the shared-cluster benefit for real integration suites.
+
 See [docs/gradle-shared-test-cluster-best-practices.md](docs/gradle-shared-test-cluster-best-practices.md)
 for concrete guidance on namespacing, cleanup, and suite boundaries.
 
