@@ -37,6 +37,60 @@ ElasticRunner.withServer(builder -> builder
     server -> System.out.println(server.version()));
 ```
 
+## Realistic indexing flow
+
+OpenSearch supports the same template-plus-bulk workflow as Elasticsearch. A
+small realistic flow looks like this:
+
+```java
+ElasticRunner.withServer(builder -> builder
+        .family(DistroFamily.OPENSEARCH)
+        .version("3.5.0")
+        .download(true),
+    server -> {
+        server.putIndexTemplate("orders-template", """
+                {
+                  "index_patterns": ["orders-*"],
+                  "template": {
+                    "settings": {
+                      "index": {
+                        "number_of_replicas": 0
+                      }
+                    },
+                    "mappings": {
+                      "properties": {
+                        "region": { "type": "keyword" },
+                        "status": { "type": "keyword" },
+                        "description": { "type": "text" }
+                      }
+                    },
+                    "aliases": {
+                      "orders-read": {}
+                    }
+                  }
+                }
+                """);
+        server.createIndex("orders-2026-03");
+        server.bulk("""
+                {"index":{"_index":"orders-2026-03","_id":"o-100"}}
+                {"region":"eu","status":"shipped","description":"overnight bike delivery"}
+                {"index":{"_index":"orders-2026-03","_id":"o-101"}}
+                {"region":"us","status":"pending","description":"standard helmet delivery"}
+                """);
+        server.refresh("orders-2026-03");
+
+        System.out.println(server.search("orders-read", """
+                {
+                  "query": {
+                    "match": {
+                      "description": "overnight"
+                    }
+                  }
+                }
+                """));
+    });
+```
+
 ## What defaults change
 
 Use `ElasticRunnerConfig.defaults(DistroFamily.OPENSEARCH)` when you want the
@@ -72,7 +126,10 @@ The smoke coverage verifies:
 
 - process startup
 - root ping / health
-- index, refresh, count, and match query
+- template creation
+- concrete index creation from that template
+- bulk ingest, refresh, and count
+- match, term, and aggregation queries
 - README-style example flow
 
 ## Related
