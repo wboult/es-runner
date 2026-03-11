@@ -1,5 +1,9 @@
 # ES Runner
 
+[![CI](https://github.com/wboult/es-runner/actions/workflows/ci-main.yml/badge.svg)](https://github.com/wboult/es-runner/actions/workflows/ci-main.yml)
+[![Docs](https://github.com/wboult/es-runner/actions/workflows/docs.yml/badge.svg)](https://github.com/wboult/es-runner/actions/workflows/docs.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit/)
+
 ES Runner launches a real Elasticsearch or OpenSearch ZIP distribution in an
 isolated OS process and gives tests or offline tooling a small, direct Java API
 for starting, stopping, and talking to the cluster.
@@ -8,6 +12,50 @@ It is aimed at environments where you want a real search node but do not want
 to depend on Docker, Testcontainers, or an already-running shared cluster.
 
 Documentation: <https://wboult.github.io/es-runner/>
+
+## Install and release status
+
+The release workflow, signing, Maven metadata, and Gradle plugin publication
+setup are all in the repo now. Until the first live tagged release is cut, the
+normal ways to consume ES Runner are:
+
+- a composite build for the Gradle plugin
+- a local Maven repo populated with the release dry-run tasks
+
+The publishable coordinates and plugin id are:
+
+- `io.github.wboult:es-runner`
+- `io.github.wboult:es-runner-java-client`
+- `io.github.wboult:es-runner-gradle-test-support`
+- plugin id `io.github.wboult.es-runner.shared-test-clusters`
+
+Core library, once published:
+
+```groovy
+testImplementation("io.github.wboult:es-runner:<version>")
+```
+
+Optional official Java client adapter:
+
+```groovy
+testImplementation("io.github.wboult:es-runner-java-client:<version>")
+```
+
+Gradle shared-cluster plugin, once published:
+
+```groovy
+plugins {
+    id("io.github.wboult.es-runner.shared-test-clusters") version "<version>"
+}
+
+dependencies {
+    testImplementation("io.github.wboult:es-runner-gradle-test-support:<version>")
+}
+```
+
+Before the first live release, use the checked-in sample and release dry-run
+flow described in [docs/releasing.md](docs/releasing.md) and
+[docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md).
 
 ## Why use it
 
