@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 
@@ -23,16 +22,16 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PublishedConsumerSampleFunctionalTest {
-    private static final String SAMPLE_ROOT = "samples/gradle-shared-cluster-multiproject";
+    private static final String SAMPLE_ROOT = "samples/gradle-shared-cluster-automation-harness";
 
     @Test
     void publishedArtifactSampleBuildSharesOneClusterAcrossProjectsAndSuites() throws IOException {
-        Path sampleDir = Files.createTempDirectory("es-runner-consumer-sample");
+        Path sampleDir = Files.createTempDirectory("es-runner-automation-harness");
         Path sampleRepo = Files.createTempDirectory("es-runner-sample-repo");
         boolean success = false;
         try {
             Path repoRoot = repoRoot();
-            Path distroArchive = localElasticsearch9Archive(repoRoot);
+            Path distroArchive = TestDistroArchives.localElasticsearch9Archive(repoRoot);
             Assumptions.assumeTrue(distroArchive != null, "Local Elasticsearch 9 distro archive not found");
 
             copyDirectory(repoRoot.resolve(SAMPLE_ROOT), sampleDir);
@@ -41,10 +40,8 @@ class PublishedConsumerSampleFunctionalTest {
             BuildResult result = GradleRunner.create()
                     .withProjectDir(sampleDir.toFile())
                     .withArguments(
-                            ":app:integrationTest",
-                            ":app:smokeTest",
-                            ":search:integrationTest",
-                            ":search:smokeTest",
+                            ":app:check",
+                            ":search:check",
                             "-PesRunnerVersion=" + rootVersion(repoRoot),
                             "-PesRunnerRepositoryUrl=" + sampleRepo.toUri(),
                             "-PesDistroZip=" + distroArchive.toAbsolutePath(),
@@ -76,6 +73,10 @@ class PublishedConsumerSampleFunctionalTest {
             assertNotEquals(metadata.get(2).getProperty("namespace"), metadata.get(3).getProperty("namespace"));
             assertTrue(metadata.get(0).getProperty("namespace").contains("app_integrationtest"));
             assertTrue(metadata.get(3).getProperty("namespace").contains("search_smoketest"));
+            assertEquals("3", metadata.get(0).getProperty("seededCount"));
+            assertEquals("true", metadata.get(1).getProperty("freshNamespace"));
+            assertTrue(metadata.get(2).getProperty("alias").contains("orders-read"));
+            assertEquals("404", metadata.get(3).getProperty("rawLogicalIndexStatus"));
 
             success = true;
         } finally {
@@ -115,29 +116,6 @@ class PublishedConsumerSampleFunctionalTest {
             }
         }
         throw new IllegalStateException("Unable to locate repo root from " + current);
-    }
-
-    private Path localElasticsearch9Archive(Path repoRoot) throws IOException {
-        List<Path> candidates = new java.util.ArrayList<>();
-        for (Path candidate = repoRoot; candidate != null; candidate = candidate.getParent()) {
-            Path distros = candidate.resolve("distros");
-            if (!Files.isDirectory(distros)) {
-                continue;
-            }
-            try (var stream = Files.walk(distros, 2)) {
-                stream.filter(Files::isRegularFile)
-                        .filter(path -> {
-                            String name = path.getFileName().toString();
-                            return (name.endsWith(".zip") || name.endsWith(".tar.gz"))
-                                    && name.contains("elasticsearch-9.3.1");
-                        })
-                        .forEach(candidates::add);
-            }
-        }
-        return candidates.stream()
-                .sorted(Comparator.comparing(path -> path.getFileName().toString()))
-                .findFirst()
-                .orElse(null);
     }
 
     private String rootVersion(Path repoRoot) throws IOException {

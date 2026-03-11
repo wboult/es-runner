@@ -31,10 +31,16 @@ dependencyResolutionManagement {
 ```
 
 A checked-in consumer sample also lives in
-`samples/gradle-shared-cluster-multiproject/`. It uses normal plugin/helper
+`samples/gradle-shared-cluster-automation-harness/`. It uses normal plugin/helper
 coordinates and can be pointed at a local Maven repo with
 `-PesRunnerRepositoryUrl=...` before publication, then at published artifacts
 later with only `-PesRunnerVersion=...`.
+
+That sample is intentionally more realistic than the TestKit fixture:
+
+- it has a small internal `automation-support` subproject
+- it bulk-loads fixture orders into namespaced indices
+- it includes a negative-path suite that proves raw non-namespaced access fails
 
 ## Apply the plugin in the root build
 
@@ -183,7 +189,7 @@ S3, GCS, and Azure Blob buckets.
 
 ## Related
 
-- `samples/gradle-shared-cluster-multiproject/`
+- `samples/gradle-shared-cluster-automation-harness/`
 - [Shared cluster best practices](../gradle-shared-test-cluster-best-practices/)
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Configuration reference](../../reference/configuration/)

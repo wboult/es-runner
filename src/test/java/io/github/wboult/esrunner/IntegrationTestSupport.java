@@ -36,10 +36,10 @@ final class IntegrationTestSupport {
                                       Duration startupTimeout,
                                       boolean quiet) {
         String prefix = envPrefix(family);
-        String zipPath = System.getenv(prefix + "_DISTRO_ZIP");
+        String zipPath = trimToNull(System.getenv(prefix + "_DISTRO_ZIP"));
         boolean download = Boolean.parseBoolean(System.getenv().getOrDefault(prefix + "_DISTRO_DOWNLOAD", "false"));
-        Path distrosDir = Path.of(System.getenv().getOrDefault(prefix + "_DISTROS_DIR", "distros"));
-        String baseUrl = System.getenv(prefix + "_DISTRO_BASE_URL");
+        Path distrosDir = Path.of(System.getenv().getOrDefault(prefix + "_DISTROS_DIR", "distros").trim());
+        String baseUrl = trimToNull(System.getenv(prefix + "_DISTRO_BASE_URL"));
 
         ElasticRunnerConfig base = ElasticRunnerConfig.defaults(family).toBuilder()
                 .workDir(workDir)
@@ -49,7 +49,7 @@ final class IntegrationTestSupport {
                 .quiet(quiet)
                 .build();
 
-        if (zipPath != null && !zipPath.isBlank()) {
+        if (zipPath != null) {
             Path zip = Path.of(zipPath);
             Assumptions.assumeTrue(Files.exists(zip), family.displayName() + " distro ZIP not found");
             return base.toBuilder().distroZip(zip).build();
@@ -66,7 +66,7 @@ final class IntegrationTestSupport {
             ElasticRunnerConfig config = base.toBuilder().version(version)
                     .distrosDir(distrosDir)
                     .download(true).build();
-            if (baseUrl != null && !baseUrl.isBlank()) {
+            if (baseUrl != null) {
                 config = config.toBuilder().downloadBaseUrl(baseUrl).build();
             }
             return config;
@@ -101,13 +101,13 @@ final class IntegrationTestSupport {
                                                  boolean quiet,
                                                  Consumer<ElasticRunnerConfig.Builder> customize) {
         String prefix = envPrefix(family);
-        String zipPath = System.getenv(prefix + "_DISTRO_ZIP");
+        String zipPath = trimToNull(System.getenv(prefix + "_DISTRO_ZIP"));
         boolean download = Boolean.parseBoolean(System.getenv().getOrDefault(prefix + "_DISTRO_DOWNLOAD", "false"));
-        Path distrosDir = Path.of(System.getenv().getOrDefault(prefix + "_DISTROS_DIR", "distros"));
-        String baseUrl = System.getenv(prefix + "_DISTRO_BASE_URL");
+        Path distrosDir = Path.of(System.getenv().getOrDefault(prefix + "_DISTROS_DIR", "distros").trim());
+        String baseUrl = trimToNull(System.getenv(prefix + "_DISTRO_BASE_URL"));
 
         Path localZip = null;
-        if (zipPath == null || zipPath.isBlank()) {
+        if (zipPath == null) {
             DistroDescriptor descriptor = DistroDescriptor.forVersion(family, version);
             localZip = distrosDir.resolve(descriptor.fileName());
             if (!download && !Files.exists(localZip)) {
@@ -116,7 +116,7 @@ final class IntegrationTestSupport {
         }
 
         Path distroZip = null;
-        if (zipPath != null && !zipPath.isBlank()) {
+        if (zipPath != null) {
             distroZip = Path.of(zipPath);
             Assumptions.assumeTrue(Files.exists(distroZip), family.displayName() + " distro ZIP not found");
         } else if (localZip != null && Files.exists(localZip)) {
@@ -138,7 +138,7 @@ final class IntegrationTestSupport {
                 builder.version(version)
                         .distrosDir(distrosDir)
                         .download(download);
-                if (baseUrl != null && !baseUrl.isBlank()) {
+                if (baseUrl != null) {
                     builder.downloadBaseUrl(baseUrl);
                 }
             }
@@ -189,5 +189,13 @@ final class IntegrationTestSupport {
 
     private static String envPrefix(DistroFamily family) {
         return family == DistroFamily.OPENSEARCH ? "OPENSEARCH" : "ES";
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

@@ -29,5 +29,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'es-runner-shared-cluster-sample'
-include('app', 'search')
+rootProject.name = 'es-runner-automation-harness-sample'
+include('automation-support', 'app', 'search')
