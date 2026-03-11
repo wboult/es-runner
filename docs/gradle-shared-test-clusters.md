@@ -28,7 +28,9 @@ resource names.
 ## Current availability
 
 The plugin and helper module already work in this repo and in composite builds.
-Plugin Portal and Maven Central publication are still pending.
+The release workflow now wires Maven Central and Gradle Plugin Portal
+publication, but until the first live release you should still treat
+composite-build and local-repo consumption as the default path.
 
 A checked-in consumer sample lives at
 `samples/gradle-shared-cluster-multiproject/`. It uses normal plugin/helper

@@ -285,7 +285,8 @@ coordinates, and Gradle plugin ids.
 Current setup status:
 
 - the plugin already works in this repo and in composite builds
-- Plugin Portal and Maven Central publication are still pending
+- the release workflow now wires Maven Central and Gradle Plugin Portal publication
+- live publication still requires repo secrets plus a claimed Central namespace
 - a checked-in published-artifact-style sample lives in
   `samples/gradle-shared-cluster-multiproject/`
 
@@ -476,10 +477,11 @@ $env:OPENSEARCH_EMBEDDED_HOME_3 = "C:\path\to\opensearch-3.5.0"
 This repo already has strong testing and docs, but a few items still need to be
 finished before a first public Maven Central release:
 
-- wire signed publication and release automation
-- add complete POM metadata and release workflows
-- add a published-artifact smoke test before the first release tag
+- configure the repo secrets required by `.github/workflows/release.yml`
+- claim the `io.github.wboult` Central namespace and create the first user token
+- exercise the first live tag release end to end
 
 See [docs/public-release-readiness.md](docs/public-release-readiness.md) for the
-repo-specific checklist.
+repo-specific checklist, and [docs/releasing.md](docs/releasing.md) for the
+reproducible publication steps.
 

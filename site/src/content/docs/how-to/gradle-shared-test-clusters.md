@@ -14,9 +14,9 @@ Use it when you want:
 
 ## Use a composite build today
 
-The plugin and helper module work now, but Plugin Portal and Maven Central
-publication are still pending. Until then, include ES Runner as a composite
-build:
+The plugin and helper module work now, and the release workflow now wires
+Plugin Portal and Maven Central publication. Until the first live release,
+still treat composite-build consumption as the default path:
 
 ```groovy
 pluginManagement {

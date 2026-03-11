@@ -1,10 +1,12 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
 }
 
 group = rootProject.group
 version = rootProject.version
+description = 'Test-side namespace and connection helpers for the ES Runner Gradle plugin.'
 
 dependencies {
     api project(':')
@@ -29,15 +31,12 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            rootProject.ext.configurePomMetadata(delegate, project, 'ES Runner Gradle Test Support', project.description)
         }
     }
     repositories {
-        def sampleRepoUrl = providers.gradleProperty("sampleRepoUrl").orNull
-        if (sampleRepoUrl != null) {
-            maven {
-                name = "sampleRepo"
-                url = uri(sampleRepoUrl)
-            }
-        }
+        rootProject.ext.configurePublishingRepositories(delegate)
     }
 }
+
+rootProject.ext.configureSigning(project)

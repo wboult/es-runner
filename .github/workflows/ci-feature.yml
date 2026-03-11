@@ -115,6 +115,29 @@ jobs:
           ES_DISTRO_DOWNLOAD: "true"
         run: ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME" ./gradlew scala3Test
 
+  publication-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Verify release publications
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          publishReleasePublicationsToMavenLocal
+          :es-runner-gradle-plugin:validatePlugins
+
   opensearch-process:
     runs-on: ubuntu-latest
     strategy:

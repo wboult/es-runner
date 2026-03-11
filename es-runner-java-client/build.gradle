@@ -1,9 +1,12 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
+    id 'signing'
 }
 
 group = rootProject.group
 version = rootProject.version
+description = 'Official Elasticsearch Java API Client adapter for ES Runner.'
 
 dependencies {
     api project(':')
@@ -26,3 +29,17 @@ java {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            rootProject.ext.configurePomMetadata(delegate, project, 'ES Runner Java Client', project.description)
+        }
+    }
+    repositories {
+        rootProject.ext.configurePublishingRepositories(delegate)
+    }
+}
+
+rootProject.ext.configureSigning(project)
