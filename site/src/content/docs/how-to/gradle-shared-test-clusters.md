@@ -189,9 +189,130 @@ See [Cloud storage mirrors](../cloud-storage-mirrors/) for per-provider
 guidance including how to generate pre-signed / SAS HTTPS URLs for private
 S3, GCS, and Azure Blob buckets.
 
+## Complete minimal example
+
+Below is a self-contained two-subproject build that you can copy and adapt.
+It assumes published artifacts; before publication, swap to a composite build
+(see "Use a composite build today" above).
+
+**`settings.gradle`:**
+
+```groovy
+pluginManagement {
+    plugins {
+        id 'io.github.wboult.es-runner.shared-test-clusters' version '0.1.0'
+    }
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'my-project'
+include('app', 'search')
+```
+
+**`build.gradle` (root):**
+
+```groovy
+import org.gradle.api.plugins.jvm.JvmTestSuite
+
+plugins {
+    id 'io.github.wboult.es-runner.shared-test-clusters'
+}
+
+elasticTestClusters {
+    clusters {
+        register("integration") {
+            version.set("9.3.1")
+            download.set(true)
+            clusterName.set("shared-it")
+            quiet.set(true)
+            startupTimeoutMillis.set(180_000L)
+        }
+    }
+
+    suites {
+        matchingName("integrationTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    testing {
+        suites {
+            withType(JvmTestSuite).configureEach {
+                useJUnitJupiter()
+                dependencies {
+                    implementation("io.github.wboult:es-runner-gradle-test-support:0.1.0")
+                }
+            }
+
+            register("integrationTest", JvmTestSuite)
+        }
+    }
+
+    tasks.named("check") {
+        dependsOn(tasks.named("integrationTest"))
+    }
+}
+```
+
+**`app/src/integrationTest/java/example/AppIntegrationTest.java`:**
+
+```java
+import io.github.wboult.esrunner.ElasticClient;
+import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class AppIntegrationTest {
+    @Test
+    void indexAndSearch() {
+        ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
+        ElasticClient client = env.client();
+
+        String orders = env.index("orders");
+        client.createIndex(orders);
+        client.indexDocument(orders, "1", "{\"status\":\"shipped\"}");
+        client.refresh(orders);
+
+        long count = client.countValue(orders);
+        assertEquals(1, count);
+    }
+}
+```
+
+Run it with:
+
+```bash
+./gradlew check
+```
+
+For a more realistic multi-project example with fixture loading and a
+negative-path suite, see
+[`samples/gradle-shared-cluster-automation-harness/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-automation-harness).
+
 ## Related
 
-- `samples/gradle-shared-cluster-automation-harness/`
+- [`samples/gradle-shared-cluster-automation-harness/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-automation-harness)
 - [Shared cluster best practices](../gradle-shared-test-cluster-best-practices/)
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Configuration reference](../../reference/configuration/)
