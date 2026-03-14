@@ -17,10 +17,11 @@ class SearchIntegrationTest {
         ElasticClient client = env.client();
 
         String index = env.index("orders-2026");
+        String indexPattern = env.indexPattern("orders");
         String alias = env.alias("orders-read");
         String template = env.template("orders-template");
 
-        client.putIndexTemplate(template, AutomationHarnessSupport.ordersTemplateJson(env.index("orders-*")));
+        client.putIndexTemplate(template, AutomationHarnessSupport.ordersTemplateJson(indexPattern));
         AutomationHarnessSupport.seedOrders(client, index);
         AutomationHarnessSupport.addAlias(client, index, alias);
 

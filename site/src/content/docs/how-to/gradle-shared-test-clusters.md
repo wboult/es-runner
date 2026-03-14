@@ -111,11 +111,18 @@ ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 
 String orders = env.index("orders");
+String ordersPattern = env.indexPattern("orders");
+String ordersTemplate = env.template("orders-template");
 String newOrder = """
         {
           "status": "new"
         }
         """;
+client.putIndexTemplate(ordersTemplate, """
+        {
+          "index_patterns": ["%s"]
+        }
+        """.formatted(ordersPattern));
 client.createIndex(orders);
 client.indexDocument(orders, newOrder);
 client.refresh(orders);
@@ -123,6 +130,10 @@ client.refresh(orders);
 
 The helper prefixes logical resource names with the suite namespace, and the
 plugin only starts the shared cluster when a bound test task actually forks.
+Use `env.indexPattern(...)` when Elasticsearch expects a wildcard-based index
+pattern, such as template `index_patterns`. Concrete helpers like
+`env.index(...)` now reject wildcard-like input so `orders-*` does not get
+silently sanitized into the wrong physical name.
 It waits for yellow cluster health before injecting `elastic.runner.baseUri`
 into that suite task. Applying the plugin alone does not start Elasticsearch,
 and tasks like `classes`, `jar`, or unrelated test tasks stay cold.

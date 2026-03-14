@@ -622,6 +622,14 @@ Test-side usage:
 ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 String ordersIndex = env.index("orders");
+String ordersPattern = env.indexPattern("orders");
+String ordersTemplate = env.template("orders-template");
+
+client.putIndexTemplate(ordersTemplate, """
+        {
+          "index_patterns": ["%s"]
+        }
+        """.formatted(ordersPattern));
 
 client.createIndex(ordersIndex);
 String newOrder = """
@@ -632,6 +640,16 @@ String newOrder = """
 client.indexDocument(ordersIndex, newOrder);
 client.refresh(ordersIndex);
 ```
+
+Use the concrete-name helpers for real resource ids:
+
+- `env.index("orders")`
+- `env.alias("orders-read")`
+- `env.template("orders-template")`
+
+Use `env.indexPattern("orders")` only when Elasticsearch expects a
+wildcard-based pattern, such as template `index_patterns`. Passing `orders-*`
+into `env.index(...)` now fails fast instead of silently sanitizing it.
 
 Namespace behavior:
 

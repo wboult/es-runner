@@ -82,6 +82,7 @@ That enables an easy companion helper API:
 ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 String orders = env.index("orders");
+String ordersPattern = env.indexPattern("orders");
 ```
 
 ## Why suite-level namespaces

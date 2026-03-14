@@ -178,6 +178,7 @@ Proposed helper API:
 ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 String ordersIndex = env.index("orders");
+String ordersPattern = env.indexPattern("orders");
 ```
 
 The helper would:
@@ -185,6 +186,7 @@ The helper would:
 - read the injected system properties
 - create an `ElasticClient`
 - prefix logical resource names consistently
+- provide a dedicated `indexPattern(...)` helper for wildcard-based matching
 
 ## Namespace behavior
 

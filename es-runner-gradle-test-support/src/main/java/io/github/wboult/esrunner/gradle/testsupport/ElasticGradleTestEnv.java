@@ -140,11 +140,28 @@ public final class ElasticGradleTestEnv {
     /**
      * Returns a namespaced index name for the logical resource.
      *
+     * <p>This helper is for concrete index names only. Use
+     * {@link #indexPattern(String)} for template {@code index_patterns} or
+     * other wildcard-based matching.</p>
+     *
      * @param logicalName stable logical index name used by the suite
      * @return namespaced index name
      */
     public String index(String logicalName) {
-        return namespaced(logicalName);
+        return concreteResourceName("index", logicalName);
+    }
+
+    /**
+     * Returns a namespaced index pattern for the logical resource prefix.
+     *
+     * <p>Use this for template {@code index_patterns} or other wildcard-based
+     * matching. For concrete index names, use {@link #index(String)}.</p>
+     *
+     * @param logicalPrefix stable logical resource prefix used by the suite
+     * @return namespaced index pattern ending in {@code -*}
+     */
+    public String indexPattern(String logicalPrefix) {
+        return concreteResourceName("index prefix", logicalPrefix) + "-*";
     }
 
     /**
@@ -154,7 +171,7 @@ public final class ElasticGradleTestEnv {
      * @return namespaced alias name
      */
     public String alias(String logicalName) {
-        return namespaced(logicalName);
+        return concreteResourceName("alias", logicalName);
     }
 
     /**
@@ -164,7 +181,7 @@ public final class ElasticGradleTestEnv {
      * @return namespaced data stream name
      */
     public String dataStream(String logicalName) {
-        return namespaced(logicalName);
+        return concreteResourceName("data stream", logicalName);
     }
 
     /**
@@ -174,7 +191,7 @@ public final class ElasticGradleTestEnv {
      * @return namespaced template name
      */
     public String template(String logicalName) {
-        return namespaced(logicalName);
+        return concreteResourceName("template", logicalName);
     }
 
     /**
@@ -184,16 +201,28 @@ public final class ElasticGradleTestEnv {
      * @return namespaced pipeline name
      */
     public String pipeline(String logicalName) {
-        return namespaced(logicalName);
+        return concreteResourceName("pipeline", logicalName);
     }
 
-    private String namespaced(String logicalName) {
+    private String concreteResourceName(String resourceKind, String logicalName) {
+        rejectPatternLikeInput(resourceKind, logicalName);
         String sanitized = sanitize(logicalName);
         return namespace + "-" + sanitized;
     }
 
+    private static void rejectPatternLikeInput(String resourceKind, String logicalName) {
+        Objects.requireNonNull(logicalName, "logicalName");
+        if (logicalName.contains("*") || logicalName.contains("?") || logicalName.contains(",")) {
+            throw new IllegalArgumentException(
+                    resourceKind + " logical names must be concrete. "
+                            + "Use indexPattern(...) for wildcard-based index patterns instead: "
+                            + logicalName
+            );
+        }
+    }
+
     private static String sanitize(String logicalName) {
-        String normalized = Objects.requireNonNull(logicalName, "logicalName")
+        String normalized = logicalName
                 .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9_-]+", "-")
                 .replaceAll("-+", "-")
