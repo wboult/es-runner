@@ -5,7 +5,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -191,7 +190,7 @@ public final class ElasticRunner {
 
             waitForReady(httpClient, baseUri, config.startupTimeout(), process, logFile, family);
 
-            long serverPid = readServerPid(pidFile).orElse(process.pid());
+            long serverPid = ElasticProcessRuntime.readServerPid(pidFile).orElse(process.pid());
 
             writeState(stateFile, new RunnerState(
                     serverPid,
@@ -203,7 +202,7 @@ public final class ElasticRunner {
                     baseUri.toString()
             ));
 
-            return new ElasticServer(
+            ElasticProcessRuntime runtime = new ElasticProcessRuntime(
                     config,
                     process,
                     homeDir,
@@ -212,11 +211,11 @@ public final class ElasticRunner {
                     pidFile,
                     stateFile,
                     serverPid,
-                    actualPort,
-                    httpClient,
+                    version,
                     startTime,
                     logThread
             );
+            return new ElasticServer(runtime, actualPort, httpClient);
         } catch (IOException e) {
             throw StartupFailureDiagnostics.wrap(
                     new ElasticRunnerException("Failed to prepare " + family.displayName() + " distribution.", e),
@@ -228,7 +227,7 @@ public final class ElasticRunner {
                     process
             );
         } catch (RuntimeException e) {
-            cleanupFailedStart(process, pidFile, stateFile, logThread);
+            ElasticProcessRuntime.cleanupFailedStart(process, pidFile, stateFile, logThread);
             throw StartupFailureDiagnostics.wrap(e, config, family, resolvedDistro, versionDir, logFile, process);
         }
     }
@@ -411,77 +410,11 @@ public final class ElasticRunner {
         }
     }
 
-    private static void cleanupFailedStart(Process process,
-                                           Path pidFile,
-                                           Path stateFile,
-                                           Thread logThread) {
-        try {
-            if (process != null) {
-                long serverPid = readServerPid(pidFile).orElse(process.pid());
-                terminateFailedStartProcess(process, serverPid, Duration.ofSeconds(10));
-            }
-            if (logThread != null && logThread.isAlive()) {
-                logThread.join(TimeUnit.SECONDS.toMillis(2));
-            }
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        } finally {
-            deleteIfExists(pidFile);
-            deleteIfExists(stateFile);
-        }
-    }
-
-    private static void terminateFailedStartProcess(Process process, long serverPid, Duration timeout) {
-        try {
-            ProcessTree.terminate(process, serverPid, timeout);
-        } catch (LinkageError ignored) {
-            terminateDirect(process, timeout);
-        }
-    }
-
-    private static void terminateDirect(Process process, Duration timeout) {
-        if (!process.isAlive()) {
-            return;
-        }
-        process.destroy();
-        try {
-            if (process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
-                return;
-            }
-            process.destroyForcibly();
-            process.waitFor(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    private static java.util.OptionalLong readServerPid(Path pidFile) {
-        if (!Files.exists(pidFile)) {
-            return java.util.OptionalLong.empty();
-        }
-        try {
-            String value = Files.readString(pidFile, StandardCharsets.UTF_8).trim();
-            if (value.isEmpty()) {
-                return java.util.OptionalLong.empty();
-            }
-            return java.util.OptionalLong.of(Long.parseLong(value));
-        } catch (IOException | NumberFormatException ignored) {
-            return java.util.OptionalLong.empty();
-        }
-    }
-
     private static void createDirs(Path dir) {
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
             throw new ElasticRunnerException("Failed to create directory: " + dir, e);
-        }
-    }
-
-    private static void deleteIfExists(Path file) {
-        try {
-            Files.deleteIfExists(file);
-        } catch (IOException ignored) {
         }
     }
 

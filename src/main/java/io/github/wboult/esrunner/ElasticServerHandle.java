@@ -69,6 +69,28 @@ public interface ElasticServerHandle extends AutoCloseable {
     }
 
     /**
+     * Returns the cluster name reported by the root endpoint.
+     *
+     * @return cluster name
+     * @throws IOException if the request fails
+     * @throws InterruptedException if interrupted while waiting
+     */
+    default String clusterName() throws IOException, InterruptedException {
+        return client().clusterName();
+    }
+
+    /**
+     * Returns the version number reported by the root endpoint.
+     *
+     * @return version number
+     * @throws IOException if the request fails
+     * @throws InterruptedException if interrupted while waiting
+     */
+    default String version() throws IOException, InterruptedException {
+        return client().version();
+    }
+
+    /**
      * Returns typed cluster health.
      *
      * @return cluster health
@@ -77,6 +99,17 @@ public interface ElasticServerHandle extends AutoCloseable {
      */
     default ClusterHealthResponse clusterHealth() throws IOException, InterruptedException {
         return client().clusterHealth();
+    }
+
+    /**
+     * Returns the current cluster health status string.
+     *
+     * @return health status such as {@code green} or {@code yellow}
+     * @throws IOException if the request fails
+     * @throws InterruptedException if interrupted while waiting
+     */
+    default String clusterHealthStatus() throws IOException, InterruptedException {
+        return client().clusterHealthStatus();
     }
 
     /**

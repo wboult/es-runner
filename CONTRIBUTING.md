@@ -137,6 +137,18 @@ npm run build
 
 Use `npm run dev` only when you need the live preview.
 
+## Core layout
+
+The process-backed runner is intentionally split by responsibility:
+
+- `ElasticRunner`: resolve/download distros, write config, install plugins, start processes
+- `ElasticProcessRuntime`: internal process lifecycle, shutdown hooks, PID/state cleanup, log tailing
+- `ElasticServer`: public facade for a running process-backed node
+- `ElasticClient`: minimal HTTP/query wrapper over one base URI
+
+If you are refactoring internals, prefer keeping those boundaries clear rather
+than growing `ElasticServer` again.
+
 ## Change expectations
 
 - Keep PRs focused on one main objective.
