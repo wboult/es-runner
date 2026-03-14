@@ -83,6 +83,7 @@ ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 String orders = env.index("orders");
 String ordersPattern = env.indexPattern("orders");
+String ordersTemplate = env.template("orders-template");
 ```
 
 ## Why suite-level namespaces

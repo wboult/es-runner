@@ -186,6 +186,7 @@ The helper would:
 - read the injected system properties
 - create an `ElasticClient`
 - prefix logical resource names consistently
+- keep concrete ids and wildcard patterns separate
 - provide a dedicated `indexPattern(...)` helper for wildcard-based matching
 
 ## Namespace behavior
@@ -400,12 +401,19 @@ ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 
 String orders = env.index("orders");
+String ordersPattern = env.indexPattern("orders");
+String ordersTemplate = env.template("orders-template");
 String newOrder = """
         {
           "status": "new"
         }
         """;
 
+client.putIndexTemplate(ordersTemplate, """
+        {
+          "index_patterns": ["%s"]
+        }
+        """.formatted(ordersPattern));
 client.createIndex(orders);
 client.indexDocument(orders, newOrder);
 ```

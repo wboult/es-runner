@@ -37,9 +37,18 @@ String ordersAlias = env.alias("orders");
 That keeps test code readable while still making the actual physical names
 unique per suite.
 
-Use `env.indexPattern(...)` only for wildcard-based patterns such as template
-`index_patterns`. Do not pass `orders-*` into `env.index(...)`; that is a
-concrete-name helper and now fails fast on pattern-like input.
+Use a simple rule:
+
+- `index(...)`, `alias(...)`, `template(...)`, `pipeline(...)`: concrete names
+- `indexPattern(...)`: wildcard-based matching only
+
+For example:
+
+- use `env.template("orders-template")` as the template id
+- use `env.indexPattern("orders")` inside template `index_patterns`
+
+Do not pass `orders-*` into `env.index(...)`; that is a concrete-name helper
+and now fails fast on pattern-like input.
 
 ## 3. Share state only inside one suite
 

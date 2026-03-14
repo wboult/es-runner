@@ -641,14 +641,18 @@ client.indexDocument(ordersIndex, newOrder);
 client.refresh(ordersIndex);
 ```
 
-Use the concrete-name helpers for real resource ids:
+Use one naming model consistently:
 
-- `env.index("orders")`
-- `env.alias("orders-read")`
-- `env.template("orders-template")`
+- concrete resource ids:
+  - `env.index("orders")`
+  - `env.alias("orders-read")`
+  - `env.template("orders-template")`
+- wildcard-based matching:
+  - `env.indexPattern("orders")`
 
 Use `env.indexPattern("orders")` only when Elasticsearch expects a
-wildcard-based pattern, such as template `index_patterns`. Passing `orders-*`
+wildcard-based pattern, such as template `index_patterns`. Keep the template id
+itself concrete with `env.template("orders-template")`. Passing `orders-*`
 into `env.index(...)` now fails fast instead of silently sanitizing it.
 
 Namespace behavior:
