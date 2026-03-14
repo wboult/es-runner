@@ -1,6 +1,8 @@
 ---
 title: First single-node server
 description: Start a single-node Elasticsearch server using a version string.
+sidebar:
+  order: 2
 ---
 
 This tutorial uses a **version string** so ES Runner downloads the ZIP for you.

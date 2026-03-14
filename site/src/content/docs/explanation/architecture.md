@@ -1,6 +1,8 @@
 ---
 title: Architecture & lifecycle
 description: How ES Runner starts and manages Elasticsearch.
+sidebar:
+  order: 1
 ---
 
 ES Runner starts **official Elasticsearch distributions** as an external process. It does not embed Elasticsearch.

@@ -1,6 +1,8 @@
 ---
 title: Gradle shared cluster plugin design
 description: Proposed Gradle integration for sharing Elasticsearch test clusters across projects and suites.
+sidebar:
+  order: 6
 ---
 
 Status: initial implementation now exists in this repo. This page explains the

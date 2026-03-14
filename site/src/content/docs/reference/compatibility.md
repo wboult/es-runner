@@ -1,6 +1,8 @@
 ---
 title: Compatibility & support policy
 description: What is verified in CI, what is supported, and what is still experimental.
+sidebar:
+  order: 6
 ---
 
 This page defines what ES Runner means by `verified`, `supported`, and

@@ -1,6 +1,8 @@
 ---
 title: Configuration reference
 description: ElasticRunnerConfig fields, defaults, and behavior.
+sidebar:
+  order: 2
 ---
 
 This page documents `ElasticRunnerConfig` fields, defaults, and how they're applied.

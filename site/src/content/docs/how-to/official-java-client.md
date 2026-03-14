@@ -1,6 +1,8 @@
 ---
 title: Official Java Client
 description: Use ES Runner with Elastic's official Java API Client.
+sidebar:
+  order: 4
 ---
 
 ES Runner keeps its built-in `ElasticClient` intentionally small. If you want

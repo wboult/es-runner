@@ -1,6 +1,8 @@
 ---
 title: Performance guidance
 description: Startup cost, shared-cluster savings, and how cache and mirror choices change build time.
+sidebar:
+  order: 3
 ---
 
 ES Runner is usually fast enough for integration automation, but it is not a

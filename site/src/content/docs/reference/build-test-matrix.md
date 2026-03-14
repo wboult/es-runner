@@ -1,6 +1,8 @@
 ---
 title: Build & test matrix
 description: CI jobs, test suites, and how to run them locally.
+sidebar:
+  order: 7
 ---
 
 This page describes the exact jobs that currently back the compatibility and

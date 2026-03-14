@@ -1,6 +1,8 @@
 ---
 title: Run a two-node cluster
 description: Download once and start two nodes that form a cluster.
+sidebar:
+  order: 8
 ---
 
 This guide shows how to **download one ZIP programmatically** and start **two nodes** that form a cluster. Each node gets its own working directory to avoid shared state.

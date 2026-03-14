@@ -1,6 +1,8 @@
 ---
 title: Use cloud storage mirrors
 description: Download Elasticsearch or OpenSearch distros from HTTPS or file mirrors, with guidance for S3, GCS, and Azure Blob via pre-signed URLs.
+sidebar:
+  order: 6
 ---
 
 ES Runner can download distro archives from:

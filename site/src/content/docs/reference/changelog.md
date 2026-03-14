@@ -1,6 +1,8 @@
 ---
 title: Changelog
 description: Release notes and recent changes.
+sidebar:
+  order: 9
 ---
 
 Release notes are maintained in the repository's `CHANGELOG.md`.

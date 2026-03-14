@@ -1,6 +1,8 @@
 ---
 title: Customize ports and work directories
 description: Run multiple servers without port collisions.
+sidebar:
+  order: 2
 ---
 
 When running multiple servers, you need **unique ports** and **isolated work directories**.

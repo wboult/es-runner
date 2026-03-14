@@ -1,6 +1,8 @@
 ---
 title: Run OpenSearch
 description: Use ES Runner with the process-backed OpenSearch distribution.
+sidebar:
+  order: 1
 ---
 
 ES Runner supports OpenSearch in the main process-backed path, not just in the

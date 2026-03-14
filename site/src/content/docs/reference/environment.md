@@ -1,6 +1,8 @@
 ---
 title: Environment variables
 description: Environment variables used by tests and examples.
+sidebar:
+  order: 3
 ---
 
 ES Runner itself does not depend on environment variables at runtime, but tests and examples do.

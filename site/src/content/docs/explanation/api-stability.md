@@ -1,6 +1,8 @@
 ---
 title: API stability and deprecations
 description: What is stable, what is experimental, and how deprecations work.
+sidebar:
+  order: 5
 ---
 
 ES Runner aims to keep the **public API** stable and predictable.

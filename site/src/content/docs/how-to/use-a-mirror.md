@@ -1,6 +1,8 @@
 ---
 title: Use a download mirror
 description: Point downloads at a local or private mirror.
+sidebar:
+  order: 5
 ---
 
 If your environment blocks direct downloads, you can point ES Runner at a **mirror**.
