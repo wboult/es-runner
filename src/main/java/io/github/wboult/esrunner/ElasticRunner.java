@@ -260,7 +260,7 @@ public final class ElasticRunner {
         java.net.URI downloadUri = descriptor.downloadUri(config.downloadBaseUrl());
         boolean downloaded = config.download() || !Files.exists(archive);
         if (downloaded) {
-            download(downloadUri, archive);
+            download(downloadUri, archive, config.downloadTimeout());
         }
         return new ResolvedDistro(
                 config.family(),
@@ -282,8 +282,8 @@ public final class ElasticRunner {
         return zip;
     }
 
-    private static void download(URI uri, Path target) {
-        DistroDownloader.download(uri, target);
+    private static void download(URI uri, Path target, Duration timeout) {
+        DistroDownloader.download(uri, target, timeout);
     }
 
     static String resolveHttpPortSetting(ElasticRunnerConfig config) {

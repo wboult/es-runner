@@ -17,13 +17,17 @@ final class DistroDownloader {
     }
 
     static void download(URI uri, Path target) {
+        download(uri, target, Duration.ofMinutes(5));
+    }
+
+    static void download(URI uri, Path target, Duration timeout) {
         Path temp = target.resolveSibling(target.getFileName() + ".partial");
         try {
             Files.createDirectories(target.getParent());
             switch (normalizedScheme(uri)) {
                 case "http":
                 case "https":
-                    downloadHttp(uri, temp);
+                    downloadHttp(uri, temp, timeout);
                     break;
                 case "file":
                     Files.copy(Path.of(uri), temp, StandardCopyOption.REPLACE_EXISTING);
@@ -53,13 +57,13 @@ final class DistroDownloader {
         }
     }
 
-    private static void downloadHttp(URI uri, Path target) throws IOException, InterruptedException {
+    private static void downloadHttp(URI uri, Path target, Duration timeout) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
         HttpRequest request = HttpRequest.newBuilder(uri)
-                .timeout(Duration.ofMinutes(5))
+                .timeout(timeout)
                 .GET()
                 .build();
         HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(target));

@@ -138,6 +138,9 @@ final class StartupFailureDiagnostics {
         captured.put("heap", config.heap());
         captured.put("startupTimeout", config.startupTimeout().toString());
         captured.put("shutdownTimeout", config.shutdownTimeout().toString());
+        captured.put("requestTimeout", config.requestTimeout().toString());
+        captured.put("bulkTimeout", config.bulkTimeout().toString());
+        captured.put("downloadTimeout", config.downloadTimeout().toString());
         captured.put("plugins", config.plugins().toString());
         captured.put("quiet", Boolean.toString(config.quiet()));
         captured.put("settings", sanitizeSettings(config.settings()).toString());

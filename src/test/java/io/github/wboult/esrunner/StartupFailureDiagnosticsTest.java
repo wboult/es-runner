@@ -55,6 +55,9 @@ class StartupFailureDiagnosticsTest {
         assertTrue(diagnostics.contains("<redacted>"));
         assertTrue(diagnostics.contains("cluster.routing.allocation.enable=all"));
         assertTrue(diagnostics.contains("download uri: https://mirror.example.com/elasticsearch/elasticsearch-9.3.1-windows-x86_64.zip"));
+        assertTrue(diagnostics.contains("requestTimeout: PT30S"));
+        assertTrue(diagnostics.contains("bulkTimeout: PT5M"));
+        assertTrue(diagnostics.contains("downloadTimeout: PT5M"));
         assertTrue(ex.getMessage().contains("Resolved download URI:"));
         assertTrue(ex.getMessage().contains("Hints:"));
     }
