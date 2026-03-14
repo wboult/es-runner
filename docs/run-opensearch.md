@@ -40,43 +40,43 @@ OpenSearch supports the same template-plus-bulk workflow as Elasticsearch. A
 small realistic flow looks like this:
 
 ```java
+String ordersTemplate = """
+        {
+          "index_patterns": ["orders-*"],
+          "template": {
+            "settings": {
+              "index": {
+                "number_of_replicas": 0
+              }
+            },
+            "mappings": {
+              "properties": {
+                "region": { "type": "keyword" },
+                "status": { "type": "keyword" },
+                "description": { "type": "text" }
+              }
+            },
+            "aliases": {
+              "orders-read": {}
+            }
+          }
+        }
+        """;
+String overnightQuery = """
+        {
+          "query": {
+            "match": {
+              "description": "overnight"
+            }
+          }
+        }
+        """;
+
 ElasticRunner.withServer(builder -> builder
         .family(DistroFamily.OPENSEARCH)
         .version("3.5.0")
         .download(true),
     server -> {
-        String ordersTemplate = """
-                {
-                  "index_patterns": ["orders-*"],
-                  "template": {
-                    "settings": {
-                      "index": {
-                        "number_of_replicas": 0
-                      }
-                    },
-                    "mappings": {
-                      "properties": {
-                        "region": { "type": "keyword" },
-                        "status": { "type": "keyword" },
-                        "description": { "type": "text" }
-                      }
-                    },
-                    "aliases": {
-                      "orders-read": {}
-                    }
-                  }
-                }
-                """);
-        String overnightQuery = """
-                {
-                  "query": {
-                    "match": {
-                      "description": "overnight"
-                    }
-                  }
-                }
-                """;
-
         server.putIndexTemplate("orders-template", ordersTemplate);
         server.createIndex("orders-2026-03");
         String shippedOrder = """
