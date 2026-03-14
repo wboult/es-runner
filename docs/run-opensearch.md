@@ -45,7 +45,7 @@ ElasticRunner.withServer(builder -> builder
         .version("3.5.0")
         .download(true),
     server -> {
-        server.putIndexTemplate("orders-template", """
+        String ordersTemplate = """
                 {
                   "index_patterns": ["orders-*"],
                   "template": {
@@ -67,6 +67,17 @@ ElasticRunner.withServer(builder -> builder
                   }
                 }
                 """);
+        String overnightQuery = """
+                {
+                  "query": {
+                    "match": {
+                      "description": "overnight"
+                    }
+                  }
+                }
+                """;
+
+        server.putIndexTemplate("orders-template", ordersTemplate);
         server.createIndex("orders-2026-03");
         String shippedOrder = """
                 {
@@ -85,15 +96,7 @@ ElasticRunner.withServer(builder -> builder
         server.bulkIndexDocuments("orders-2026-03", List.of(shippedOrder, pendingOrder));
         server.refresh("orders-2026-03");
 
-        System.out.println(server.search("orders-read", """
-                {
-                  "query": {
-                    "match": {
-                      "description": "overnight"
-                    }
-                  }
-                }
-                """));
+        System.out.println(server.search("orders-read", overnightQuery));
     });
 ```
 

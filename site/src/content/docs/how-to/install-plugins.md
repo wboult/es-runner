@@ -45,7 +45,7 @@ ElasticRunner.withServer(builder -> builder
         .download(true)
         .plugin("analysis-icu"),
     server -> {
-        server.createIndex("icu-docs", """
+        String icuDocsIndex = """
                 {
                   "settings": {
                     "index": {
@@ -75,9 +75,7 @@ ElasticRunner.withServer(builder -> builder
                   "title": "Caf\u00e9 Cr\u00e8me"
                 }
                 """;
-        server.indexDocument("icu-docs", document);
-        server.refresh("icu-docs");
-        System.out.println(server.search("icu-docs", """
+        String searchQuery = """
                 {
                   "query": {
                     "match": {
@@ -85,7 +83,11 @@ ElasticRunner.withServer(builder -> builder
                     }
                   }
                 }
-                """));
+                """;
+        server.createIndex("icu-docs", icuDocsIndex);
+        server.indexDocument("icu-docs", document);
+        server.refresh("icu-docs");
+        System.out.println(server.search("icu-docs", searchQuery));
     });
 ```
 
