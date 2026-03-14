@@ -70,7 +70,8 @@ Path zip = ElasticRunner.resolveDistroZip(
 Important:
 
 - `builder.setting(key, value)` adds or overrides settings without removing defaults.
-- `builder.settings(map)` replaces all settings, including defaults. Use this when you want full control.
+- `builder.replaceSettings(map)` replaces all settings, including defaults. Use this only when you want full control.
+- `builder.settings(map)` is a legacy alias for full replacement; it also removes defaults.
 
 ## Precedence
 
@@ -78,7 +79,7 @@ Settings are applied in this order:
 
 1. Defaults (from `ElasticRunnerConfig.defaults()`)
    For OpenSearch, use `ElasticRunnerConfig.defaults(DistroFamily.OPENSEARCH)`.
-2. Builder updates (including `.setting(...)` and `.settings(...)`)
+2. Builder updates (including `.setting(...)` and `.replaceSettings(...)`)
 3. Implicit writes (`cluster.name`, `path.data`, `path.logs`, `http.port`)
 
 ## Related

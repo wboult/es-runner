@@ -36,7 +36,7 @@ class StartupFailureDiagnosticsTest {
         );
 
         ElasticRunnerException ex = StartupFailureDiagnostics.wrap(
-                new ElasticRunnerException("Timed out waiting for Elasticsearch."),
+                new StartupTimeoutException("Timed out waiting for Elasticsearch."),
                 config,
                 DistroFamily.ELASTICSEARCH,
                 resolvedDistro,
@@ -46,6 +46,8 @@ class StartupFailureDiagnosticsTest {
         );
 
         Path diagnosticsFile = ex.diagnosticsFile().orElseThrow();
+        assertTrue(ex instanceof StartupTimeoutException);
+        assertEquals(ElasticRunnerException.Kind.STARTUP_TIMEOUT, ex.kind());
         assertEquals(versionDir.resolve("logs").resolve("startup-diagnostics.txt").toAbsolutePath(), diagnosticsFile);
         assertTrue(Files.exists(diagnosticsFile));
 
@@ -74,7 +76,7 @@ class StartupFailureDiagnosticsTest {
         );
 
         ElasticRunnerException ex = StartupFailureDiagnostics.wrap(
-                new ElasticRunnerException("Failed to install plugin: analysis-icu"),
+                new PluginInstallException("Failed to install plugin: analysis-icu"),
                 config,
                 DistroFamily.ELASTICSEARCH,
                 resolvedDistro,
@@ -83,6 +85,8 @@ class StartupFailureDiagnosticsTest {
                 null
         );
 
+        assertTrue(ex instanceof PluginInstallException);
+        assertEquals(ElasticRunnerException.Kind.PLUGIN_INSTALL, ex.kind());
         String diagnostics = Files.readString(ex.diagnosticsFile().orElseThrow());
         assertTrue(diagnostics.contains("Verify each plugin is compatible"));
     }

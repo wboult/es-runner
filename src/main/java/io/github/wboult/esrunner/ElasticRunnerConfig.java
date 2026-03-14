@@ -15,6 +15,18 @@ import java.util.function.UnaryOperator;
  * Immutable configuration for resolving a distro archive and starting one
  * local search node.
  *
+ * <p>{@link #defaults()} starts from these values for Elasticsearch:
+ * family {@code ELASTICSEARCH}, no explicit ZIP or version, {@code distros/}
+ * as the cache directory, {@code .es/} as the work directory, download
+ * disabled, cluster name {@code local-es}, dynamic HTTP port selection from
+ * {@code 9200-9300}, heap {@code 256m}, startup timeout {@code 60s}, shutdown
+ * timeout {@code 20s}, quiet logging disabled, and the family's default
+ * settings map.</p>
+ *
+ * <p>{@link #defaults(DistroFamily)} keeps those operational defaults but swaps
+ * the family-specific download base URL and default settings for the requested
+ * family.</p>
+ *
  * @param family distro family to resolve and launch
  * @param distroZip local ZIP archive to use instead of version-based lookup
  * @param version distro version used for download or cache resolution
@@ -374,12 +386,37 @@ public record ElasticRunnerConfig(
         }
 
         /**
-         * Replaces all extra server settings.
+         * Replaces the entire server settings map, including all family
+         * defaults.
+         *
+         * <p>This is a full-replacement operation. Defaults like
+         * {@code discovery.type=single-node} are removed unless they are
+         * present in the supplied map. Prefer {@link #setting(String, String)}
+         * for additive changes.</p>
+         *
+         * <p>Prefer {@link #replaceSettings(Map)} in new code. This method is
+         * kept as a legacy alias.</p>
          *
          * @param settings settings map
          * @return this builder
          */
+        @Deprecated(forRemoval = false)
         public Builder settings(Map<String, String> settings) {
+            return replaceSettings(settings);
+        }
+
+        /**
+         * Replaces the entire server settings map, including all family
+         * defaults.
+         *
+         * <p>Use this when you want complete control over the written config
+         * file. Prefer {@link #setting(String, String)} when you only need to
+         * add or override a few settings while keeping the defaults.</p>
+         *
+         * @param settings settings map
+         * @return this builder
+         */
+        public Builder replaceSettings(Map<String, String> settings) {
             this.settings.clear();
             this.settings.putAll(settings);
             return this;

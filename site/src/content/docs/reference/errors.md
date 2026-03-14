@@ -6,7 +6,10 @@ sidebar:
 ---
 
 This reference lists common `ElasticRunnerException` messages and likely causes.
-Startup failures also write:
+Most failures now also have a more specific exception type and
+`ElasticRunnerException.kind()` value, so callers can distinguish download,
+resolution, plugin install, port binding, and startup-timeout failures without
+matching on message text. Startup failures also write:
 
 ```text
 <workDir>/<version>/logs/startup-diagnostics.txt
@@ -34,6 +37,8 @@ tail, and common remediation hints.
 
 **Meaning**: Download returned non-2xx status.
 
+**Exception type**: `DistroDownloadException`
+
 **Fix**:
 - Verify the version exists.
 - Confirm your mirror's base URL and filename.
@@ -41,6 +46,8 @@ tail, and common remediation hints.
 ## `Timed out waiting for Elasticsearch`
 
 **Meaning**: Startup exceeded `startupTimeout`.
+
+**Exception type**: `StartupTimeoutException`
 
 **Fix**:
 - Increase `startupTimeout`.
@@ -51,6 +58,8 @@ tail, and common remediation hints.
 
 **Meaning**: Process died during startup.
 
+**Exception type**: `ProcessStartException`
+
 **Fix**:
 - Inspect `startup-diagnostics.txt` first, then `server.logTail()`.
 - Check config errors, port collisions, or permissions.
@@ -58,6 +67,8 @@ tail, and common remediation hints.
 ## `Timed out waiting for HTTP port bind`
 
 **Meaning**: Elasticsearch did not finish binding its HTTP listener before `startupTimeout`.
+
+**Exception type**: `PortBindingException`
 
 **Fix**:
 - Increase `startupTimeout`.
