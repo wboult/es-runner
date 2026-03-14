@@ -138,27 +138,7 @@ experimental.
 
 ## Quick start
 
-```java
-Path distroZip = Paths.get("elasticsearch-9.3.1-windows-x86_64.zip");
-Path workDir = Paths.get(".es");
-
-ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
-    .distroZip(distroZip)
-    .workDir(workDir)
-    .clusterName("local-es")
-    .setting("discovery.type", "single-node")
-    .setting("xpack.security.enabled", "false"));
-
-try (ElasticServer server = ElasticRunner.start(config)) {
-    System.out.println(server.baseUri());
-    System.out.println(server.clusterHealth());
-    System.out.println(server.version());
-}
-```
-
-## Simplest download flow
-
-If you want ES Runner to fetch the ZIP for you:
+The simplest way to start — ES Runner downloads the distribution for you:
 
 ```java
 ElasticRunner.withServer(builder -> builder
@@ -177,16 +157,24 @@ ElasticRunner.withServer(builder -> builder
     server -> System.out.println(server.clusterHealth()));
 ```
 
-If you want to start from the OpenSearch family defaults directly:
+## Starting from a local ZIP
+
+If you already have a distribution ZIP:
 
 ```java
-ElasticRunnerConfig config = ElasticRunnerConfig.defaults(DistroFamily.OPENSEARCH)
-    .toBuilder()
-    .version("3.5.0")
-    .download(true)
-    .build();
+Path distroZip = Paths.get("elasticsearch-9.3.1-windows-x86_64.zip");
+Path workDir = Paths.get(".es");
+
+ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder
+    .distroZip(distroZip)
+    .workDir(workDir)
+    .clusterName("local-es")
+    .setting("discovery.type", "single-node")
+    .setting("xpack.security.enabled", "false"));
 
 try (ElasticServer server = ElasticRunner.start(config)) {
+    System.out.println(server.baseUri());
+    System.out.println(server.clusterHealth());
     System.out.println(server.version());
 }
 ```
@@ -265,6 +253,15 @@ The intended easy path is:
 - `ElasticServer` for lifecycle plus convenience methods
 - `ElasticClient` for direct HTTP-oriented operations
 - `es-runner-java-client` when you want the official Elasticsearch Java API Client
+
+### Which artifact contains what
+
+| Artifact | Key classes | Use when |
+|----------|------------|----------|
+| `io.github.wboult:es-runner` | `ElasticRunner`, `ElasticRunnerConfig`, `ElasticServer`, `ElasticClient` | Always — this is the core library |
+| `io.github.wboult:es-runner-java-client` | `ElasticJavaClients`, `ManagedElasticsearchClient` | You want Elastic's official typed Java API Client |
+| `io.github.wboult:es-runner-gradle-test-support` | `ElasticGradleTestEnv` | Your tests run inside the shared Gradle cluster plugin |
+| Plugin id `io.github.wboult.es-runner.shared-test-clusters` | `ElasticTestClustersExtension`, `ElasticClusterService` | You want build-scoped shared clusters in Gradle |
 
 If you need explicit shutdown details:
 
