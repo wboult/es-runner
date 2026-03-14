@@ -138,9 +138,14 @@ ElasticClient client = env.client();
 
 String ordersIndex = env.index("orders");
 String ordersTemplate = env.template("orders-template");
+String newOrder = """
+        {
+          "status": "new"
+        }
+        """;
 
 client.createIndex(ordersIndex);
-client.indexDocument(ordersIndex, "1", "{\"status\":\"new\"}");
+client.indexDocument(ordersIndex, newOrder);
 client.refresh(ordersIndex);
 ```
 

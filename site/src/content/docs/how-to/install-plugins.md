@@ -70,7 +70,12 @@ ElasticRunner.withServer(builder -> builder
                   }
                 }
                 """);
-        server.indexDocument("icu-docs", "1", "{\"title\":\"Caf\u00e9 Cr\u00e8me\"}");
+        String document = """
+                {
+                  "title": "Caf\u00e9 Cr\u00e8me"
+                }
+                """;
+        server.indexDocument("icu-docs", document);
         server.refresh("icu-docs");
         System.out.println(server.search("icu-docs", """
                 {

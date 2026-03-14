@@ -73,12 +73,21 @@ ElasticRunner.withServer(builder -> builder
                 }
                 """);
         server.createIndex("orders-2026-03");
-        server.bulk("""
-                {"index":{"_index":"orders-2026-03","_id":"o-100"}}
-                {"region":"eu","status":"shipped","description":"overnight bike delivery"}
-                {"index":{"_index":"orders-2026-03","_id":"o-101"}}
-                {"region":"us","status":"pending","description":"standard helmet delivery"}
-                """);
+        String shippedOrder = """
+                {
+                  "region": "eu",
+                  "status": "shipped",
+                  "description": "overnight bike delivery"
+                }
+                """;
+        String pendingOrder = """
+                {
+                  "region": "us",
+                  "status": "pending",
+                  "description": "standard helmet delivery"
+                }
+                """;
+        server.bulkIndexDocuments("orders-2026-03", List.of(shippedOrder, pendingOrder));
         server.refresh("orders-2026-03");
 
         System.out.println(server.search("orders-read", """
