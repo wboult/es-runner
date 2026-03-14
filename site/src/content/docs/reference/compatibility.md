@@ -31,7 +31,7 @@ This page defines what ES Runner means by `verified`, `supported`, and
 | --- | --- | --- | --- |
 | Gradle | `9.2.1` wrapper | all jobs | Wrapper version used by this repo and plugin functional tests. |
 | JVM target | Java `17` bytecode | build/test jobs | Core published modules target Java 17. |
-| Elasticsearch | `9.3.1`, `8.19.11` | full `test` matrix on JDK 17 | Main verified process-backed lines. |
+| Elasticsearch | `9.3.1`, `8.19.11` | full `test` matrix on JDK 17, plus Windows smoke on `9.3.1` | Main verified process-backed lines. |
 | OpenSearch | `3.5.0`, `2.19.4` | `opensearch-process` smoke job on JDK 21 | Verified process-backed smoke path. |
 | Scala | `2.12.21`, `2.13.18`, `3.x` | `test` + `scala3Test` | Scala 3 is verified separately. |
 | Spark | `3.5.8`, `4.1.1` | `test` matrix | Verified with the Scala combinations listed below. |
