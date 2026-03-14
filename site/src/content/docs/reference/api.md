@@ -65,9 +65,14 @@ See [Configuration reference](../configuration/) for the full list of fields.
 provides helpers such as:
 
 - `clusterHealth()`
-- `createIndex(...)`, `indexDocument(...)`, `search(...)`
+- `createIndex(...)`, `indexDocument(index, id, json)`, `indexDocument(index, json)`, `bulkIndexDocuments(...)`, `search(...)`
 - `nodesInfo()` and `nodesStats()`
 - `request(...)` and `requestNdjson(...)` for direct endpoint access
+
+Startup failures are surfaced as specific exception types such as
+`DistroDownloadException`, `PortBindingException`, and
+`StartupTimeoutException`. If you prefer one catch block, inspect
+`ElasticRunnerException.kind()`.
 
 ## Gradle test support
 

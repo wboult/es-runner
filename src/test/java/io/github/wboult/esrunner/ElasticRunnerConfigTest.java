@@ -3,6 +3,7 @@ package io.github.wboult.esrunner;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,6 +50,30 @@ class ElasticRunnerConfigTest {
 
         assertFalse(base.settings().containsKey("cluster.name"));
         assertEquals("unit-test", updated.settings().get("cluster.name"));
+    }
+
+    @Test
+    void replaceSettingsDropsFamilyDefaults() {
+        ElasticRunnerConfig config = ElasticRunnerConfig.defaults()
+                .toBuilder()
+                .replaceSettings(Map.of("node.name", "isolated-node"))
+                .build();
+
+        assertEquals("isolated-node", config.settings().get("node.name"));
+        assertFalse(config.settings().containsKey("discovery.type"));
+        assertFalse(config.settings().containsKey("xpack.security.enabled"));
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    void legacySettingsAliasStillReplacesAllSettings() {
+        ElasticRunnerConfig config = ElasticRunnerConfig.defaults()
+                .toBuilder()
+                .settings(Map.of("node.name", "legacy-node"))
+                .build();
+
+        assertEquals("legacy-node", config.settings().get("node.name"));
+        assertFalse(config.settings().containsKey("discovery.type"));
     }
 
     @Test

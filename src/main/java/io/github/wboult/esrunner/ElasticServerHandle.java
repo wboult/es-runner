@@ -3,6 +3,7 @@ package io.github.wboult.esrunner;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Common API for a started Elasticsearch server, regardless of whether it runs
@@ -287,6 +288,19 @@ public interface ElasticServerHandle extends AutoCloseable {
     }
 
     /**
+     * Indexes one JSON document and lets the server generate the document id.
+     *
+     * @param index index name
+     * @param json document JSON
+     * @return raw Elasticsearch response
+     * @throws IOException if the request fails
+     * @throws InterruptedException if interrupted while waiting
+     */
+    default String indexDocument(String index, String json) throws IOException, InterruptedException {
+        return client().indexDocument(index, json);
+    }
+
+    /**
      * Executes a search request.
      *
      * @param index index name
@@ -372,6 +386,7 @@ public interface ElasticServerHandle extends AutoCloseable {
     /**
      * Returns index templates.
      *
+     * @param name template name
      * @return raw Elasticsearch response
      * @throws IOException if the request fails
      * @throws InterruptedException if interrupted while waiting
@@ -402,5 +417,18 @@ public interface ElasticServerHandle extends AutoCloseable {
      */
     default String bulk(String ndjson) throws IOException, InterruptedException {
         return client().bulk(ndjson);
+    }
+
+    /**
+     * Builds and sends a bulk indexing request for one index from plain JSON payloads.
+     *
+     * @param index index name
+     * @param jsonDocuments document JSON payloads
+     * @return raw Elasticsearch response
+     * @throws IOException if the request fails
+     * @throws InterruptedException if interrupted while waiting
+     */
+    default String bulkIndexDocuments(String index, List<String> jsonDocuments) throws IOException, InterruptedException {
+        return client().bulkIndexDocuments(index, jsonDocuments);
     }
 }

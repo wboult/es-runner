@@ -37,6 +37,9 @@ final class StartupFailureDiagnostics {
         write(diagnosticsFile, rendered);
 
         String summary = summary(failure.getMessage(), resolvedDistro, diagnosticsFile, exitCode, logTail, hints);
+        if (failure instanceof ElasticRunnerException existing) {
+            return existing.copyWith(summary, existing, diagnosticsFile);
+        }
         return new ElasticRunnerException(summary, failure, diagnosticsFile);
     }
 

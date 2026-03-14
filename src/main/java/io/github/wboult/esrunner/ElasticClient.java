@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -344,6 +345,21 @@ public final class ElasticClient implements Serializable {
     }
 
     /**
+     * Indexes one document and lets the server generate the document id.
+     *
+     * @param index index name
+     * @param json document JSON
+     * @return raw Elasticsearch response
+     * @throws IOException if the request fails
+     * @throws InterruptedException if interrupted while waiting
+     */
+    public String indexDocument(String index, String json) throws IOException, InterruptedException {
+        Objects.requireNonNull(index, "index");
+        Objects.requireNonNull(json, "json");
+        return post("/" + index + "/_doc", json);
+    }
+
+    /**
      * Executes a search request against an index.
      *
      * @param index index name
@@ -465,6 +481,33 @@ public final class ElasticClient implements Serializable {
      */
     public String bulk(String ndjson) throws IOException, InterruptedException {
         return requestNdjson("/_bulk", ndjson).body();
+    }
+
+    /**
+     * Builds a bulk indexing request for one index from plain document JSON payloads.
+     *
+     * @param index index name
+     * @param jsonDocuments document JSON payloads
+     * @return raw Elasticsearch response
+     * @throws IOException if the request fails
+     * @throws InterruptedException if interrupted while waiting
+     */
+    public String bulkIndexDocuments(String index, List<String> jsonDocuments) throws IOException, InterruptedException {
+        Objects.requireNonNull(index, "index");
+        Objects.requireNonNull(jsonDocuments, "jsonDocuments");
+        if (jsonDocuments.isEmpty()) {
+            throw new IllegalArgumentException("jsonDocuments must not be empty");
+        }
+        StringBuilder ndjson = new StringBuilder();
+        for (String jsonDocument : jsonDocuments) {
+            Objects.requireNonNull(jsonDocument, "jsonDocuments must not contain null entries");
+            ndjson.append("{\"index\":{\"_index\":\"")
+                    .append(index)
+                    .append("\"}}\n")
+                    .append(jsonDocument)
+                    .append('\n');
+        }
+        return bulk(ndjson.toString());
     }
 
     /**

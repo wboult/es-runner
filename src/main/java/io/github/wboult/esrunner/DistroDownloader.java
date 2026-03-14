@@ -31,20 +31,20 @@ final class DistroDownloader {
                 case "s3":
                 case "gs":
                 case "az":
-                    throw new ElasticRunnerException(
+                    throw new DistroDownloadException(
                             "Cloud storage scheme '" + uri.getScheme() + "' is not supported. "
                             + "Use an HTTPS pre-signed or SAS URL instead (these work with the built-in "
                             + "https:// downloader). See docs/cloud-storage-extension-plan.md for the "
                             + "planned design for proper SDK-based cloud storage modules.");
                 default:
-                    throw new ElasticRunnerException("Unsupported download URI scheme: " + uri);
+                    throw new DistroDownloadException("Unsupported download URI scheme: " + uri);
             }
             Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            throw new ElasticRunnerException("Failed to download distro from " + uri, e);
+            throw new DistroDownloadException("Failed to download distro from " + uri, e);
         } finally {
             try {
                 Files.deleteIfExists(temp);
@@ -64,7 +64,7 @@ final class DistroDownloader {
                 .build();
         HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(target));
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new ElasticRunnerException("Failed to download distro: " + uri + " (HTTP " + response.statusCode() + ")");
+            throw new DistroDownloadException("Failed to download distro: " + uri + " (HTTP " + response.statusCode() + ")");
         }
     }
 

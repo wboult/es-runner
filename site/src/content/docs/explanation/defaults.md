@@ -18,14 +18,16 @@ These defaults make local startup easier and avoid cluster-formation pitfalls. T
 ## Overriding defaults
 
 - Use `.setting(key, value)` to override while keeping defaults.
-- Use `.settings(map)` to replace all settings (and remove defaults).
+- Use `.replaceSettings(map)` to replace all settings (and remove defaults).
 
 ## Example
 
 ```java
 ElasticRunnerConfig config = ElasticRunnerConfig.defaults()
+    .toBuilder()
     .setting("xpack.security.enabled", "true")
-    .setting("discovery.type", "single-node");
+    .setting("discovery.type", "single-node")
+    .build();
 ```
 
 ## Related

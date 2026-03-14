@@ -148,7 +148,7 @@ public final class ElasticRunner {
         String version = resolvedDistro.version();
         Path workDir = config.workDir().toAbsolutePath();
         Path versionDir = workDir.resolve(version);
-        createDirs(versionDir);
+        createWorkDir(versionDir);
 
         Path homeDir;
         Path logFile = versionDir.resolve("logs").resolve("runner.log");
@@ -160,8 +160,8 @@ public final class ElasticRunner {
             homeDir = DistroLayout.prepare(zip, versionDir, family);
             Path dataDir = versionDir.resolve("data");
             Path logsDir = versionDir.resolve("logs");
-            createDirs(dataDir);
-            createDirs(logsDir);
+            createWorkDir(dataDir);
+            createWorkDir(logsDir);
 
             String httpPortSetting = resolveHttpPortSetting(config);
 
@@ -218,7 +218,7 @@ public final class ElasticRunner {
             return new ElasticServer(runtime, actualPort, httpClient);
         } catch (IOException e) {
             throw StartupFailureDiagnostics.wrap(
-                    new ElasticRunnerException("Failed to prepare " + family.displayName() + " distribution.", e),
+                    new DistroResolutionException("Failed to prepare " + family.displayName() + " distribution.", e),
                     config,
                     family,
                     resolvedDistro,
@@ -251,10 +251,10 @@ public final class ElasticRunner {
             return new ResolvedDistro(family, version, archive, "explicit-distroZip", null, null);
         }
         if (config.version() == null || config.version().isBlank()) {
-            throw new ElasticRunnerException("version or distroZip is required.");
+            throw new DistroResolutionException("version or distroZip is required.");
         }
         Path distrosDir = config.distrosDir().toAbsolutePath();
-        createDirs(distrosDir);
+        createDistroCacheDir(distrosDir);
         DistroDescriptor descriptor = DistroDescriptor.forVersion(config.family(), config.version());
         Path archive = distrosDir.resolve(descriptor.fileName());
         java.net.URI downloadUri = descriptor.downloadUri(config.downloadBaseUrl());
@@ -274,10 +274,10 @@ public final class ElasticRunner {
 
     private static Path requireZip(Path zip) {
         if (!Files.exists(zip)) {
-            throw new ElasticRunnerException("Distro archive does not exist: " + zip);
+            throw new DistroResolutionException("Distro archive does not exist: " + zip);
         }
         if (!Files.isRegularFile(zip)) {
-            throw new ElasticRunnerException("Distro archive is not a file: " + zip);
+            throw new DistroResolutionException("Distro archive is not a file: " + zip);
         }
         return zip;
     }
@@ -310,7 +310,7 @@ public final class ElasticRunner {
         try {
             ConfigWriter.write(configFile, settings);
         } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to write " + family.configFileName(), e);
+            throw new ProcessStartException("Failed to write " + family.configFileName(), e);
         }
     }
 
@@ -337,13 +337,13 @@ public final class ElasticRunner {
                 logThread.setDaemon(true);
                 logThread.start();
                 if (!process.waitFor(5, TimeUnit.MINUTES) || process.exitValue() != 0) {
-                    throw new ElasticRunnerException("Failed to install plugin: " + plugin);
+                    throw new PluginInstallException("Failed to install plugin: " + plugin);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new ElasticRunnerException("Plugin install interrupted: " + plugin, e);
+                throw new PluginInstallException("Plugin install interrupted: " + plugin, e);
             } catch (IOException e) {
-                throw new ElasticRunnerException("Plugin install failed: " + plugin, e);
+                throw new PluginInstallException("Plugin install failed: " + plugin, e);
             }
         }
     }
@@ -367,7 +367,7 @@ public final class ElasticRunner {
         try {
             return builder.start();
         } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to start " + family.displayName() + " process.", e);
+            throw new ProcessStartException("Failed to start " + family.displayName() + " process.", e);
         }
     }
 
@@ -380,7 +380,7 @@ public final class ElasticRunner {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
             if (!process.isAlive()) {
-                throw new ElasticRunnerException(family.displayName() + " process exited early.");
+                throw new ProcessStartException(family.displayName() + " process exited early.");
             }
             try {
                 HttpRequest request = HttpRequest.newBuilder(baseUri)
@@ -393,28 +393,36 @@ public final class ElasticRunner {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new ElasticRunnerException("Interrupted while waiting for " + family.displayName() + ".", e);
+                throw new ProcessStartException("Interrupted while waiting for " + family.displayName() + ".", e);
             } catch (IOException ignored) {
                 // Retry until timeout.
             }
             sleep(500);
         }
-        throw new ElasticRunnerException("Timed out waiting for " + family.displayName() + ".");
+        throw new StartupTimeoutException("Timed out waiting for " + family.displayName() + ".");
     }
 
     private static void writeState(Path stateFile, RunnerState state) {
         try {
             state.write(stateFile);
         } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to write state file.", e);
+            throw new ProcessStartException("Failed to write state file.", e);
         }
     }
 
-    private static void createDirs(Path dir) {
+    private static void createDistroCacheDir(Path dir) {
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
-            throw new ElasticRunnerException("Failed to create directory: " + dir, e);
+            throw new DistroResolutionException("Failed to create directory: " + dir, e);
+        }
+    }
+
+    private static void createWorkDir(Path dir) {
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new ProcessStartException("Failed to create directory: " + dir, e);
         }
     }
 
@@ -422,7 +430,7 @@ public final class ElasticRunner {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
             if (!process.isAlive()) {
-                throw new ElasticRunnerException("Search server exited unexpectedly before binding HTTP port.");
+                throw new PortBindingException("Search server exited unexpectedly before binding HTTP port.");
             }
             try {
                 if (Files.exists(logFile)) {
@@ -435,7 +443,7 @@ public final class ElasticRunner {
             }
             sleep(500);
         }
-        throw new ElasticRunnerException("Timed out waiting for HTTP port bind.");
+        throw new PortBindingException("Timed out waiting for HTTP port bind.");
     }
 
     static OptionalInt findHttpPublishPort(List<String> lines) {

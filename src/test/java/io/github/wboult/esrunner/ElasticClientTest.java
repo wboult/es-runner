@@ -11,11 +11,13 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ElasticClientTest {
@@ -92,6 +94,56 @@ class ElasticClientTest {
         assertTrue(client.bulk(ndjson).contains("\"errors\":false"));
         assertEquals("application/x-ndjson", contentType.get());
         assertEquals(ndjson, body.get());
+    }
+
+    @Test
+    void indexDocumentWithoutIdUsesPostDocEndpoint() throws Exception {
+        AtomicReference<String> method = new AtomicReference<>();
+        AtomicReference<String> body = new AtomicReference<>();
+        server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/orders/_doc", exchange -> {
+            method.set(exchange.getRequestMethod());
+            body.set(readBody(exchange));
+            respond(exchange, 201, "{\"result\":\"created\"}");
+        });
+        startServer();
+
+        ElasticClient client = new ElasticClient(baseUri());
+
+        assertTrue(client.indexDocument("orders", "{\"value\":1}").contains("\"created\""));
+        assertEquals("POST", method.get());
+        assertEquals("{\"value\":1}", body.get());
+    }
+
+    @Test
+    void bulkIndexDocumentsBuildsNdjsonForOneIndex() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/_bulk", exchange -> {
+            body.set(readBody(exchange));
+            respond(exchange, 200, "{\"errors\":false}");
+        });
+        startServer();
+
+        ElasticClient client = new ElasticClient(baseUri());
+
+        assertTrue(client.bulkIndexDocuments("orders", List.of("{\"value\":1}", "{\"value\":2}"))
+                .contains("\"errors\":false"));
+        assertEquals("""
+                {"index":{"_index":"orders"}}
+                {"value":1}
+                {"index":{"_index":"orders"}}
+                {"value":2}
+                """, body.get());
+    }
+
+    @Test
+    void bulkIndexDocumentsRejectsEmptyLists() {
+        ElasticClient client = new ElasticClient(URI.create("http://localhost:9200/"));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> client.bulkIndexDocuments("orders", List.of()));
+        assertTrue(ex.getMessage().contains("must not be empty"));
     }
 
     private void startServer() {

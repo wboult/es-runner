@@ -85,7 +85,7 @@ static ElasticServer startNode(Path cachedZip,
         .workDir(isolatedZip.getParent().resolve("work"))
         .clusterName(clusterName)
         .httpPort(httpPort)
-        .settings(settings));
+        .replaceSettings(settings));
 
     return ElasticRunner.start(config);
 }

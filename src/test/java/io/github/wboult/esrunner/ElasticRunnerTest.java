@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ElasticRunnerTest {
@@ -121,6 +122,26 @@ class ElasticRunnerTest {
 
         assertEquals(cachedZip.toAbsolutePath(), resolved);
         assertEquals("healthy-zip", Files.readString(resolved));
+    }
+
+    @Test
+    void resolveDistroZipRequiresVersionOrExplicitArchive() {
+        DistroResolutionException ex = assertThrows(DistroResolutionException.class,
+                () -> ElasticRunner.resolveDistroZip(ElasticRunnerConfig.defaults()));
+
+        assertEquals(ElasticRunnerException.Kind.DISTRO_RESOLUTION, ex.kind());
+    }
+
+    @Test
+    void resolveDistroZipRejectsMissingArchive() {
+        Path missing = Path.of("missing-elasticsearch.zip").toAbsolutePath();
+        ElasticRunnerConfig config = ElasticRunnerConfig.from(builder -> builder.distroZip(missing));
+
+        DistroResolutionException ex = assertThrows(DistroResolutionException.class,
+                () -> ElasticRunner.resolveDistroZip(config));
+
+        assertEquals(ElasticRunnerException.Kind.DISTRO_RESOLUTION, ex.kind());
+        assertTrue(ex.getMessage().contains("does not exist"));
     }
 
     @Test
