@@ -155,11 +155,23 @@ client.indexDocument(ordersIndex, newOrder);
 client.refresh(ordersIndex);
 ```
 
-The helper prefixes logical resource names with the injected suite namespace,
-so tests can use stable logical names without colliding with other suites.
-Use `env.indexPattern(...)` when Elasticsearch expects a wildcard-based index
-pattern, such as template `index_patterns`. Concrete helpers like
-`env.index(...)` now reject wildcard-like input so `orders-*` does not get
+## Resource naming model
+
+Use one naming model consistently:
+
+- concrete resource ids:
+  - `env.index("orders")`
+  - `env.alias("orders-read")`
+  - `env.template("orders-template")`
+- wildcard-based matching:
+  - `env.indexPattern("orders")`
+
+Concrete helpers produce one physical resource id inside the suite namespace.
+Use those ids for CRUD, refresh, alias creation, template ids, and cleanup.
+
+Use `env.indexPattern(...)` only when Elasticsearch expects wildcard matching,
+such as template `index_patterns`. Do not pass `orders-*` into `env.index(...)`;
+concrete helpers now reject pattern-like input so a bad pattern cannot be
 silently sanitized into the wrong physical name.
 
 The plugin starts the cluster lazily only when a bound test task actually
@@ -223,6 +235,8 @@ Example:
 - build id: `erabc123`
 - `:app:integrationTest` using `env.index("orders")`
   - physical index: `erabc123_app_integrationtest-orders`
+- `:app:integrationTest` using `env.indexPattern("orders")`
+  - physical index pattern: `erabc123_app_integrationtest-orders-*`
 - `:search:smokeTest` using `env.index("orders")`
   - physical index: `erabc123_search_smoketest-orders`
 
