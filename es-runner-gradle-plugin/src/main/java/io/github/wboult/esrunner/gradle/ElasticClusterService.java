@@ -3,6 +3,8 @@ package io.github.wboult.esrunner.gradle;
 import io.github.wboult.esrunner.ElasticRunner;
 import io.github.wboult.esrunner.ElasticRunnerConfig;
 import io.github.wboult.esrunner.ElasticServer;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
 import org.gradle.api.provider.ListProperty;
@@ -58,6 +60,8 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
         Property<Boolean> getQuiet();
     }
 
+    private static final Logger LOGGER = Logging.getLogger(ElasticClusterService.class);
+
     private final Object lock = new Object();
     private ElasticServer server;
     private ElasticClusterMetadata metadata;
@@ -71,7 +75,11 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
     public ElasticClusterMetadata metadata() {
         synchronized (lock) {
             if (server == null || !server.isRunning()) {
-                if (server != null) {
+                String clusterName = getParameters().getName().get();
+                boolean isRestart = server != null;
+                if (isRestart) {
+                    LOGGER.warn("Shared cluster '{}' process is no longer running — restarting."
+                            + " Tests in the previous suite may have failed.", clusterName);
                     try {
                         server.close();
                     } catch (Exception ignored) {
@@ -81,7 +89,7 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
                 try {
                     Duration startupTimeout = Duration.ofMillis(getParameters().getStartupTimeoutMillis().get());
                     if (!started.client().waitForYellow(startupTimeout)) {
-                        throw new IllegalStateException("Shared cluster '" + getParameters().getName().get()
+                        throw new IllegalStateException("Shared cluster '" + clusterName
                                 + "' did not reach yellow health within " + startupTimeout + ".");
                     }
                     metadata = new ElasticClusterMetadata(
@@ -95,10 +103,18 @@ public abstract class ElasticClusterService implements BuildService<ElasticClust
                     } catch (Exception suppressed) {
                         e.addSuppressed(suppressed);
                     }
-                    throw new IllegalStateException("Failed to start shared cluster '"
-                            + getParameters().getName().get() + "'.", e);
+                    String action = isRestart ? "restart" : "start";
+                    throw new IllegalStateException("Failed to " + action + " shared cluster '"
+                            + clusterName + "'.", e);
                 }
                 server = started;
+                if (isRestart) {
+                    LOGGER.warn("Shared cluster '{}' restarted successfully on port {}.",
+                            clusterName, started.httpPort());
+                } else {
+                    LOGGER.lifecycle("Shared cluster '{}' started on port {}.",
+                            clusterName, started.httpPort());
+                }
             }
             return metadata;
         }
