@@ -527,6 +527,11 @@ actually forks, waits for yellow cluster health before handing tests the
 connection details, and injects a per-suite namespace so parallel suites do
 not collide.
 
+Yellow health is only the startup floor. Shared-cluster suites still need to
+install their own templates, create indices, and `refresh(...)` before making
+deterministic search assertions. If the cluster starts but tests still fail,
+use the troubleshooting guide linked from the docs site.
+
 Current source-tree plugin id:
 
 - `io.github.wboult.es-runner.shared-test-clusters`
