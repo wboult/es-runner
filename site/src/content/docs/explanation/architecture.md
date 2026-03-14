@@ -22,11 +22,15 @@ ES Runner starts **official Elasticsearch distributions** as an external process
 
 ## Lifecycle control
 
-`ElasticServer` wraps the process and exposes:
+`ElasticServer` is the public facade for a running process-backed node. It exposes:
 
 - `close()` for shutdown
 - `logTail()` for diagnostics
 - `client()` for HTTP access
+
+Internally, process lifecycle work now lives in `ElasticProcessRuntime`. That keeps
+`ElasticServer` focused on the public facade while startup stays in `ElasticRunner`
+and HTTP helpers stay in `ElasticClient`.
 
 ## Related
 
