@@ -397,8 +397,15 @@ And in tests:
 ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 
-client.createIndex(env.index("orders"));
-client.indexDocument(env.index("orders"), "1", "{\"status\":\"new\"}");
+String orders = env.index("orders");
+String newOrder = """
+        {
+          "status": "new"
+        }
+        """;
+
+client.createIndex(orders);
+client.indexDocument(orders, newOrder);
 ```
 
 This gives:

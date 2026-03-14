@@ -14,6 +14,26 @@ to depend on Docker, Testcontainers, or an already-running shared cluster.
 Documentation: <https://wboult.github.io/es-runner/>
 Contributor setup: [CONTRIBUTING.md](CONTRIBUTING.md)
 
+## Table of contents
+
+- [Why ES Runner instead of Testcontainers or custom scripts?](#why-es-runner-instead-of-testcontainers-or-custom-scripts)
+- [Install and release status](#install-and-release-status)
+- [Why use it](#why-use-it)
+- [Start with the path that matches your use case](#start-with-the-path-that-matches-your-use-case)
+- [When not to use it](#when-not-to-use-it)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+- [Starting from a local ZIP](#starting-from-a-local-zip)
+- [Realistic indexing flow](#realistic-indexing-flow)
+- [Main API shape](#main-api-shape)
+- [Startup failure diagnostics](#startup-failure-diagnostics)
+- [Official Java API Client](#official-java-api-client)
+- [Plugin install](#plugin-install)
+- [Mirrors and private distros](#mirrors-and-private-distros)
+- [Process-backed OpenSearch](#process-backed-opensearch)
+- [Shared Gradle test clusters](#shared-gradle-test-clusters)
+- [Experimental embedded servers](#experimental-embedded-servers)
+
 ## Why ES Runner instead of Testcontainers or custom scripts?
 
 Use ES Runner when you want a real search node but Docker is the wrong fit:
@@ -215,14 +235,34 @@ ElasticRunner.withServer(builder -> builder
                 }
                 """);
         server.createIndex("orders-2026-03");
-        server.bulk("""
-                {"index":{"_index":"orders-2026-03","_id":"o-100"}}
-                {"customer":"acme","region":"eu","status":"shipped","description":"overnight bike delivery","total":120.5}
-                {"index":{"_index":"orders-2026-03","_id":"o-101"}}
-                {"customer":"acme","region":"eu","status":"pending","description":"standard helmet delivery","total":45.0}
-                {"index":{"_index":"orders-2026-03","_id":"o-102"}}
-                {"customer":"globex","region":"us","status":"shipped","description":"overnight gloves delivery","total":75.25}
-                """);
+        String firstOrder = """
+                {
+                  "customer": "acme",
+                  "region": "eu",
+                  "status": "shipped",
+                  "description": "overnight bike delivery",
+                  "total": 120.5
+                }
+                """;
+        String secondOrder = """
+                {
+                  "customer": "acme",
+                  "region": "eu",
+                  "status": "pending",
+                  "description": "standard helmet delivery",
+                  "total": 45.0
+                }
+                """;
+        String thirdOrder = """
+                {
+                  "customer": "globex",
+                  "region": "us",
+                  "status": "shipped",
+                  "description": "overnight gloves delivery",
+                  "total": 75.25
+                }
+                """;
+        server.bulkIndexDocuments("orders-2026-03", List.of(firstOrder, secondOrder, thirdOrder));
         server.refresh("orders-2026-03");
 
         System.out.println(server.search("orders-read", """
@@ -434,12 +474,21 @@ ElasticRunner.withServer(builder -> builder
                 }
                 """);
         server.createIndex("orders-2026-03");
-        server.bulk("""
-                {"index":{"_index":"orders-2026-03","_id":"o-100"}}
-                {"status":"shipped","region":"eu","description":"overnight bike delivery"}
-                {"index":{"_index":"orders-2026-03","_id":"o-101"}}
-                {"status":"pending","region":"eu","description":"standard helmet delivery"}
-                """);
+        String shippedOrder = """
+                {
+                  "status": "shipped",
+                  "region": "eu",
+                  "description": "overnight bike delivery"
+                }
+                """;
+        String pendingOrder = """
+                {
+                  "status": "pending",
+                  "region": "eu",
+                  "description": "standard helmet delivery"
+                }
+                """;
+        server.bulkIndexDocuments("orders-2026-03", List.of(shippedOrder, pendingOrder));
         server.refresh("orders-2026-03");
         System.out.println(server.search("orders-read", """
                 {
@@ -562,7 +611,12 @@ ElasticClient client = env.client();
 String ordersIndex = env.index("orders");
 
 client.createIndex(ordersIndex);
-client.indexDocument(ordersIndex, "1", "{\"status\":\"new\"}");
+String newOrder = """
+        {
+          "status": "new"
+        }
+        """;
+client.indexDocument(ordersIndex, newOrder);
 client.refresh(ordersIndex);
 ```
 

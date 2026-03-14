@@ -111,8 +111,13 @@ ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 
 String orders = env.index("orders");
+String newOrder = """
+        {
+          "status": "new"
+        }
+        """;
 client.createIndex(orders);
-client.indexDocument(orders, "1", "{\"status\":\"new\"}");
+client.indexDocument(orders, newOrder);
 client.refresh(orders);
 ```
 
@@ -290,8 +295,13 @@ class AppIntegrationTest {
         ElasticClient client = env.client();
 
         String orders = env.index("orders");
+        String shippedOrder = """
+                {
+                  "status": "shipped"
+                }
+                """;
         client.createIndex(orders);
-        client.indexDocument(orders, "1", "{\"status\":\"shipped\"}");
+        client.indexDocument(orders, shippedOrder);
         client.refresh(orders);
 
         long count = client.countValue(orders);

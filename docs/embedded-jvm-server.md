@@ -222,7 +222,12 @@ EmbeddedElasticServerConfig config = EmbeddedElasticServer.defaultConfig(esHome)
 
 try (EmbeddedElasticServer server = EmbeddedElasticServer.start(config)) {
     server.createIndex("docs");
-    server.indexDocument("docs", "1", "{\"title\":\"hello\"}");
+    String document = """
+            {
+              "title": "hello"
+            }
+            """;
+    server.indexDocument("docs", document);
     server.refresh("docs");
     long count = server.countValue("docs");
     System.out.println(count);
