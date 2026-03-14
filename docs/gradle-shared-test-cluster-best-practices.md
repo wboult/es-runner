@@ -168,6 +168,10 @@ elasticTestClusters {
 
 That makes reuse predictable and makes failures easier to inspect.
 
+The tradeoff is that repeated local runs can also preserve stale templates,
+aliases, and indices. If a failure only appears after several local runs,
+clear that cluster's `workDir` and rerun before changing the suite logic.
+
 ## 10. Let lazy startup do its job
 
 Applying the plugin does not mean Elasticsearch always starts.
@@ -195,3 +199,4 @@ For most multi-project builds, this is the right starting point:
 
 - [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
 - [docs/gradle-shared-cluster-plugin-design.md](docs/gradle-shared-cluster-plugin-design.md)
+- [Troubleshooting](https://wboult.github.io/es-runner/how-to/troubleshooting/)

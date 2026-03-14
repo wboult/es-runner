@@ -133,6 +133,11 @@ elasticTestClusters {
 }
 ```
 
+That stable `workDir` is usually the right tradeoff, but it also means repeated
+local runs can preserve stale templates, aliases, and indices. If a failure
+only appears after several local runs, clear that cluster's `workDir` and
+rerun before changing the suite logic.
+
 ## Recommended default
 
 For most multi-project builds:
@@ -147,3 +152,4 @@ For most multi-project builds:
 
 - [Use shared Gradle test clusters](../gradle-shared-test-clusters/)
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
+- [Troubleshooting](../troubleshooting/)

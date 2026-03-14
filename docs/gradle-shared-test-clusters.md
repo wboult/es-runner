@@ -183,6 +183,10 @@ and non-bound test tasks do not pay startup cost just because the plugin is
 applied, while the first real suite still does not need its own startup
 polling to survive initial contact with a fresh single-node cluster.
 
+Yellow health is a startup/readiness threshold, not a data-visibility
+guarantee. Suites still need to install templates, create indices, and
+`refresh(...)` before making deterministic search assertions.
+
 ## Lazy startup behavior
 
 Applying the plugin does not start Elasticsearch on its own.
@@ -199,6 +203,10 @@ the shared-cluster benefit for real integration suites.
 
 See [docs/gradle-shared-test-cluster-best-practices.md](docs/gradle-shared-test-cluster-best-practices.md)
 for concrete guidance on namespacing, cleanup, and suite boundaries.
+If the cluster starts but assertions still fail, use the troubleshooting flow
+in the docs site:
+
+- [Troubleshooting](https://wboult.github.io/es-runner/how-to/troubleshooting/)
 
 ## Injected system properties
 

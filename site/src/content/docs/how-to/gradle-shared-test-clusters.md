@@ -155,6 +155,10 @@ It waits for yellow cluster health before injecting `elastic.runner.baseUri`
 into that suite task. Applying the plugin alone does not start Elasticsearch,
 and tasks like `classes`, `jar`, or unrelated test tasks stay cold.
 
+Yellow health is only the startup floor. Suites still need to install their
+own templates, create indices, and `refresh(...)` before asserting on
+search results.
+
 ## Lazy startup behavior
 
 Applying the plugin does not start Elasticsearch by itself.
@@ -168,6 +172,11 @@ The shared cluster stays cold for commands such as:
 The cluster only boots when Gradle actually executes a bound suite task and
 forks its test JVM. That keeps ordinary development tasks fast while still
 giving integration suites a build-scoped shared node when they really run.
+
+If the shared cluster starts but the suite still returns zero hits or reads the
+wrong resources, jump to [Troubleshooting](../troubleshooting/). The usual
+causes are missing refresh, using `index(...)` where `indexPattern(...)` was
+required, or stale state in a reused `workDir`.
 
 ## What gets injected
 
@@ -355,5 +364,6 @@ negative-path suite, see
 - [`samples/gradle-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample)
 - [Shared cluster best practices](../gradle-shared-test-cluster-best-practices/)
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
+- [Troubleshooting](../troubleshooting/)
 - [Configuration reference](../../reference/configuration/)
 
