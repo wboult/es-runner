@@ -127,6 +127,23 @@ class ElasticSharedTestClustersPluginFunctionalTest {
             assertTrue(metadata.get(1).getProperty("namespace").contains("app_smoketest"));
             assertTrue(metadata.get(2).getProperty("namespace").contains("search_integrationtest"));
             assertTrue(metadata.get(3).getProperty("namespace").contains("search_smoketest"));
+            assertEquals("template-alias-query", metadata.get(2).getProperty("scenario"));
+            assertTrue(
+                    metadata.get(2).getProperty("template").startsWith(metadata.get(2).getProperty("namespace") + "-"),
+                    "search integration template id should be namespaced"
+            );
+            assertTrue(
+                    metadata.get(2).getProperty("indexPattern").startsWith(metadata.get(2).getProperty("namespace") + "-"),
+                    "search integration index pattern should be namespaced"
+            );
+            assertTrue(
+                    metadata.get(2).getProperty("indexPattern").endsWith("-orders-*"),
+                    "search integration index pattern should preserve wildcard matching"
+            );
+            assertTrue(
+                    metadata.get(2).getProperty("alias").startsWith(metadata.get(2).getProperty("namespace") + "-"),
+                    "search integration alias should be namespaced"
+            );
 
             assertNotEquals(
                     metadata.get(0).getProperty("namespace"),
