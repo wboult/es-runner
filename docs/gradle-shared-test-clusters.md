@@ -137,6 +137,7 @@ ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 ElasticClient client = env.client();
 
 String ordersIndex = env.index("orders");
+String ordersPattern = env.indexPattern("orders");
 String ordersTemplate = env.template("orders-template");
 String newOrder = """
         {
@@ -144,6 +145,11 @@ String newOrder = """
         }
         """;
 
+client.putIndexTemplate(ordersTemplate, """
+        {
+          "index_patterns": ["%s"]
+        }
+        """.formatted(ordersPattern));
 client.createIndex(ordersIndex);
 client.indexDocument(ordersIndex, newOrder);
 client.refresh(ordersIndex);
@@ -151,6 +157,10 @@ client.refresh(ordersIndex);
 
 The helper prefixes logical resource names with the injected suite namespace,
 so tests can use stable logical names without colliding with other suites.
+Use `env.indexPattern(...)` when Elasticsearch expects a wildcard-based index
+pattern, such as template `index_patterns`. Concrete helpers like
+`env.index(...)` now reject wildcard-like input so `orders-*` does not get
+silently sanitized into the wrong physical name.
 
 The plugin starts the cluster lazily only when a bound test task actually
 forks a JVM, and waits for yellow health before it injects

@@ -90,7 +90,8 @@ start with `ElasticGradleTestEnv.fromSystemProperties()`. That gives you:
 
 - the injected cluster base URI
 - a ready-made `ElasticClient`
-- namespaced logical resource helpers such as `index("orders")`
+- namespaced logical resource helpers such as `index("orders")`,
+  `indexPattern("orders")`, and `template("orders-template")`
 
 See [Use shared Gradle test clusters](../../how-to/gradle-shared-test-clusters/)
 for the full workflow.

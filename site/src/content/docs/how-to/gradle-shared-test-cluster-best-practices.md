@@ -29,11 +29,16 @@ Generate physical names from the injected namespace instead of hard-coding them:
 ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
 
 String orders = env.index("orders");
+String ordersPattern = env.indexPattern("orders");
 String ordersAlias = env.alias("orders");
 String ordersTemplate = env.template("orders-template");
 ```
 
 That keeps test code readable and automatically scopes resources per suite.
+
+Use `env.indexPattern(...)` only for wildcard-based patterns such as template
+`index_patterns`. Do not pass `orders-*` into `env.index(...)`; that is a
+concrete-name helper and now fails fast on pattern-like input.
 
 ## Share state only inside one suite
 
