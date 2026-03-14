@@ -1,6 +1,8 @@
 ---
 title: Error messages
 description: Common errors and what they mean.
+sidebar:
+  order: 4
 ---
 
 This reference lists common `ElasticRunnerException` messages and likely causes.

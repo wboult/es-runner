@@ -1,6 +1,8 @@
 ---
 title: API reference
 description: Public entry points and the main Java API.
+sidebar:
+  order: 1
 ---
 
 This reference lists the public entry points you are expected to start with

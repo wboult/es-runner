@@ -1,6 +1,8 @@
 ---
 title: GitHub Actions CI example
 description: Run ES Runner in CI using GitHub Actions.
+sidebar:
+  order: 9
 ---
 
 This example runs tests and enables distro downloads in GitHub Actions.

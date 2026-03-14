@@ -1,6 +1,8 @@
 ---
 title: Release ES Runner
 description: Verify and publish the Maven artifacts and Gradle plugin with the tag-driven release workflow.
+sidebar:
+  order: 13
 ---
 
 ES Runner now has a real release pipeline for the publishable modules:

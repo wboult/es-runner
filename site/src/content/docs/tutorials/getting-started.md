@@ -1,6 +1,8 @@
 ---
 title: Getting started
 description: Install prerequisites and start your first Elasticsearch server.
+sidebar:
+  order: 1
 ---
 
 This tutorial walks you through installing the prerequisites and starting your first server with ES Runner.

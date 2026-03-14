@@ -1,6 +1,8 @@
 ---
 title: Shared cluster best practices
 description: Keep shared Gradle Elasticsearch clusters predictable with good namespacing, cleanup, and suite boundaries.
+sidebar:
+  order: 11
 ---
 
 Shared Gradle clusters work well when you treat one suite as the unit of shared

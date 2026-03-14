@@ -1,6 +1,8 @@
 ---
 title: File layout
 description: Where ES Runner writes data and logs.
+sidebar:
+  order: 5
 ---
 
 ES Runner writes into `workDir` using the following structure:

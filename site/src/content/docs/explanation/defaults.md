@@ -1,6 +1,8 @@
 ---
 title: Defaults and safety
 description: Why defaults are chosen and how to override them.
+sidebar:
+  order: 2
 ---
 
 ES Runner ships with conservative defaults to make local use safe and predictable.

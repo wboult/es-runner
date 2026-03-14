@@ -1,6 +1,8 @@
 ---
 title: Security & support policy
 description: Security defaults, reporting, and support windows.
+sidebar:
+  order: 4
 ---
 
 ## Security defaults

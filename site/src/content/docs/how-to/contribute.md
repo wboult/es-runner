@@ -1,6 +1,8 @@
 ---
 title: Contribute
 description: Set up a dev environment and submit changes.
+sidebar:
+  order: 14
 ---
 
 We welcome contributions! This guide covers local setup and how to submit a change.

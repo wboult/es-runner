@@ -1,6 +1,8 @@
 ---
 title: Release & versioning policy
 description: How versions are assigned and what changes mean.
+sidebar:
+  order: 8
 ---
 
 ES Runner follows **Semantic Versioning (SemVer)**:
