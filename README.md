@@ -206,51 +206,51 @@ template, let it shape a concrete index, bulk seed a few documents, then query
 through an alias:
 
 ```java
+String ordersTemplate = """
+        {
+          "index_patterns": ["orders-*"],
+          "template": {
+            "settings": {
+              "index": {
+                "number_of_replicas": 0
+              }
+            },
+            "mappings": {
+              "properties": {
+                "customer": { "type": "keyword" },
+                "region": { "type": "keyword" },
+                "status": { "type": "keyword" },
+                "description": { "type": "text" },
+                "total": { "type": "double" }
+              }
+            },
+            "aliases": {
+              "orders-read": {}
+            }
+          }
+        }
+        """;
+String shippedOrdersByRegionQuery = """
+        {
+          "query": {
+            "term": {
+              "status": "shipped"
+            }
+          },
+          "aggs": {
+            "orders_by_region": {
+              "terms": {
+                "field": "region"
+              }
+            }
+          }
+        }
+        """;
+
 ElasticRunner.withServer(builder -> builder
         .version("9.3.1")
         .download(true),
     server -> {
-        String ordersTemplate = """
-                {
-                  "index_patterns": ["orders-*"],
-                  "template": {
-                    "settings": {
-                      "index": {
-                        "number_of_replicas": 0
-                      }
-                    },
-                    "mappings": {
-                      "properties": {
-                        "customer": { "type": "keyword" },
-                        "region": { "type": "keyword" },
-                        "status": { "type": "keyword" },
-                        "description": { "type": "text" },
-                        "total": { "type": "double" }
-                      }
-                    },
-                    "aliases": {
-                      "orders-read": {}
-                    }
-                  }
-                }
-                """);
-        String shippedOrdersByRegionQuery = """
-                {
-                  "query": {
-                    "term": {
-                      "status": "shipped"
-                    }
-                  },
-                  "aggs": {
-                    "orders_by_region": {
-                      "terms": {
-                        "field": "region"
-                      }
-                    }
-                  }
-                }
-                """;
-
         server.putIndexTemplate("orders-template", ordersTemplate);
         server.createIndex("orders-2026-03");
         String firstOrder = """
@@ -456,36 +456,36 @@ embedded experiment.
 Quick example:
 
 ```java
+String ordersTemplate = """
+        {
+          "index_patterns": ["orders-*"],
+          "template": {
+            "settings": {
+              "index": {
+                "number_of_replicas": 0
+              }
+            },
+            "aliases": {
+              "orders-read": {}
+            }
+          }
+        }
+        """;
+String overnightQuery = """
+        {
+          "query": {
+            "match": {
+              "description": "overnight"
+            }
+          }
+        }
+        """;
+
 ElasticRunner.withServer(builder -> builder
         .family(DistroFamily.OPENSEARCH)
         .version("3.5.0")
         .download(true),
     server -> {
-        String ordersTemplate = """
-                {
-                  "index_patterns": ["orders-*"],
-                  "template": {
-                    "settings": {
-                      "index": {
-                        "number_of_replicas": 0
-                      }
-                    },
-                    "aliases": {
-                      "orders-read": {}
-                    }
-                  }
-                }
-                """);
-        String overnightQuery = """
-                {
-                  "query": {
-                    "match": {
-                      "description": "overnight"
-                    }
-                  }
-                }
-                """;
-
         server.putIndexTemplate("orders-template", ordersTemplate);
         server.createIndex("orders-2026-03");
         String shippedOrder = """

@@ -40,50 +40,51 @@ If you want to prove the plugin is actually usable, create an index that uses a
 plugin-provided analyzer or filter:
 
 ```java
+String icuDocsIndex = """
+        {
+          "settings": {
+            "index": {
+              "number_of_replicas": 0
+            },
+            "analysis": {
+              "analyzer": {
+                "folding": {
+                  "tokenizer": "standard",
+                  "filter": ["lowercase", "icu_folding"]
+                }
+              }
+            }
+          },
+          "mappings": {
+            "properties": {
+              "title": {
+                "type": "text",
+                "analyzer": "folding"
+              }
+            }
+          }
+        }
+        """;
+String document = """
+        {
+          "title": "Caf\u00e9 Cr\u00e8me"
+        }
+        """;
+String searchQuery = """
+        {
+          "query": {
+            "match": {
+              "title": "cafe creme"
+            }
+          }
+        }
+        """;
+
 ElasticRunner.withServer(builder -> builder
         .version("9.3.1")
         .download(true)
         .plugin("analysis-icu"),
     server -> {
-        String icuDocsIndex = """
-                {
-                  "settings": {
-                    "index": {
-                      "number_of_replicas": 0
-                    },
-                    "analysis": {
-                      "analyzer": {
-                        "folding": {
-                          "tokenizer": "standard",
-                          "filter": ["lowercase", "icu_folding"]
-                        }
-                      }
-                    }
-                  },
-                  "mappings": {
-                    "properties": {
-                      "title": {
-                        "type": "text",
-                        "analyzer": "folding"
-                      }
-                    }
-                  }
-                }
-                """);
-        String document = """
-                {
-                  "title": "Caf\u00e9 Cr\u00e8me"
-                }
-                """;
-        String searchQuery = """
-                {
-                  "query": {
-                    "match": {
-                      "title": "cafe creme"
-                    }
-                  }
-                }
-                """;
         server.createIndex("icu-docs", icuDocsIndex);
         server.indexDocument("icu-docs", document);
         server.refresh("icu-docs");
