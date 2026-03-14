@@ -20,8 +20,9 @@ import java.util.function.UnaryOperator;
  * as the cache directory, {@code .es/} as the work directory, download
  * disabled, cluster name {@code local-es}, dynamic HTTP port selection from
  * {@code 9200-9300}, heap {@code 256m}, startup timeout {@code 60s}, shutdown
- * timeout {@code 20s}, quiet logging disabled, and the family's default
- * settings map.</p>
+ * timeout {@code 20s}, request timeout {@code 30s}, bulk timeout {@code 5m},
+ * download timeout {@code 5m}, quiet logging disabled, and the family's
+ * default settings map.</p>
  *
  * <p>{@link #defaults(DistroFamily)} keeps those operational defaults but swaps
  * the family-specific download base URL and default settings for the requested
@@ -43,6 +44,11 @@ import java.util.function.UnaryOperator;
  * @param heap heap size passed to the launched process for both Xms and Xmx
  * @param startupTimeout startup timeout for process readiness
  * @param shutdownTimeout shutdown timeout before forced termination
+ * @param requestTimeout timeout for standard HTTP requests made through the
+ *                       attached client
+ * @param bulkTimeout timeout for bulk NDJSON requests made through the
+ *                    attached client
+ * @param downloadTimeout timeout for HTTP distro downloads
  * @param settings additional server settings
  * @param plugins plugins to install before startup
  * @param quiet whether process output should stay quiet on stdout/stderr
@@ -62,6 +68,9 @@ public record ElasticRunnerConfig(
         String heap,
         Duration startupTimeout,
         Duration shutdownTimeout,
+        Duration requestTimeout,
+        Duration bulkTimeout,
+        Duration downloadTimeout,
         Map<String, String> settings,
         List<String> plugins,
         boolean quiet
@@ -83,6 +92,9 @@ public record ElasticRunnerConfig(
      * @param heap heap size
      * @param startupTimeout startup timeout
      * @param shutdownTimeout shutdown timeout
+     * @param requestTimeout request timeout
+     * @param bulkTimeout bulk timeout
+     * @param downloadTimeout download timeout
      * @param settings server settings
      * @param plugins plugins to install
      * @param quiet quiet flag
@@ -94,6 +106,9 @@ public record ElasticRunnerConfig(
         Objects.requireNonNull(heap, "heap");
         Objects.requireNonNull(startupTimeout, "startupTimeout");
         Objects.requireNonNull(shutdownTimeout, "shutdownTimeout");
+        Objects.requireNonNull(requestTimeout, "requestTimeout");
+        Objects.requireNonNull(bulkTimeout, "bulkTimeout");
+        Objects.requireNonNull(downloadTimeout, "downloadTimeout");
         Objects.requireNonNull(distrosDir, "distrosDir");
         Objects.requireNonNull(downloadBaseUrl, "downloadBaseUrl");
         settings = settings == null ? Map.of() : Map.copyOf(settings);
@@ -136,6 +151,9 @@ public record ElasticRunnerConfig(
                 "256m",
                 Duration.ofSeconds(60),
                 Duration.ofSeconds(20),
+                Duration.ofSeconds(30),
+                Duration.ofMinutes(5),
+                Duration.ofMinutes(5),
                 family.defaultSettings(),
                 List.of(),
                 false
@@ -200,6 +218,9 @@ public record ElasticRunnerConfig(
         private String heap;
         private Duration startupTimeout;
         private Duration shutdownTimeout;
+        private Duration requestTimeout;
+        private Duration bulkTimeout;
+        private Duration downloadTimeout;
         private final Map<String, String> settings;
         private final List<String> plugins;
         private boolean quiet;
@@ -219,6 +240,9 @@ public record ElasticRunnerConfig(
             this.heap = base.heap();
             this.startupTimeout = base.startupTimeout();
             this.shutdownTimeout = base.shutdownTimeout();
+            this.requestTimeout = base.requestTimeout();
+            this.bulkTimeout = base.bulkTimeout();
+            this.downloadTimeout = base.downloadTimeout();
             this.settings = new LinkedHashMap<>(base.settings());
             this.plugins = new ArrayList<>(base.plugins());
             this.quiet = base.quiet();
@@ -386,6 +410,41 @@ public record ElasticRunnerConfig(
         }
 
         /**
+         * Sets the timeout for standard HTTP requests made through the attached
+         * {@link ElasticClient}.
+         *
+         * @param requestTimeout standard request timeout
+         * @return this builder
+         */
+        public Builder requestTimeout(Duration requestTimeout) {
+            this.requestTimeout = requestTimeout;
+            return this;
+        }
+
+        /**
+         * Sets the timeout for bulk NDJSON requests made through the attached
+         * {@link ElasticClient}.
+         *
+         * @param bulkTimeout bulk request timeout
+         * @return this builder
+         */
+        public Builder bulkTimeout(Duration bulkTimeout) {
+            this.bulkTimeout = bulkTimeout;
+            return this;
+        }
+
+        /**
+         * Sets the timeout for HTTP distro downloads.
+         *
+         * @param downloadTimeout distro download timeout
+         * @return this builder
+         */
+        public Builder downloadTimeout(Duration downloadTimeout) {
+            this.downloadTimeout = downloadTimeout;
+            return this;
+        }
+
+        /**
          * Replaces the entire server settings map, including all family
          * defaults.
          *
@@ -489,6 +548,9 @@ public record ElasticRunnerConfig(
                     heap,
                     startupTimeout,
                     shutdownTimeout,
+                    requestTimeout,
+                    bulkTimeout,
+                    downloadTimeout,
                     settings,
                     plugins,
                     quiet

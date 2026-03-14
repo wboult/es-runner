@@ -297,6 +297,13 @@ The intended easy path is:
 - `ElasticClient` for direct HTTP-oriented operations
 - `es-runner-java-client` when you want the official Elasticsearch Java API Client
 
+`ElasticRunnerConfig` now also owns the default timeout model for the
+process-backed path:
+
+- `startupTimeout` / `shutdownTimeout` for lifecycle
+- `requestTimeout` / `bulkTimeout` for the attached `ElasticClient`
+- `downloadTimeout` for distro downloads
+
 ### Which artifact contains what
 
 | Artifact | Key classes | Use when |

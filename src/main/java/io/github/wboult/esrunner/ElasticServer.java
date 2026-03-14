@@ -56,7 +56,12 @@ public final class ElasticServer implements ElasticServerHandle {
         this.httpPort = httpPort;
         this.baseUri = URI.create("http://localhost:" + httpPort + "/");
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
-        this.client = new ElasticClient(baseUri, httpClient);
+        this.client = new ElasticClient(
+                baseUri,
+                runtime.config().requestTimeout(),
+                runtime.config().bulkTimeout(),
+                httpClient
+        );
     }
 
     /**
@@ -210,7 +215,7 @@ public final class ElasticServer implements ElasticServerHandle {
             throws IOException, InterruptedException {
         URI uri = baseUri.resolve(path.startsWith("/") ? path.substring(1) : path);
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
-                .timeout(Duration.ofSeconds(30));
+                .timeout(runtime.config().requestTimeout());
         if (body == null) {
             builder.method(method, HttpRequest.BodyPublishers.noBody());
         } else {

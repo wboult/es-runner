@@ -3,6 +3,7 @@ package io.github.wboult.esrunner;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,6 +19,9 @@ class ElasticRunnerConfigTest {
         assertEquals("single-node", config.settings().get("discovery.type"));
         assertEquals("false", config.settings().get("xpack.security.enabled"));
         assertEquals("https://artifacts.elastic.co/downloads/elasticsearch/", config.downloadBaseUrl());
+        assertEquals(Duration.ofSeconds(30), config.requestTimeout());
+        assertEquals(Duration.ofMinutes(5), config.bulkTimeout());
+        assertEquals(Duration.ofMinutes(5), config.downloadTimeout());
     }
 
     @Test
@@ -93,6 +97,9 @@ class ElasticRunnerConfigTest {
                 .version("3.5.0")
                 .clusterName("builder-cluster")
                 .httpPort(9250)
+                .requestTimeout(Duration.ofSeconds(45))
+                .bulkTimeout(Duration.ofMinutes(7))
+                .downloadTimeout(Duration.ofMinutes(9))
                 .setting("node.name", "builder-node"));
 
         assertEquals(DistroFamily.OPENSEARCH, config.family());
@@ -100,5 +107,8 @@ class ElasticRunnerConfigTest {
         assertEquals(9250, config.httpPort());
         assertEquals("builder-node", config.settings().get("node.name"));
         assertEquals("3.5.0", config.version());
+        assertEquals(Duration.ofSeconds(45), config.requestTimeout());
+        assertEquals(Duration.ofMinutes(7), config.bulkTimeout());
+        assertEquals(Duration.ofMinutes(9), config.downloadTimeout());
     }
 }

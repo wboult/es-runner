@@ -40,7 +40,7 @@ public final class ElasticClient implements Serializable {
         this(baseUri, Duration.ofSeconds(30), Duration.ofMinutes(5), httpClient);
     }
 
-    private ElasticClient(URI baseUri, Duration requestTimeout, Duration bulkTimeout, HttpClient httpClient) {
+    ElasticClient(URI baseUri, Duration requestTimeout, Duration bulkTimeout, HttpClient httpClient) {
         this.baseUri = Objects.requireNonNull(baseUri, "baseUri");
         this.requestTimeout = Objects.requireNonNull(requestTimeout, "requestTimeout");
         this.bulkTimeout = Objects.requireNonNull(bulkTimeout, "bulkTimeout");
@@ -54,6 +54,26 @@ public final class ElasticClient implements Serializable {
      */
     public URI baseUri() {
         return baseUri;
+    }
+
+    /**
+     * Returns the default timeout for standard HTTP requests made by this
+     * client.
+     *
+     * @return standard request timeout
+     */
+    public Duration requestTimeout() {
+        return requestTimeout;
+    }
+
+    /**
+     * Returns the default timeout for bulk NDJSON requests made by this
+     * client.
+     *
+     * @return bulk request timeout
+     */
+    public Duration bulkTimeout() {
+        return bulkTimeout;
     }
 
     /**

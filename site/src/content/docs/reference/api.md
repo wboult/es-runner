@@ -44,6 +44,12 @@ Helpers:
 - `ElasticRunnerConfig.from(builder -> ...)` for the builder DSL
 - `toBuilder()` when you want to start from an existing config and tweak it
 
+It also owns the default timeout model for the process-backed path:
+
+- `startupTimeout` / `shutdownTimeout` for lifecycle
+- `requestTimeout` / `bulkTimeout` for the attached `ElasticClient`
+- `downloadTimeout` for distro downloads
+
 See [Configuration reference](../configuration/) for the full list of fields.
 
 ## ElasticServer
@@ -68,6 +74,9 @@ provides helpers such as:
 - `createIndex(...)`, `indexDocument(index, id, json)`, `indexDocument(index, json)`, `bulkIndexDocuments(...)`, `search(...)`
 - `nodesInfo()` and `nodesStats()`
 - `request(...)` and `requestNdjson(...)` for direct endpoint access
+
+The shared client returned by `server.client()` inherits its default request
+and bulk timeouts from `ElasticRunnerConfig`.
 
 Startup failures are surfaced as specific exception types such as
 `DistroDownloadException`, `PortBindingException`, and

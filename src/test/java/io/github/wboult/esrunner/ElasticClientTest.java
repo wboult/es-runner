@@ -146,6 +146,19 @@ class ElasticClientTest {
         assertTrue(ex.getMessage().contains("must not be empty"));
     }
 
+    @Test
+    void timeoutOverridesReturnConfiguredCopies() {
+        ElasticClient base = new ElasticClient(URI.create("http://localhost:9200/"));
+
+        ElasticClient updated = base.withRequestTimeout(Duration.ofSeconds(90))
+                .withBulkTimeout(Duration.ofMinutes(9));
+
+        assertEquals(Duration.ofSeconds(30), base.requestTimeout());
+        assertEquals(Duration.ofMinutes(5), base.bulkTimeout());
+        assertEquals(Duration.ofSeconds(90), updated.requestTimeout());
+        assertEquals(Duration.ofMinutes(9), updated.bulkTimeout());
+    }
+
     private void startServer() {
         server.start();
     }

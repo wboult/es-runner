@@ -42,6 +42,7 @@ tail, and common remediation hints.
 **Fix**:
 - Verify the version exists.
 - Confirm your mirror's base URL and filename.
+- Increase `downloadTimeout` if the archive source is slow.
 
 ## `Timed out waiting for Elasticsearch`
 

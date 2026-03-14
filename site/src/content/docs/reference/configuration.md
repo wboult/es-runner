@@ -25,6 +25,9 @@ This page documents `ElasticRunnerConfig` fields, defaults, and how they're appl
 | `heap` | `String` | `256m` | Used for the family-specific JVM opts env var (`ES_JAVA_OPTS` or `OPENSEARCH_JAVA_OPTS`). |
 | `startupTimeout` | `Duration` | `60s` | Time to wait for readiness. |
 | `shutdownTimeout` | `Duration` | `20s` | Time to wait for shutdown. |
+| `requestTimeout` | `Duration` | `30s` | Default timeout for standard `ElasticClient` requests and `ElasticServer.request(...)`. |
+| `bulkTimeout` | `Duration` | `5m` | Default timeout for bulk NDJSON requests such as `bulk(...)` and `bulkIndexDocuments(...)`. |
+| `downloadTimeout` | `Duration` | `5m` | Timeout for HTTP distro downloads. |
 | `settings` | `Map<String,String>` | Family-specific single-node defaults | Written to `elasticsearch.yml` or `opensearch.yml`. |
 | `plugins` | `List<String>` | `[]` | Plugins installed before start. |
 | `quiet` | `boolean` | `false` | If `true`, reduce logging. |
@@ -36,6 +39,8 @@ Resolution order:
 1. `distroZip` if provided
 2. `version` + `distrosDir`
 3. Download if ZIP missing or `download(true)`
+
+The configured `downloadTimeout` applies to HTTP/HTTPS distro downloads.
 
 You can resolve a ZIP programmatically without starting a server:
 
@@ -81,6 +86,19 @@ Settings are applied in this order:
    For OpenSearch, use `ElasticRunnerConfig.defaults(DistroFamily.OPENSEARCH)`.
 2. Builder updates (including `.setting(...)` and `.replaceSettings(...)`)
 3. Implicit writes (`cluster.name`, `path.data`, `path.logs`, `http.port`)
+
+## Client request timeouts
+
+The process-backed `ElasticServer` creates its shared `ElasticClient` from the
+config, so these defaults apply automatically:
+
+- `requestTimeout` for standard calls like `get(...)`, `search(...)`,
+  `createIndex(...)`, and `putIndexTemplate(...)`
+- `bulkTimeout` for `bulk(...)` and `bulkIndexDocuments(...)`
+
+You can still derive a one-off client copy with
+`server.client().withRequestTimeout(...)` or `withBulkTimeout(...)`, but the
+normal path is now to set the defaults once on `ElasticRunnerConfig`.
 
 ## Related
 
