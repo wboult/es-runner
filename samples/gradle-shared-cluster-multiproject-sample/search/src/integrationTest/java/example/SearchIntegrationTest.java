@@ -1,6 +1,6 @@
 package example;
 
-import example.support.AutomationHarnessSupport;
+import example.support.SampleSupport;
 import io.github.wboult.esrunner.ElasticClient;
 import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
 import org.junit.jupiter.api.Test;
@@ -21,14 +21,14 @@ class SearchIntegrationTest {
         String alias = env.alias("orders-read");
         String template = env.template("orders-template");
 
-        client.putIndexTemplate(template, AutomationHarnessSupport.ordersTemplateJson(indexPattern));
-        AutomationHarnessSupport.seedOrders(client, index);
-        AutomationHarnessSupport.addAlias(client, index, alias);
+        client.putIndexTemplate(template, SampleSupport.ordersTemplateJson(indexPattern));
+        SampleSupport.seedOrders(client, index);
+        SampleSupport.addAlias(client, index, alias);
 
         assertEquals(3L, client.countValue(index));
         assertTrue(client.search(alias, "{\"query\":{\"match\":{\"customer\":\"Ada\"}}}").contains("Ada Lovelace"));
 
-        AutomationHarnessSupport.writeMetadata("search-integration.properties", env, Map.of(
+        SampleSupport.writeMetadata("search-integration.properties", env, Map.of(
                 "index", index,
                 "alias", alias,
                 "template", template,

@@ -1,22 +1,23 @@
-# Shared cluster automation harness sample
+# Multi-project shared-cluster sample
 
-This sample is meant to look like a small internal automation build rather
-than a toy fixture. It consumes the ES Runner shared-cluster plugin and helper
-artifact through normal published coordinates and shows how one build-scoped
-Elasticsearch 9 node can support multiple projects and suites without data
-collisions.
+This is the canonical public sample for the ES Runner shared-cluster Gradle
+plugin. It consumes the plugin and helper artifact through normal published
+coordinates and shows how one build-scoped Elasticsearch 9 node can support
+multiple projects and suites without data collisions.
 
 It proves:
 
 - one shared Elasticsearch 9 cluster per build
 - multiple Gradle projects using that same cluster
-- seeded test data loaded through a small internal support module
+- seeded test data loaded through a small internal `sample-support` module
 - suite-level namespace isolation
 - a negative-path suite that proves raw non-namespaced access fails
+- concrete template ids plus wildcard index patterns through `env.template(...)`
+  and `env.indexPattern(...)`
 
 ## Layout
 
-- `automation-support`
+- `sample-support`
   - common fixture loader and metadata writer used by test suites
 - `app`
   - integration suite that seeds orders into its own namespace
@@ -27,6 +28,22 @@ It proves:
 
 All four suites share one Elasticsearch node, but they use different physical
 resource names because each suite gets its own namespace.
+
+## What to copy first
+
+If you are wiring the plugin into a real consumer build, start with:
+
+- `settings.gradle`
+  - plugin version + repository setup
+- `build.gradle`
+  - root plugin application
+  - one shared cluster definition
+  - suite binding for `integrationTest` and `smokeTest`
+- `sample-support`
+  - a minimal pattern for test-side fixture helpers
+- `search/src/integrationTest/.../SearchIntegrationTest.java`
+  - the clearest example of `env.index(...)`, `env.template(...)`,
+    `env.indexPattern(...)`, and `env.alias(...)` used together
 
 ## How to run after publication
 

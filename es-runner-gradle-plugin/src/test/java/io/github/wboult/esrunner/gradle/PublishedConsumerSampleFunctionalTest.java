@@ -22,11 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PublishedConsumerSampleFunctionalTest {
-    private static final String SAMPLE_ROOT = "samples/gradle-shared-cluster-automation-harness";
+    private static final String SAMPLE_ROOT = "samples/gradle-shared-cluster-multiproject-sample";
 
     @Test
     void publishedArtifactSampleBuildSharesOneClusterAcrossProjectsAndSuites() throws IOException {
-        Path sampleDir = Files.createTempDirectory("es-runner-automation-harness");
+        Path sampleDir = Files.createTempDirectory("es-runner-shared-cluster-sample");
         Path sampleRepo = Files.createTempDirectory("es-runner-sample-repo");
         boolean success = false;
         try {
@@ -64,7 +64,7 @@ class PublishedConsumerSampleFunctionalTest {
 
             String sharedBaseUri = metadata.get(0).getProperty("baseUri");
             metadata.forEach(properties -> {
-                assertEquals("sample-shared-es9", properties.getProperty("clusterName"));
+                assertEquals("sample-integration-es9", properties.getProperty("clusterName"));
                 assertEquals(sharedBaseUri, properties.getProperty("baseUri"));
             });
 

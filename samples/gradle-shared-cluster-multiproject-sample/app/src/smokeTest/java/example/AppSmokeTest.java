@@ -1,6 +1,6 @@
 package example;
 
-import example.support.AutomationHarnessSupport;
+import example.support.SampleSupport;
 import io.github.wboult.esrunner.ElasticClient;
 import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ class AppSmokeTest {
 
         assertEquals(1, client.countValue(index));
 
-        AutomationHarnessSupport.writeMetadata("app-smoke.properties", env, Map.of(
+        SampleSupport.writeMetadata("app-smoke.properties", env, Map.of(
                 "index", index,
                 "freshNamespace", "true",
                 "scenario", "suite-isolation"
