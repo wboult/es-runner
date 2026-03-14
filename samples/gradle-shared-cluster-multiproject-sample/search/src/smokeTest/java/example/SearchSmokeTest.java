@@ -1,6 +1,6 @@
 package example;
 
-import example.support.AutomationHarnessSupport;
+import example.support.SampleSupport;
 import io.github.wboult.esrunner.ElasticClient;
 import io.github.wboult.esrunner.ElasticResponse;
 import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
@@ -23,7 +23,7 @@ class SearchSmokeTest {
         assertEquals(404, rawLogical.statusCode());
         assertFalse(client.indexExists(index));
 
-        AutomationHarnessSupport.writeMetadata("search-smoke.properties", env, Map.of(
+        SampleSupport.writeMetadata("search-smoke.properties", env, Map.of(
                 "index", index,
                 "rawLogicalIndexStatus", Integer.toString(rawLogical.statusCode()),
                 "scenario", "negative-path"

@@ -105,4 +105,4 @@ After the first real release, validate both consumption paths:
 - Maven Central dependencies
 - the Plugin Portal plugin id
 
-Use `samples/gradle-shared-cluster-automation-harness/` as the consumer smoke test.
+Use `samples/gradle-shared-cluster-multiproject-sample/` as the consumer smoke test.

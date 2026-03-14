@@ -29,5 +29,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'es-runner-automation-harness-sample'
-include('automation-support', 'app', 'search')
+rootProject.name = 'es-runner-gradle-shared-cluster-sample'
+include('sample-support', 'app', 'search')

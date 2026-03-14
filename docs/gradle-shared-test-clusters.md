@@ -32,10 +32,10 @@ The release workflow now wires Maven Central and Gradle Plugin Portal
 publication, but until the first live release you should still treat
 composite-build and local-repo consumption as the default path.
 
-A checked-in consumer sample lives at
-`samples/gradle-shared-cluster-automation-harness/`. It uses normal plugin/helper
-coordinates instead of `includeBuild`, so it is the closest approximation of
-how a published consumer build will look.
+A checked-in canonical sample lives at
+`samples/gradle-shared-cluster-multiproject-sample/`. It uses normal
+plugin/helper coordinates instead of `includeBuild`, so it is the closest
+approximation of how a published consumer build will look.
 
 Until publication, the correct setup is a composite build:
 
@@ -61,9 +61,11 @@ with:
 
 That sample is intentionally more realistic than the TestKit fixture:
 
-- it has a small internal `automation-support` subproject
+- it has a small internal `sample-support` subproject
 - it bulk-loads fixture orders into namespaced indices
 - it includes a negative-path suite that proves raw non-namespaced access fails
+- it shows `env.template(...)`, `env.index(...)`, `env.indexPattern(...)`, and
+  `env.alias(...)` working together across multiple projects and suites
 
 ## Recommended build layout
 

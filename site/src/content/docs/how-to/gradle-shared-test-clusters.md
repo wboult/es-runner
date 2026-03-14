@@ -32,17 +32,19 @@ dependencyResolutionManagement {
 }
 ```
 
-A checked-in consumer sample also lives in
-`samples/gradle-shared-cluster-automation-harness/`. It uses normal plugin/helper
-coordinates and can be pointed at a local Maven repo with
+A checked-in canonical sample also lives in
+`samples/gradle-shared-cluster-multiproject-sample/`. It uses normal
+plugin/helper coordinates and can be pointed at a local Maven repo with
 `-PesRunnerRepositoryUrl=...` before publication, then at published artifacts
 later with only `-PesRunnerVersion=...`.
 
 That sample is intentionally more realistic than the TestKit fixture:
 
-- it has a small internal `automation-support` subproject
+- it has a small internal `sample-support` subproject
 - it bulk-loads fixture orders into namespaced indices
 - it includes a negative-path suite that proves raw non-namespaced access fails
+- it shows `env.template(...)`, `env.index(...)`, `env.indexPattern(...)`, and
+  `env.alias(...)` working together across multiple projects and suites
 
 ## Apply the plugin in the root build
 
@@ -346,11 +348,11 @@ Run it with:
 
 For a more realistic multi-project example with fixture loading and a
 negative-path suite, see
-[`samples/gradle-shared-cluster-automation-harness/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-automation-harness).
+[`samples/gradle-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample).
 
 ## Related
 
-- [`samples/gradle-shared-cluster-automation-harness/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-automation-harness)
+- [`samples/gradle-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample)
 - [Shared cluster best practices](../gradle-shared-test-cluster-best-practices/)
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Configuration reference](../../reference/configuration/)

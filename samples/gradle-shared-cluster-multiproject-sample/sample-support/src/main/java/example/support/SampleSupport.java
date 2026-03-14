@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
-public final class AutomationHarnessSupport {
-    private AutomationHarnessSupport() {
+public final class SampleSupport {
+    private SampleSupport() {
     }
 
     public static void seedOrders(ElasticClient client, String index) throws IOException, InterruptedException {
@@ -73,12 +73,12 @@ public final class AutomationHarnessSupport {
         Path output = Path.of("build", "es-runner", fileName);
         Files.createDirectories(output.getParent());
         try (var stream = Files.newOutputStream(output)) {
-            properties.store(stream, "automation harness metadata");
+            properties.store(stream, "shared cluster sample metadata");
         }
     }
 
     private static String loadResource(String name) throws IOException {
-        try (InputStream input = AutomationHarnessSupport.class.getResourceAsStream(name)) {
+        try (InputStream input = SampleSupport.class.getResourceAsStream(name)) {
             if (input == null) {
                 throw new IOException("Missing resource: " + name);
             }

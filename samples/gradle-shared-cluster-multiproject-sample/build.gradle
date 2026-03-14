@@ -7,7 +7,7 @@ plugins {
 def esRunnerVersion = providers.gradleProperty("esRunnerVersion").orElse("0.1.0").get()
 def esVersion = providers.gradleProperty("esVersion").orElse("9.3.1").get()
 def esDistroZip = providers.gradleProperty("esDistroZip").orNull
-def automationProjects = [project(":app"), project(":search")]
+def sampleProjects = [project(":app"), project(":search")]
 
 allprojects {
     group = 'example'
@@ -16,12 +16,12 @@ allprojects {
 
 elasticTestClusters {
     clusters {
-        register("automationHarness") {
-            clusterName.set("sample-shared-es9")
+        register("integration") {
+            clusterName.set("sample-integration-es9")
             quiet.set(true)
             startupTimeoutMillis.set(180_000L)
             distrosDir.set(rootProject.file(".gradle/elasticsearch/distros").absolutePath)
-            workDir.set(layout.buildDirectory.dir("elastic-test-clusters/automation-harness").get().asFile.absolutePath)
+            workDir.set(layout.buildDirectory.dir("elastic-test-clusters/integration").get().asFile.absolutePath)
             if (esDistroZip != null) {
                 distroZip.set(esDistroZip)
                 download.set(false)
@@ -34,17 +34,17 @@ elasticTestClusters {
 
     suites {
         matchingName("integrationTest") {
-            useCluster("automationHarness")
+            useCluster("integration")
             namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
         matchingName("smokeTest") {
-            useCluster("automationHarness")
+            useCluster("integration")
             namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
         }
     }
 }
 
-project(":automation-support") {
+project(":sample-support") {
     apply plugin: 'java-library'
 
     java {
@@ -58,7 +58,7 @@ project(":automation-support") {
     }
 }
 
-configure(automationProjects) {
+configure(sampleProjects) {
     apply plugin: 'java'
 
     java {
@@ -77,7 +77,7 @@ configure(automationProjects) {
             withType(JvmTestSuite).configureEach {
                 useJUnitJupiter()
                 dependencies {
-                    implementation(project(":automation-support"))
+                    implementation(project(":sample-support"))
                 }
             }
 
