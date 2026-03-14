@@ -35,6 +35,9 @@ jobs:
 
 - Use `ES_DISTRO_DOWNLOAD=true` to allow downloads when the ZIP is missing.
 - Cache the `distros` directory to speed up subsequent builds.
+- A full Linux matrix is still the main compatibility signal, but keeping a
+  small `windows-latest` smoke lane for the process-backed path is worthwhile
+  if you claim Windows support.
 
 ## Related
 

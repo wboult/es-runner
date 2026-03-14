@@ -179,6 +179,47 @@ jobs:
           :test
           --tests io.github.wboult.esrunner.ElasticRunnerPluginInstallIntegrationTest
 
+  windows-smoke:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache Elasticsearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: es-distro-${{ runner.os }}-9.3.1
+
+      - name: Prime local Elasticsearch distro
+        run: |
+          New-Item -ItemType Directory -Force -Path distros | Out-Null
+          $archive = "distros/elasticsearch-9.3.1-windows-x86_64.zip"
+          if (-not (Test-Path $archive)) {
+            curl.exe -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-9.3.1-windows-x86_64.zip" -o $archive
+          }
+
+      - name: Run Windows smoke tests
+        env:
+          ES_VERSION: "9.3.1"
+          ES_DISTROS_DIR: distros
+          ES_DISTRO_DOWNLOAD: "true"
+        run: >
+          $env:ORG_GRADLE_JAVA_INSTALLATIONS_PATHS = $env:JAVA_HOME;
+          .\gradlew.bat
+          :test
+          --tests io.github.wboult.esrunner.ElasticRunnerIntegrationTest
+          --tests io.github.wboult.esrunner.ReadmeJavaExampleTest
+          --tests io.github.wboult.esrunner.ElasticRunnerFailureIntegrationTest
+          --tests io.github.wboult.esrunner.ProcessTreeTest
+
   opensearch-process:
     runs-on: ubuntu-latest
     strategy:

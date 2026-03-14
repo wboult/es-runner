@@ -13,6 +13,7 @@ The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 - `test`
 - `scala3Test`
 - `plugin-install`
+- `windows-smoke`
 - `opensearch-process`
 - `embedded-jdk17`
 - `embedded-jdk21`
@@ -24,6 +25,7 @@ The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 | `test` | `17` | Main Java/Scala/unit/integration coverage, Gradle plugin tests, and Scala/Spark matrix against Elasticsearch `9.3.1` and `8.19.11`. |
 | `scala3Test` | `17` | Scala 3 coverage against Elasticsearch `9.3.1`. |
 | `plugin-install` | `17` | Real plugin-install coverage against Elasticsearch `9.3.1` and the published `analysis-icu` plugin. |
+| `windows-smoke` | `17` | Process-backed Windows smoke coverage for Elasticsearch `9.3.1`, including startup, README-style usage, startup-failure diagnostics, and Windows process-tree shutdown. |
 | `opensearch-process` | `21` | Process-backed OpenSearch smoke tests for `3.5.0` and `2.19.4`, including README-style flows. |
 | `embedded-jdk17` | `17` | Experimental embedded Elasticsearch `8.19.11` and OpenSearch `2.19.4`. |
 | `embedded-jdk21` | `21` | Experimental embedded Elasticsearch `9.3.1` and OpenSearch `3.5.0`. |
@@ -48,6 +50,10 @@ The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 
 These commands cover the main process-backed path. Embedded and OpenSearch-only
 smoke jobs are separate.
+
+The repo also runs a narrower `windows-smoke` job in GitHub Actions so
+process-backed lifecycle behavior is continuously verified on Windows instead of
+only on Linux.
 
 ## Environment variables
 

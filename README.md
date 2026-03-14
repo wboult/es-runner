@@ -126,10 +126,11 @@ shared-cluster savings, and mirror/cache guidance.
 - JDK 17+
 - an Elasticsearch/OpenSearch distribution ZIP, or a version plus `download(true)`
 
-Latest verified process-backed lines:
+Latest verified process-backed lines and platforms:
 
-- Elasticsearch `9.3.1` and `8.19.11` in CI
+- Elasticsearch `9.3.1` and `8.19.11` in the main Linux matrix
 - OpenSearch `3.5.0` and `2.19.4` in CI smoke tests
+- Windows process-backed smoke coverage for Elasticsearch `9.3.1`
 
 See [site/src/content/docs/reference/compatibility.md](site/src/content/docs/reference/compatibility.md)
 for the exact support policy, verified JDK/Gradle lines, and what is still
