@@ -1,0 +1,42 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = rootProject.group
+version = rootProject.version
+description = 'Shared Gradle cluster abstractions for ES Runner plugins.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+dependencies {
+    implementation gradleApi()
+
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            rootProject.ext.configurePomMetadata(delegate, project, 'ES Runner Gradle Core', project.description)
+        }
+    }
+    repositories {
+        rootProject.ext.configurePublishingRepositories(delegate)
+    }
+}
+
+rootProject.ext.configureSigning(project)

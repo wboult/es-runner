@@ -1,7 +1,7 @@
 package io.github.wboult.esrunner.gradle;
 
-import org.gradle.process.CommandLineArgumentProvider;
 import org.gradle.api.provider.Provider;
+import org.gradle.process.CommandLineArgumentProvider;
 
 import java.util.List;
 
@@ -9,21 +9,31 @@ import java.util.List;
  * Lazily resolves shared cluster metadata only when Gradle is about to fork a
  * test JVM that actually needs it.
  */
-final class ElasticClusterJvmArgumentProvider implements CommandLineArgumentProvider {
-    private final Provider<ElasticClusterService> service;
+public final class ElasticClusterJvmArgumentProvider implements CommandLineArgumentProvider {
+    private final Provider<? extends SharedClusterBackend> backend;
     private final String buildId;
     private final String taskPath;
     private final String projectPath;
     private final String taskName;
     private final NamespaceMode namespaceMode;
 
-    ElasticClusterJvmArgumentProvider(Provider<ElasticClusterService> service,
-                                      String buildId,
-                                      String taskPath,
-                                      String projectPath,
-                                      String taskName,
-                                      NamespaceMode namespaceMode) {
-        this.service = service;
+    /**
+     * Creates the lazy argument provider for one bound test task.
+     *
+     * @param backend shared cluster backend provider
+     * @param buildId build-scoped namespace seed
+     * @param taskPath full Gradle task path
+     * @param projectPath Gradle project path
+     * @param taskName Gradle task name
+     * @param namespaceMode namespace derivation mode
+     */
+    public ElasticClusterJvmArgumentProvider(Provider<? extends SharedClusterBackend> backend,
+                                             String buildId,
+                                             String taskPath,
+                                             String projectPath,
+                                             String taskName,
+                                             NamespaceMode namespaceMode) {
+        this.backend = backend;
         this.buildId = buildId;
         this.taskPath = taskPath;
         this.projectPath = projectPath;
@@ -33,7 +43,7 @@ final class ElasticClusterJvmArgumentProvider implements CommandLineArgumentProv
 
     @Override
     public Iterable<String> asArguments() {
-        ElasticClusterMetadata metadata = service.get().metadata();
+        ElasticClusterMetadata metadata = backend.get().metadata();
         String namespace = ElasticNamespace.namespace(buildId, projectPath, taskName, namespaceMode);
         return List.of(
                 systemProperty("elastic.runner.baseUri", metadata.baseUri()),

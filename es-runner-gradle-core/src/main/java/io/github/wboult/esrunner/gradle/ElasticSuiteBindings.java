@@ -10,7 +10,12 @@ import org.gradle.api.NamedDomainObjectContainer;
 public final class ElasticSuiteBindings {
     private final NamedDomainObjectContainer<ElasticSuiteBinding> bindings;
 
-    ElasticSuiteBindings(NamedDomainObjectContainer<ElasticSuiteBinding> bindings) {
+    /**
+     * Wraps the backing binding container exposed by the plugin extension.
+     *
+     * @param bindings named suite binding container
+     */
+    public ElasticSuiteBindings(NamedDomainObjectContainer<ElasticSuiteBinding> bindings) {
         this.bindings = bindings;
     }
 

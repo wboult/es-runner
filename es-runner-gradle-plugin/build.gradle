@@ -17,6 +17,7 @@ java {
 }
 
 dependencies {
+    implementation project(':es-runner-gradle-core')
     implementation project(':')
     implementation gradleApi()
 

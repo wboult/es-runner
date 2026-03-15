@@ -269,6 +269,7 @@ tasks.register("publishReleasePublicationsToMavenLocal") {
     group = "publishing"
     dependsOn(
             tasks.named("publishToMavenLocal"),
+            project(":es-runner-gradle-core").tasks.named("publishToMavenLocal"),
             project(":es-runner-java-client").tasks.named("publishToMavenLocal"),
             project(":es-runner-gradle-test-support").tasks.named("publishToMavenLocal"),
             project(":es-runner-gradle-plugin").tasks.named("publishToMavenLocal")
@@ -281,6 +282,7 @@ if (centralPublishingEnabled.get() || (centralPortalUsername.isPresent() && cent
         group = "publishing"
         dependsOn(
                 tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
+                project(":es-runner-gradle-core").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
                 project(":es-runner-java-client").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
                 project(":es-runner-gradle-test-support").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
                 project(":es-runner-gradle-plugin").tasks.named("publishAllPublicationsToOssrhStagingApiRepository")
