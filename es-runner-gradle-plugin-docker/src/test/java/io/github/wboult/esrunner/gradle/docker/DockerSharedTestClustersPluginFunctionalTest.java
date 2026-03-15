@@ -133,10 +133,6 @@ class DockerSharedTestClustersPluginFunctionalTest {
 
     private Map<String, String> gradleEnvironment() {
         Map<String, String> environment = new LinkedHashMap<>(System.getenv());
-        environment.remove("DOCKER_HOST");
-        environment.remove("TESTCONTAINERS_DOCKER_CLIENT_STRATEGY");
-        environment.remove("TESTCONTAINERS_HOST_OVERRIDE");
-        environment.remove("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE");
         environment.put("TESTCONTAINERS_REUSE_ENABLE", "false");
         return environment;
     }
@@ -205,9 +201,11 @@ class DockerSharedTestClustersPluginFunctionalTest {
                     .forwardOutput()
                     .build();
         } catch (UnexpectedBuildFailure failure) {
-            System.err.println("Nested fixture build failed for " + projectDir + ":");
-            System.err.println(failure.getBuildResult().getOutput());
-            throw failure;
+            throw new AssertionError(
+                    "Nested fixture build failed for " + projectDir + ":\n"
+                            + failure.getBuildResult().getOutput(),
+                    failure
+            );
         }
     }
 

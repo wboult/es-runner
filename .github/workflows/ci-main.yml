@@ -156,6 +156,9 @@ jobs:
           cache: gradle
 
       - name: Run Docker shared-cluster plugin tests
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
         run: >
           ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
           ./gradlew
