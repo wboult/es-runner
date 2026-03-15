@@ -158,6 +158,26 @@ The Docker-backed functional test is treated as Linux CI coverage first.
 Local Windows development can still build the plugin module, but the real
 container-backed TestKit flow is verified in the dedicated Ubuntu CI lane.
 
+## Startup failure diagnostics
+
+The Docker-backed plugin does not write a process-style
+`startup-diagnostics.txt` file because there is no extracted distro work
+directory to inspect. Instead, startup failures now include an inline diagnostic
+block in the exception output with:
+
+- the cluster definition name and configured Elasticsearch cluster name
+- the exact image reference
+- startup timeout
+- Docker/Testcontainers environment hints such as `DOCKER_HOST`
+- container id, container name, host, and mapped ports when available
+- sanitized container env vars
+- a recent container log tail
+- remediation hints for common cases such as daemon connectivity, image pull
+  failures, and health-probe timeouts
+
+So for Docker-backed failures, start with the exception message itself before
+looking elsewhere.
+
 ## Related
 
 - [docs/gradle-shared-test-clusters.md](C:/Dev/elastic-runner/docs/gradle-shared-test-clusters.md)
