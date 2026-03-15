@@ -85,6 +85,9 @@ OpenSearch process tests also respect the repo's local distro directories and
 `OPENSEARCH_*` environment variables. See the build/test matrix and
 compatibility docs for the exact currently verified lines.
 
+The full local test env-var reference lives in
+`site/src/content/docs/reference/environment.md`.
+
 ## Experimental embedded modules
 
 The embedded runners live under `experimental/embedded/` and are experimental
@@ -182,9 +185,12 @@ Useful issue reports include:
 ## Related docs
 
 - `docs/public-release-readiness.md`
+- `docs/modules.md`
 - `docs/gradle-shared-test-clusters.md`
+- `docs/try-embedded-runners.md`
 - `docs/embedded-jvm-server.md`
 - `site/src/content/docs/reference/build-test-matrix.md`
+- `site/src/content/docs/reference/environment.md`
 - `site/src/content/docs/reference/compatibility.md`
 
 

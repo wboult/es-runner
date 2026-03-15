@@ -69,25 +69,7 @@ public final class ElasticSharedTestClustersPlugin implements Plugin<Project> {
             Provider<ElasticClusterService> provider = sharedServices.registerIfAbsent(
                     serviceName(spec.getName()),
                     ElasticClusterService.class,
-                    registration -> {
-                        registration.getParameters().getName().set(spec.getName());
-                        registration.getParameters().getDistroZip().set(spec.getDistroZip());
-                        registration.getParameters().getVersion().set(spec.getVersion());
-                        registration.getParameters().getDistrosDir().set(spec.getDistrosDir());
-                        registration.getParameters().getDownload().set(spec.getDownload());
-                        registration.getParameters().getDownloadBaseUrl().set(spec.getDownloadBaseUrl());
-                        registration.getParameters().getWorkDir().set(spec.getWorkDir());
-                        registration.getParameters().getClusterName().set(spec.getClusterName());
-                        registration.getParameters().getHttpPort().set(spec.getHttpPort());
-                        registration.getParameters().getPortRangeStart().set(spec.getPortRangeStart());
-                        registration.getParameters().getPortRangeEnd().set(spec.getPortRangeEnd());
-                        registration.getParameters().getHeap().set(spec.getHeap());
-                        registration.getParameters().getStartupTimeoutMillis().set(spec.getStartupTimeoutMillis());
-                        registration.getParameters().getShutdownTimeoutMillis().set(spec.getShutdownTimeoutMillis());
-                        registration.getParameters().getSettings().set(spec.getSettings());
-                        registration.getParameters().getPlugins().set(spec.getPlugins());
-                        registration.getParameters().getQuiet().set(spec.getQuiet());
-                    }
+                    registration -> spec.copyTo(registration.getParameters())
             );
             services.put(spec.getName(), provider);
         });

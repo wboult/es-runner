@@ -67,14 +67,7 @@ public final class DockerSharedTestClustersPlugin implements Plugin<Project> {
             Provider<DockerClusterService> provider = sharedServices.registerIfAbsent(
                     serviceName(spec.getName()),
                     DockerClusterService.class,
-                    registration -> {
-                        registration.getParameters().getName().set(spec.getName());
-                        registration.getParameters().getDistribution().set(spec.getDistribution());
-                        registration.getParameters().getImage().set(spec.getImage());
-                        registration.getParameters().getClusterName().set(spec.getClusterName());
-                        registration.getParameters().getStartupTimeoutMillis().set(spec.getStartupTimeoutMillis());
-                        registration.getParameters().getEnvVars().set(spec.getEnvVars());
-                    }
+                    registration -> spec.copyTo(registration.getParameters())
             );
             services.put(spec.getName(), provider);
         });

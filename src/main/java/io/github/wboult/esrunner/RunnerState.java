@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -141,22 +142,26 @@ public final class RunnerState {
     public static RunnerState read(Path stateFile) throws IOException {
         String json = Files.readString(stateFile, StandardCharsets.UTF_8);
         Map<String, String> values = JsonUtils.parseFlatJson(json);
-        long pid = Long.parseLong(values.getOrDefault("pid", "0"));
-        if (pid <= 0) {
-            throw new IOException("Invalid PID in state file " + stateFile + ": " + pid);
+        try {
+            long pid = Long.parseLong(values.getOrDefault("pid", "0"));
+            if (pid <= 0) {
+                throw new IOException("Invalid PID in state file " + stateFile + ": " + pid);
+            }
+            int httpPort = Integer.parseInt(values.getOrDefault("httpPort", "0"));
+            if (httpPort <= 0 || httpPort > 65535) {
+                throw new IOException("Invalid HTTP port in state file " + stateFile + ": " + httpPort);
+            }
+            return new RunnerState(
+                    pid,
+                    httpPort,
+                    values.getOrDefault("clusterName", "unknown"),
+                    values.getOrDefault("version", "unknown"),
+                    Instant.parse(values.getOrDefault("startTime", Instant.EPOCH.toString())),
+                    Path.of(values.getOrDefault("workDir", ".")),
+                    values.getOrDefault("baseUri", "")
+            );
+        } catch (NumberFormatException | DateTimeParseException e) {
+            throw new IOException("Invalid numeric or timestamp field in state file " + stateFile + ".", e);
         }
-        int httpPort = Integer.parseInt(values.getOrDefault("httpPort", "0"));
-        if (httpPort <= 0 || httpPort > 65535) {
-            throw new IOException("Invalid HTTP port in state file " + stateFile + ": " + httpPort);
-        }
-        return new RunnerState(
-                pid,
-                httpPort,
-                values.getOrDefault("clusterName", "unknown"),
-                values.getOrDefault("version", "unknown"),
-                Instant.parse(values.getOrDefault("startTime", Instant.EPOCH.toString())),
-                Path.of(values.getOrDefault("workDir", ".")),
-                values.getOrDefault("baseUri", "")
-        );
     }
 }

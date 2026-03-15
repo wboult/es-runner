@@ -113,7 +113,10 @@ public record ElasticRunnerConfig(
         Objects.requireNonNull(downloadBaseUrl, "downloadBaseUrl");
         settings = settings == null ? Map.of() : Map.copyOf(settings);
         plugins = plugins == null ? List.of() : List.copyOf(plugins);
-        if (portRangeStart <= 0 || portRangeEnd < portRangeStart) {
+        if (httpPort < 0 || httpPort > 65535) {
+            throw new IllegalArgumentException("Invalid HTTP port: " + httpPort);
+        }
+        if (portRangeStart <= 0 || portRangeStart > 65535 || portRangeEnd < portRangeStart || portRangeEnd > 65535) {
             throw new IllegalArgumentException("Invalid port range: " + portRangeStart + "-" + portRangeEnd);
         }
     }

@@ -87,9 +87,8 @@ public final class ElasticSuiteBindings {
     }
 
     private void configureClosure(ElasticSuiteBinding binding, Closure<?> closure) {
-        Closure<?> cloned = (Closure<?>) closure.clone();
-        cloned.setResolveStrategy(Closure.DELEGATE_FIRST);
-        cloned.setDelegate(binding);
-        cloned.call(binding);
+        Closure<?> rehydrated = (Closure<?>) closure.rehydrate(binding, closure.getOwner(), closure.getThisObject());
+        rehydrated.setResolveStrategy(Closure.DELEGATE_FIRST);
+        rehydrated.call(binding);
     }
 }

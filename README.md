@@ -24,6 +24,7 @@ Contributor setup: [CONTRIBUTING.md](CONTRIBUTING.md)
 - [OpenSearch](#opensearch)
 - [Shared Gradle clusters](#shared-gradle-clusters)
 - [Samples and docs](#samples-and-docs)
+- [Module overview](#module-overview)
 - [Build and test](#build-and-test)
 
 ## What ES Runner is for
@@ -74,12 +75,14 @@ Publishable coordinates and plugin ids:
 |---|---|
 | Core library | `io.github.wboult:es-runner` |
 | Official Java client adapter | `io.github.wboult:es-runner-java-client` |
+| Gradle shared-cluster core | `io.github.wboult:es-runner-gradle-core` |
 | Gradle shared-cluster test helper | `io.github.wboult:es-runner-gradle-test-support` |
 | Process-backed Gradle plugin | `io.github.wboult.es-runner.shared-test-clusters` |
 | Docker-backed Gradle plugin | `io.github.wboult.es-runner.docker-shared-test-clusters` |
 
 Before the first live release, use the checked-in samples and
-[docs/releasing.md](docs/releasing.md).
+[docs/releasing.md](docs/releasing.md). For the artifact/module map, use
+[docs/modules.md](docs/modules.md).
 
 ## Quick start
 
@@ -180,7 +183,15 @@ Canonical public samples:
   [`samples/docker-opensearch-shared-cluster-multiproject-sample`](samples/docker-opensearch-shared-cluster-multiproject-sample)
 
 Experimental embedded runners still exist, but they are intentionally
-secondary. See [docs/embedded-jvm-server.md](docs/embedded-jvm-server.md).
+secondary. See [docs/try-embedded-runners.md](docs/try-embedded-runners.md) and
+[docs/embedded-jvm-server.md](docs/embedded-jvm-server.md).
+
+## Module overview
+
+If you are choosing artifacts rather than following one tutorial, use:
+
+- [docs/modules.md](docs/modules.md)
+- [docs/try-embedded-runners.md](docs/try-embedded-runners.md)
 
 ## Build and test
 
@@ -202,4 +213,6 @@ If the system JDK is not compatible, the wrapper uses the pinned JDK 17 in
 `.jdks/` via `gradle.properties`.
 
 For contributor workflows, release steps, and focused test slices, use
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](CONTRIBUTING.md). For the full local test environment-variable
+list, use
+[site/src/content/docs/reference/environment.md](site/src/content/docs/reference/environment.md).
