@@ -236,6 +236,50 @@ tasks.register("scala3Test", Test) {
     shouldRunAfter tasks.test
 }
 
+def configureCiTestTask = { Test task, List<String> includes ->
+    task.group = "verification"
+    task.testClassesDirs = sourceSets.test.output.classesDirs
+    task.classpath = sourceSets.test.runtimeClasspath
+    task.filter {
+        includes.each { includeTestsMatching(it) }
+    }
+}
+
+tasks.register("ciCoreTest", Test) {
+    description = "Runs axis-insensitive core tests once for CI."
+    configureCiTestTask(delegate, [
+            "io.github.wboult.esrunner.ConfigWriterTest",
+            "io.github.wboult.esrunner.DistroDescriptorTest",
+            "io.github.wboult.esrunner.DistroDownloaderTest",
+            "io.github.wboult.esrunner.DistroVersionTest",
+            "io.github.wboult.esrunner.ElasticClientTest",
+            "io.github.wboult.esrunner.ElasticRunnerConfigTest",
+            "io.github.wboult.esrunner.ElasticRunnerTest",
+            "io.github.wboult.esrunner.ElasticServerStopTest",
+            "io.github.wboult.esrunner.RunnerStateTest",
+            "io.github.wboult.esrunner.StartupFailureDiagnosticsTest"
+    ])
+}
+
+tasks.register("ciEsProcessSmokeTest", Test) {
+    description = "Runs process-backed Elasticsearch smoke tests per Elasticsearch major version."
+    configureCiTestTask(delegate, [
+            "io.github.wboult.esrunner.ElasticRunnerIntegrationTest",
+            "io.github.wboult.esrunner.ElasticRunnerFailureIntegrationTest",
+            "io.github.wboult.esrunner.ElasticRunnerRecoveryIntegrationTest",
+            "io.github.wboult.esrunner.ReadmeJavaExampleTest",
+            "io.github.wboult.esrunner.ReadmeKotlinExampleTest"
+    ])
+}
+
+tasks.register("ciScalaMatrixTest", Test) {
+    description = "Runs the Scala/Spark consumer compatibility tests for CI."
+    configureCiTestTask(delegate, [
+            "io.github.wboult.esrunner.ElasticRunnerSparkIntegrationTest",
+            "io.github.wboult.esrunner.ReadmeScalaExampleTest"
+    ])
+}
+
 tasks.named("check").configure {
     dependsOn tasks.named("scala3Test")
 }

@@ -29,6 +29,48 @@ jobs:
             echo 'list=["9.3.1","8.19.11"]' >> "$GITHUB_OUTPUT"
           fi
 
+  core-once:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache Elasticsearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: es-distro-${{ runner.os }}-9.3.1
+
+      - name: Prime local Elasticsearch distro
+        run: |
+          mkdir -p distros
+          archive="distros/elasticsearch-9.3.1-linux-x86_64.tar.gz"
+          if [ ! -f "$archive" ]; then
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-9.3.1-linux-x86_64.tar.gz" -o "$archive"
+          fi
+
+      - name: Run core once tests
+        env:
+          ES_VERSION: "9.3.1"
+          ES_DISTROS_DIR: distros
+          ES_DISTRO_DOWNLOAD: "true"
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          ciCoreTest
+          :es-runner-gradle-plugin:test
+          :es-runner-gradle-test-support:test
+
   test:
     needs: resolve-matrix
     runs-on: ubuntu-latest
@@ -71,7 +113,7 @@ jobs:
             curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz" -o "$archive"
           fi
 
-      - name: Run tests
+      - name: Run Scala/Spark compatibility tests
         env:
           ES_VERSION: ${{ matrix.es_version }}
           ES_DISTROS_DIR: distros
@@ -79,12 +121,54 @@ jobs:
         run: >
           ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
           ./gradlew
-          :test
-          :es-runner-gradle-plugin:test
-          :es-runner-gradle-test-support:test
-          -Djunit.jupiter.excludeTags=stress
+          ciScalaMatrixTest
           -PscalaVersion=${{ matrix.scala_spark.scala }}
           -PsparkVersion=${{ matrix.scala_spark.spark }}
+
+  es-process-smoke:
+    needs: resolve-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        es_version: ${{ fromJson(needs.resolve-matrix.outputs.versions) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Cache Elasticsearch distro
+        uses: actions/cache@v4
+        with:
+          path: distros
+          key: es-distro-${{ runner.os }}-${{ matrix.es_version }}
+
+      - name: Prime local Elasticsearch distro
+        run: |
+          mkdir -p distros
+          archive="distros/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz"
+          if [ ! -f "$archive" ]; then
+            curl -fsSL "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es_version }}-linux-x86_64.tar.gz" -o "$archive"
+          fi
+
+      - name: Run process-backed Elasticsearch smoke tests
+        env:
+          ES_VERSION: ${{ matrix.es_version }}
+          ES_DISTROS_DIR: distros
+          ES_DISTRO_DOWNLOAD: "true"
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          ciEsProcessSmokeTest
 
   scala3-test:
     runs-on: ubuntu-latest

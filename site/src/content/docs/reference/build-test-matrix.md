@@ -12,7 +12,9 @@ support policy.
 
 The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 
+- `core-once`
 - `test`
+- `es-process-smoke`
 - `scala3Test`
 - `plugin-install`
 - `windows-smoke`
@@ -24,7 +26,9 @@ The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 
 | Job | JDK | What it verifies |
 | --- | --- | --- |
-| `test` | `17` | Main Java/Scala/unit/integration coverage, Gradle plugin tests, and Scala/Spark matrix against Elasticsearch `9.3.1` and `8.19.11`. |
+| `core-once` | `17` | Axis-insensitive core Java tests plus Gradle plugin and Gradle test-support coverage, run once instead of in every matrix leg. |
+| `test` | `17` | Scala/Spark consumer compatibility matrix against Elasticsearch `9.3.1` and `8.19.11`. |
+| `es-process-smoke` | `17` | Process-backed Java/Kotlin smoke coverage once per Elasticsearch major line (`9.3.1` and `8.19.11`). |
 | `scala3Test` | `17` | Scala 3 coverage against Elasticsearch `9.3.1`. |
 | `plugin-install` | `17` | Real plugin-install coverage against Elasticsearch `9.3.1` and the published `analysis-icu` plugin. |
 | `windows-smoke` | `17` | Process-backed Windows smoke coverage for Elasticsearch `9.3.1`, including startup, README-style usage, startup-failure diagnostics, and Windows process-tree shutdown. |
@@ -33,6 +37,9 @@ The repo currently runs on the Gradle `9.2.1` wrapper and uses these CI jobs:
 | `embedded-jdk21` | `21` | Experimental embedded Elasticsearch `9.3.1` and OpenSearch `3.5.0`. |
 
 ## Main matrix
+
+The main matrix is intentionally limited to the Scala/Spark combinations that
+are actually consumer-sensitive.
 
 | Elasticsearch | Scala | Spark |
 | --- | --- | --- |
