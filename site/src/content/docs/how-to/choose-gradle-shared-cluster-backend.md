@@ -5,14 +5,14 @@ sidebar:
   order: 9
 ---
 
-ES Runner now has two Gradle shared-cluster backends:
+ES Runner has two Gradle shared-cluster backends:
 
 - the original process-backed plugin, which starts the official ZIP distro in a
   local OS process
 - the Docker-backed plugin, which keeps the same suite-binding and namespacing
   model on top of Testcontainers
 
-Use this page to choose the right one quickly.
+Use this page to decide quickly, then jump to the right sample and how-to.
 
 ## Short answer
 
@@ -30,12 +30,7 @@ Use the Docker-backed plugin when:
 - your CI agents already provide a healthy Docker daemon
 - you want the same namespace-aware test helpers without switching test code
 
-## Plugin and sample map
-
-| Backend | Plugin id | Main cluster runtime | Public sample |
-| --- | --- | --- | --- |
-| Process-backed | `io.github.wboult.es-runner.shared-test-clusters` | local Elasticsearch process from the official ZIP distro | [Process sample](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample) |
-| Docker-backed | `io.github.wboult.es-runner.docker-shared-test-clusters` | shared Elasticsearch or OpenSearch container via Testcontainers | [Docker Elasticsearch sample](https://github.com/wboult/es-runner/tree/main/samples/docker-shared-cluster-multiproject-sample) and [Docker OpenSearch sample](https://github.com/wboult/es-runner/tree/main/samples/docker-opensearch-shared-cluster-multiproject-sample) |
+## What stays the same
 
 Both backends use the same test helper artifact:
 
@@ -51,6 +46,13 @@ Both backends also keep the same test-side naming API:
 
 So the main decision is about runtime and build environment, not test-code
 shape.
+
+## Plugin and sample map
+
+| Backend | Plugin id | Main cluster runtime | Public sample |
+| --- | --- | --- | --- |
+| Process-backed | `io.github.wboult.es-runner.shared-test-clusters` | local Elasticsearch process from the official ZIP distro | [Process sample](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample) |
+| Docker-backed | `io.github.wboult.es-runner.docker-shared-test-clusters` | shared Elasticsearch or OpenSearch container via Testcontainers | [Docker Elasticsearch sample](https://github.com/wboult/es-runner/tree/main/samples/docker-shared-cluster-multiproject-sample) and [Docker OpenSearch sample](https://github.com/wboult/es-runner/tree/main/samples/docker-opensearch-shared-cluster-multiproject-sample) |
 
 ## Capability differences
 
@@ -74,6 +76,13 @@ shape.
 3. If you need the richest distro-level knobs, use the process-backed plugin.
 4. If your goal is only shared suite reuse and Docker is already standard, the
    Docker-backed plugin is the simpler mental model.
+
+## Recommended reading order
+
+1. Copy the public sample that matches your backend.
+2. Read the backend-specific how-to page while wiring your root build.
+3. Come back to this page only if you are deciding whether the other backend is
+   a better fit.
 
 ## Start from a public sample
 

@@ -23,7 +23,9 @@ For Docker-backed shared-cluster failures, there is no
 diagnostic artifact because it now includes image, Docker/Testcontainers
 environment hints, container id/name/ports, and a recent log tail.
 
-## Distro ZIP not found
+## Startup failures
+
+### Distro ZIP not found
 
 **Symptom**: `ElasticRunnerException: Distro archive does not exist`
 
@@ -32,7 +34,7 @@ environment hints, container id/name/ports, and a recent log tail.
 - Enable downloads with `.download(true)` and ensure network access, or
 - Set `ES_DISTRO_DOWNLOAD=true` / `OPENSEARCH_DISTRO_DOWNLOAD=true` in CI.
 
-## Download fails
+### Download fails
 
 **Symptom**: `Failed to download distro: ... (HTTP 404)`
 
@@ -41,7 +43,7 @@ environment hints, container id/name/ports, and a recent log tail.
 - Confirm your `downloadBaseUrl` points to a mirror with the correct filename.
 - Check the resolved download URI in `startup-diagnostics.txt`.
 
-## Port collisions
+### Port collisions
 
 **Symptom**: The node fails to start and logs show `BindException`.
 
@@ -50,7 +52,7 @@ environment hints, container id/name/ports, and a recent log tail.
 - Ensure each server gets its own `workDir`.
 - Inspect `startup-diagnostics.txt` to see the resolved port settings.
 
-## Process exits early
+### Process exits early
 
 **Symptom**: `Elasticsearch process exited early` or `OpenSearch process
 exited early`.
@@ -61,7 +63,7 @@ exited early`.
   handle.
 - Check JVM heap settings (`heap`) and disk permissions.
 
-## Startup times out
+### Startup times out
 
 **Symptom**: `Timed out waiting for Elasticsearch`, `Timed out waiting for
 OpenSearch`, or `Timed out waiting for HTTP port bind`.
@@ -72,7 +74,7 @@ OpenSearch`, or `Timed out waiting for HTTP port bind`.
 - Increase `startupTimeout` or `heap` if the node is starting slowly.
 - Widen the HTTP port range if the machine may already have other local nodes.
 
-## Docker shared cluster fails to start
+### Docker shared cluster fails to start
 
 **Symptom**: the Docker/Testcontainers-backed shared-cluster plugin fails before
 any test code runs.
@@ -90,11 +92,11 @@ any test code runs.
 - If the message mentions manifest, image pull, or not found errors, verify the
   configured image exists and the registry is reachable.
 - If the message says the health probe failed, inspect the inline log tail for
-  Elasticsearch bootstrap or security-setting issues.
+  Elasticsearch or OpenSearch bootstrap issues.
 - If the container starts but never becomes healthy on slower machines, raise
   `startupTimeoutMillis`.
 
-## Shared cluster started, but tests still fail
+## Cluster started, but tests still fail
 
 If the Gradle shared-cluster plugin started Elasticsearch and your suite still
 fails, the problem is usually not cluster startup. It is usually one of:
@@ -191,7 +193,7 @@ Also useful:
 - the shared-cluster sample and best-practices guide when the failure is about
   namespacing rather than process startup
 
-## Cluster won't form
+## Multi-node cluster won't form
 
 **Symptom**: Two nodes start but remain separate.
 

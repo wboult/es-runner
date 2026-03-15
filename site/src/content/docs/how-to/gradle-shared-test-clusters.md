@@ -21,6 +21,18 @@ Use it when you want:
 - multiple Gradle projects to share the same cluster
 - suite-level namespaces so parallel suites do not collide
 
+## Read this page in order
+
+1. Copy the public sample first.
+2. Wire the plugin once in the root build.
+3. Bind the suites you actually want to share a cluster.
+4. Keep test-side resource names on the `template` / `index` / `indexPattern` /
+   `alias` model.
+
+The public sample is the fastest way to see the intended structure:
+
+- [`samples/gradle-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample)
+
 ## Use a composite build today
 
 The plugin and helper module work now, and the release workflow now wires
@@ -169,7 +181,7 @@ Yellow health is only the startup floor. Suites still need to install their
 own templates, create indices, and `refresh(...)` before asserting on
 search results.
 
-## Lazy startup behavior
+## Startup and lifecycle behavior
 
 Applying the plugin does not start Elasticsearch by itself.
 
@@ -243,132 +255,6 @@ See [Cloud storage mirrors](../cloud-storage-mirrors/) for per-provider
 guidance including how to generate pre-signed / SAS HTTPS URLs for private
 S3, GCS, and Azure Blob buckets.
 
-## Complete minimal example
-
-Below is a self-contained two-subproject build that you can copy and adapt.
-It assumes published artifacts; before publication, swap to a composite build
-(see "Use a composite build today" above).
-
-**`settings.gradle`:**
-
-```groovy
-pluginManagement {
-    plugins {
-        id 'io.github.wboult.es-runner.shared-test-clusters' version '0.1.0'
-    }
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-    }
-}
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        mavenCentral()
-    }
-}
-
-rootProject.name = 'my-project'
-include('app', 'search')
-```
-
-**`build.gradle` (root):**
-
-```groovy
-import org.gradle.api.plugins.jvm.JvmTestSuite
-
-plugins {
-    id 'io.github.wboult.es-runner.shared-test-clusters'
-}
-
-elasticTestClusters {
-    clusters {
-        register("integration") {
-            version.set("9.3.1")
-            download.set(true)
-            clusterName.set("shared-it")
-            quiet.set(true)
-            startupTimeoutMillis.set(180_000L)
-        }
-    }
-
-    suites {
-        matchingName("integrationTest") {
-            useCluster("integration")
-            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
-        }
-    }
-}
-
-subprojects {
-    apply plugin: 'java'
-
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(17)
-        }
-    }
-
-    testing {
-        suites {
-            withType(JvmTestSuite).configureEach {
-                useJUnitJupiter()
-                dependencies {
-                    implementation("io.github.wboult:es-runner-gradle-test-support:0.1.0")
-                }
-            }
-
-            register("integrationTest", JvmTestSuite)
-        }
-    }
-
-    tasks.named("check") {
-        dependsOn(tasks.named("integrationTest"))
-    }
-}
-```
-
-**`app/src/integrationTest/java/example/AppIntegrationTest.java`:**
-
-```java
-import io.github.wboult.esrunner.ElasticClient;
-import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-class AppIntegrationTest {
-    @Test
-    void indexAndSearch() {
-        ElasticGradleTestEnv env = ElasticGradleTestEnv.fromSystemProperties();
-        ElasticClient client = env.client();
-
-        String orders = env.index("orders");
-        String shippedOrder = """
-                {
-                  "status": "shipped"
-                }
-                """;
-        client.createIndex(orders);
-        client.indexDocument(orders, shippedOrder);
-        client.refresh(orders);
-
-        long count = client.countValue(orders);
-        assertEquals(1, count);
-    }
-}
-```
-
-Run it with:
-
-```bash
-./gradlew check
-```
-
-For a more realistic multi-project example with fixture loading and a
-negative-path suite, see
-[`samples/gradle-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample).
-
 ## Related
 
 - [`samples/gradle-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample)
@@ -376,4 +262,3 @@ negative-path suite, see
 - [Gradle shared cluster plugin design](../../explanation/gradle-shared-cluster-plugin-design/)
 - [Troubleshooting](../troubleshooting/)
 - [Configuration reference](../../reference/configuration/)
-
