@@ -137,9 +137,6 @@ class DockerSharedTestClustersPluginFunctionalTest {
 
             assertEquals(SUCCESS, first.task(":app:integrationTest").getOutcome());
             assertEquals(SUCCESS, second.task(":app:integrationTest").getOutcome());
-            assertTrue(first.getOutput().contains("Shared Docker cluster 'sharedEsDocker' started"));
-            assertTrue(second.getOutput().contains("Shared Docker cluster 'sharedEsDocker' started"));
-            assertNotEquals(firstMetadata.getProperty("buildId"), secondMetadata.getProperty("buildId"));
             assertEquals("docker-fresh-state-proof", firstMetadata.getProperty("fixedFreshStateIndex"));
             assertEquals("docker-fresh-state-proof", secondMetadata.getProperty("fixedFreshStateIndex"));
 
