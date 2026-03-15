@@ -7,6 +7,9 @@ of Testcontainers.
 This is a sibling backend to the process-backed shared-cluster plugin, not a
 replacement for it.
 
+If you are deciding between the two backends, start with
+[docs/choose-gradle-shared-cluster-backend.md](C:/Dev/elastic-runner/docs/choose-gradle-shared-cluster-backend.md).
+
 ## When to use it
 
 Use the Docker-backed plugin when:
@@ -37,6 +40,16 @@ The helper API stays the same:
 - `env.alias(...)`
 
 So test code can usually stay unchanged while the backend changes.
+
+## Canonical public sample
+
+A checked-in public sample now lives at:
+
+- `samples/docker-shared-cluster-multiproject-sample/`
+
+It mirrors the structure of the process-backed sample, but swaps the shared
+cluster runtime to Docker/Testcontainers while keeping the same namespace-aware
+test-side API.
 
 ## Minimal root configuration
 

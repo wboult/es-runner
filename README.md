@@ -22,6 +22,7 @@ Contributor setup: [CONTRIBUTING.md](CONTRIBUTING.md)
 - [Install and release status](#install-and-release-status)
 - [Why use it](#why-use-it)
 - [Start with the path that matches your use case](#start-with-the-path-that-matches-your-use-case)
+- [Choose a Gradle shared-cluster backend](#choose-a-gradle-shared-cluster-backend)
 - [When not to use it](#when-not-to-use-it)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
@@ -132,11 +133,12 @@ flow described in [docs/releasing.md](docs/releasing.md) and
   tutorial and the [getting started](https://wboult.github.io/es-runner/tutorials/getting-started/)
   walkthrough
 - **A Gradle build with multiple suites or subprojects**:
-  use [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
-  for one shared cluster plus per-suite namespaces
+  start with [docs/choose-gradle-shared-cluster-backend.md](docs/choose-gradle-shared-cluster-backend.md)
+  so you pick the process-backed or Docker-backed shared-cluster backend
+  intentionally
 - **A Gradle build that already standardizes on Docker**:
-  use [docs/docker-shared-test-clusters.md](docs/docker-shared-test-clusters.md)
-  for the Docker/Testcontainers-backed shared-cluster backend
+  use [docs/choose-gradle-shared-cluster-backend.md](docs/choose-gradle-shared-cluster-backend.md)
+  first, then the Docker/Testcontainers-backed shared-cluster backend docs
 - **OpenSearch instead of Elasticsearch**:
   switch the distro family and follow the same process-backed flow documented in
   the [compatibility](https://wboult.github.io/es-runner/reference/compatibility/)
@@ -145,6 +147,28 @@ flow described in [docs/releasing.md](docs/releasing.md) and
 - **Mirror, cache, or CI tuning**:
   use [docs/performance.md](docs/performance.md) and
   [docs/cloud-storage-mirrors.md](docs/cloud-storage-mirrors.md)
+
+## Choose a Gradle shared-cluster backend
+
+If you are adopting the Gradle shared-cluster path, decide the backend first:
+
+- **Process-backed**:
+  [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
+  when you want the mainline ES Runner path, ZIP distro control, mirrors, or
+  OpenSearch shared clusters
+- **Docker-backed**:
+  [docs/docker-shared-test-clusters.md](docs/docker-shared-test-clusters.md)
+  when Docker/Testcontainers is already the standard build runtime
+- **Quick decision guide**:
+  [docs/choose-gradle-shared-cluster-backend.md](docs/choose-gradle-shared-cluster-backend.md)
+  compares both backends and links to the public samples
+
+Canonical public samples:
+
+- process-backed:
+  `samples/gradle-shared-cluster-multiproject-sample/`
+- Docker-backed:
+  `samples/docker-shared-cluster-multiproject-sample/`
 
 ## When not to use it
 
@@ -700,6 +724,10 @@ Namespace behavior:
 That lets multiple projects and suites share one node without data collisions
 or stale test data leaking across suites.
 
+If you are deciding between the process-backed and Docker-backed plugins, start
+with
+[docs/choose-gradle-shared-cluster-backend.md](docs/choose-gradle-shared-cluster-backend.md).
+
 There is also a realistic multi-project consumer sample in
 [`samples/gradle-shared-cluster-multiproject-sample`](samples/gradle-shared-cluster-multiproject-sample)
 that consumes the plugin/helper through normal coordinates. It includes a
@@ -721,6 +749,10 @@ for namespacing, cleanup, and suite design, and
 for the design rationale.
 
 ## Docker shared Gradle test clusters
+
+If you are not sure whether the process-backed or Docker-backed shared-cluster
+plugin is the better fit, start with
+[docs/choose-gradle-shared-cluster-backend.md](docs/choose-gradle-shared-cluster-backend.md).
 
 If your build already standardizes on Docker, there is now a second shared
 Gradle plugin backend built on Testcontainers.
@@ -746,6 +778,11 @@ This backend currently focuses on shared single-node Elasticsearch clusters and
 Linux CI coverage. It does not yet try to mirror every process-backed option
 one for one, and OpenSearch Docker support is intentionally out of scope for
 the first version.
+
+There is also a realistic public sample in
+[`samples/docker-shared-cluster-multiproject-sample`](samples/docker-shared-cluster-multiproject-sample)
+that mirrors the process-backed sample structure while consuming the Docker
+plugin and helper through normal coordinates.
 
 See [docs/docker-shared-test-clusters.md](docs/docker-shared-test-clusters.md)
 for the Docker-specific setup and trade-offs.

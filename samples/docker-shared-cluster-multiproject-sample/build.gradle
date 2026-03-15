@@ -1,0 +1,84 @@
+import org.gradle.api.plugins.jvm.JvmTestSuite
+
+plugins {
+    id 'io.github.wboult.es-runner.docker-shared-test-clusters'
+}
+
+def esRunnerVersion = providers.gradleProperty("esRunnerVersion").orElse("0.1.0").get()
+def esVersion = providers.gradleProperty("esVersion").orElse("9.3.1").get()
+def sampleProjects = [project(":app"), project(":search")]
+
+allprojects {
+    group = 'example'
+    version = '0.1.0'
+}
+
+dockerElasticTestClusters {
+    clusters {
+        register("integration") {
+            version.set(esVersion)
+            clusterName.set("sample-docker-es9")
+            startupTimeoutMillis.set(240_000L)
+        }
+    }
+
+    suites {
+        matchingName("integrationTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+        matchingName("smokeTest") {
+            useCluster("integration")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+    }
+}
+
+project(":sample-support") {
+    apply plugin: 'java-library'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    dependencies {
+        api("io.github.wboult:es-runner:${esRunnerVersion}")
+        api("io.github.wboult:es-runner-gradle-test-support:${esRunnerVersion}")
+    }
+}
+
+configure(sampleProjects) {
+    apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    dependencies {
+        testImplementation(platform("org.junit:junit-bom:5.12.0"))
+        testImplementation("org.junit.jupiter:junit-jupiter")
+    }
+
+    testing {
+        suites {
+            withType(JvmTestSuite).configureEach {
+                useJUnitJupiter()
+                dependencies {
+                    implementation(project(":sample-support"))
+                }
+            }
+
+            register("integrationTest", JvmTestSuite)
+            register("smokeTest", JvmTestSuite)
+        }
+    }
+
+    tasks.named("check") {
+        dependsOn(tasks.named("integrationTest"))
+        dependsOn(tasks.named("smokeTest"))
+    }
+}

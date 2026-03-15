@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DockerSharedTestClustersPluginFunctionalTest {
     private static final String FIXTURE_ROOT = "fixtures/docker-shared-cluster-multiproject";
+    private static final String SAMPLE_ROOT = "samples/docker-shared-cluster-multiproject-sample";
 
     @Test
     void doesNotStartClusterWhenBuildRunsNoBoundTestTask() throws IOException {
@@ -111,6 +112,67 @@ class DockerSharedTestClustersPluginFunctionalTest {
                 deleteTempDir(projectDir);
             } else {
                 System.err.println("Preserving failed fixture at " + projectDir);
+            }
+        }
+    }
+
+    @Test
+    void publishedArtifactSampleBuildSharesOneDockerClusterAcrossProjectsAndSuites() throws IOException {
+        Assumptions.assumeTrue(linuxDockerAvailable(),
+                "Docker plugin functional tests require Linux with a working Docker daemon");
+        Path sampleDir = Files.createTempDirectory("es-runner-docker-sample");
+        Path sampleRepo = Files.createTempDirectory("es-runner-docker-sample-repo");
+        boolean success = false;
+        try {
+            Path repoRoot = repoRoot();
+            copyDirectory(repoRoot.resolve(SAMPLE_ROOT), sampleDir);
+            publishArtifacts(repoRoot, sampleRepo);
+
+            BuildResult result = GradleRunner.create()
+                    .withProjectDir(sampleDir.toFile())
+                    .withArguments(
+                            gradleArguments(
+                                    ":app:check",
+                                    ":search:check",
+                                    "-PesRunnerVersion=" + rootVersion(repoRoot),
+                                    "-PesRunnerRepositoryUrl=" + sampleRepo.toUri()
+                            )
+                    )
+                    .withEnvironment(gradleEnvironment())
+                    .forwardOutput()
+                    .build();
+
+            assertEquals(SUCCESS, result.task(":app:integrationTest").getOutcome());
+            assertEquals(SUCCESS, result.task(":app:smokeTest").getOutcome());
+            assertEquals(SUCCESS, result.task(":search:integrationTest").getOutcome());
+            assertEquals(SUCCESS, result.task(":search:smokeTest").getOutcome());
+
+            List<Properties> metadata = List.of(
+                    loadProperties(sampleDir.resolve("app/build/es-runner/app-integration.properties")),
+                    loadProperties(sampleDir.resolve("app/build/es-runner/app-smoke.properties")),
+                    loadProperties(sampleDir.resolve("search/build/es-runner/search-integration.properties")),
+                    loadProperties(sampleDir.resolve("search/build/es-runner/search-smoke.properties"))
+            );
+
+            String sharedBaseUri = metadata.get(0).getProperty("baseUri");
+            metadata.forEach(properties -> {
+                assertEquals("sample-docker-es9", properties.getProperty("clusterName"));
+                assertEquals(sharedBaseUri, properties.getProperty("baseUri"));
+            });
+            assertEquals(4, metadata.stream().map(properties -> properties.getProperty("namespace")).distinct().count());
+            assertEquals("3", metadata.get(0).getProperty("seededCount"));
+            assertEquals("true", metadata.get(1).getProperty("freshNamespace"));
+            assertTrue(metadata.get(2).getProperty("alias").contains("orders-read"));
+            assertEquals("404", metadata.get(3).getProperty("rawLogicalIndexStatus"));
+
+            success = true;
+        } finally {
+            if (success) {
+                deleteTempDir(sampleDir);
+                deleteTempDir(sampleRepo);
+            } else {
+                System.err.println("Preserving failed sample at " + sampleDir);
+                System.err.println("Preserving failed sample repo at " + sampleRepo);
             }
         }
     }
@@ -209,6 +271,26 @@ class DockerSharedTestClustersPluginFunctionalTest {
         }
     }
 
+    private void publishArtifacts(Path repoRoot, Path sampleRepo) {
+        BuildResult publishResult = GradleRunner.create()
+                .withProjectDir(repoRoot.toFile())
+                .withArguments(
+                        gradleArguments(
+                                "publishMavenJavaPublicationToSampleRepoRepository",
+                                ":es-runner-gradle-core:publishMavenJavaPublicationToSampleRepoRepository",
+                                ":es-runner-gradle-test-support:publishMavenJavaPublicationToSampleRepoRepository",
+                                ":es-runner-gradle-plugin-docker:publishPluginMavenPublicationToSampleRepoRepository",
+                                ":es-runner-gradle-plugin-docker:publishElasticRunnerDockerSharedTestClustersPluginMarkerMavenPublicationToSampleRepoRepository",
+                                "-PsampleRepoUrl=" + sampleRepo.toUri()
+                        )
+                )
+                .withEnvironment(gradleEnvironment())
+                .forwardOutput()
+                .build();
+        assertEquals(SUCCESS,
+                publishResult.task(":es-runner-gradle-plugin-docker:publishPluginMavenPublicationToSampleRepoRepository").getOutcome());
+    }
+
     private void copyFixture(Path targetRoot, Map<String, String> replacements) throws IOException {
         Path fixtureRoot = repoRoot()
                 .resolve("es-runner-gradle-plugin-docker")
@@ -228,6 +310,24 @@ class DockerSharedTestClustersPluginFunctionalTest {
                 for (Map.Entry<String, String> replacement : replacements.entrySet()) {
                     content = content.replace(replacement.getKey(), replacement.getValue());
                 }
+                Files.writeString(target, content, StandardCharsets.UTF_8);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private void copyDirectory(Path sourceRoot, Path targetRoot) throws IOException {
+        Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                Files.createDirectories(targetRoot.resolve(sourceRoot.relativize(dir).toString()));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path target = targetRoot.resolve(sourceRoot.relativize(file).toString());
+                String content = Files.readString(file, StandardCharsets.UTF_8);
                 Files.writeString(target, content, StandardCharsets.UTF_8);
                 return FileVisitResult.CONTINUE;
             }

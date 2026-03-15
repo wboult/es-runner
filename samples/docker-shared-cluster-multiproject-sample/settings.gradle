@@ -1,0 +1,33 @@
+pluginManagement {
+    def esRunnerVersion = settings.startParameter.projectProperties['esRunnerVersion'] ?: '0.1.0'
+    def esRunnerRepositoryUrl = settings.startParameter.projectProperties['esRunnerRepositoryUrl']
+    plugins {
+        id 'io.github.wboult.es-runner.docker-shared-test-clusters' version esRunnerVersion
+    }
+    repositories {
+        if (esRunnerRepositoryUrl != null) {
+            maven {
+                url = uri(esRunnerRepositoryUrl)
+            }
+        }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+def esRunnerRepositoryUrl = gradle.startParameter.projectProperties['esRunnerRepositoryUrl']
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        if (esRunnerRepositoryUrl != null) {
+            maven {
+                url = uri(esRunnerRepositoryUrl)
+            }
+        }
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'es-runner-gradle-docker-shared-cluster-sample'
+include('sample-support', 'app', 'search')
