@@ -76,14 +76,12 @@ public abstract class DockerClusterService
     private void startContainer() {
         Params params = getParameters();
         String distribution = params.getDistribution().get();
+        DockerDistribution dockerDistribution = DockerDistribution.from(distribution);
         String image = params.getImage().get();
         String clusterName = params.getClusterName().get();
         Duration timeout = Duration.ofMillis(params.getStartupTimeoutMillis().get());
 
-        GenericContainer<?> started = new GenericContainer<>(DockerImageName.parse(image))
-                .withExposedPorts(HTTP_PORT, TRANSPORT_PORT)
-                .waitingFor(Wait.forHttp("/").forPort(HTTP_PORT).forStatusCodeMatching(code -> code >= 200 && code < 500))
-                .withStartupTimeout(timeout);
+        GenericContainer<?> started = createContainer(dockerDistribution, image, timeout);
         for (Map.Entry<String, String> entry : params.getEnvVars().get().entrySet()) {
             started.withEnv(entry.getKey(), entry.getValue());
         }
@@ -124,6 +122,19 @@ public abstract class DockerClusterService
             }
             throw new IllegalStateException(diagnostics, e);
         }
+    }
+
+    private GenericContainer<?> createContainer(DockerDistribution distribution, String image, Duration timeout) {
+        return switch (distribution) {
+            case ELASTICSEARCH -> new GenericContainer<>(DockerImageName.parse(image))
+                    .withExposedPorts(HTTP_PORT, TRANSPORT_PORT)
+                    .waitingFor(Wait.forHttp("/").forPort(HTTP_PORT).forStatusCodeMatching(code -> code >= 200 && code < 500))
+                    .withStartupTimeout(timeout);
+            case OPENSEARCH -> new GenericContainer<>(DockerImageName.parse(image))
+                    .withExposedPorts(HTTP_PORT, TRANSPORT_PORT)
+                    .waitingFor(Wait.forHttp("/").forPort(HTTP_PORT).forStatusCode(200))
+                    .withStartupTimeout(timeout);
+        };
     }
 
     private void waitForReady(GenericContainer<?> started, Duration timeout)

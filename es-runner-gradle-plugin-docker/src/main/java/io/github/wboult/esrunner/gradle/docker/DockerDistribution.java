@@ -34,16 +34,14 @@ enum DockerDistribution {
     Map<String, String> defaultEnvVars() {
         Map<String, String> defaults = new LinkedHashMap<>();
         defaults.put("discovery.type", "single-node");
-        defaults.put("cluster.routing.allocation.disk.threshold_enabled", "false");
         switch (this) {
             case ELASTICSEARCH -> {
+                defaults.put("cluster.routing.allocation.disk.threshold_enabled", "false");
                 defaults.put("xpack.security.enabled", "false");
                 defaults.put("ES_JAVA_OPTS", "-Xms256m -Xmx256m");
             }
             case OPENSEARCH -> {
-                defaults.put("DISABLE_INSTALL_DEMO_CONFIG", "true");
                 defaults.put("DISABLE_SECURITY_PLUGIN", "true");
-                defaults.put("plugins.security.disabled", "true");
                 defaults.put("OPENSEARCH_JAVA_OPTS", "-Xms256m -Xmx256m");
             }
         }
