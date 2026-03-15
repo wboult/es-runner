@@ -1,6 +1,7 @@
 package example;
 
 import io.github.wboult.esrunner.ElasticClient;
+import io.github.wboult.esrunner.ElasticResponse;
 import io.github.wboult.esrunner.gradle.testsupport.ElasticGradleTestEnv;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -21,10 +22,17 @@ class AppIntegrationTest {
     private static final ElasticGradleTestEnv ENV = ElasticGradleTestEnv.fromSystemProperties();
     private static final ElasticClient CLIENT = ENV.client().withRequestTimeout(Duration.ofMinutes(2));
     private static final String INDEX = ENV.index("orders");
+    private static final String FIXED_FRESH_STATE_INDEX = "docker-fresh-state-proof";
 
     @Test
     @Order(1)
     void createsNamespacedIndexAndWritesMetadata() throws Exception {
+        assertIndexMissing(FIXED_FRESH_STATE_INDEX);
+        CLIENT.createIndex(FIXED_FRESH_STATE_INDEX, "{\"settings\":{\"index.number_of_replicas\":0}}");
+        CLIENT.indexDocument(FIXED_FRESH_STATE_INDEX, "{\"scope\":\"cross-build\",\"status\":\"fresh\"}");
+        CLIENT.refresh(FIXED_FRESH_STATE_INDEX);
+        assertEquals(1L, CLIENT.countValue(FIXED_FRESH_STATE_INDEX));
+
         CLIENT.createIndex(INDEX, "{\"settings\":{\"index.number_of_replicas\":0}}");
         CLIENT.indexDocument(INDEX, "1", "{\"suite\":\"app-integration\",\"status\":\"new\"}");
         CLIENT.refresh(INDEX);
@@ -48,8 +56,17 @@ class AppIntegrationTest {
         properties.setProperty("namespace", ENV.namespace());
         properties.setProperty("suiteId", ENV.suiteId());
         properties.setProperty("clusterName", ENV.clusterName());
+        properties.setProperty("fixedFreshStateIndex", FIXED_FRESH_STATE_INDEX);
         try (var output = Files.newOutputStream(Path.of("build", "es-runner", fileName + ".properties"))) {
             properties.store(output, null);
+        }
+    }
+
+    private static void assertIndexMissing(String index) throws IOException, InterruptedException {
+        ElasticResponse response = CLIENT.request("GET", "/" + index, "");
+        if (response.statusCode() != 404) {
+            throw new IllegalStateException("Expected fresh Docker cluster state for '" + index
+                    + "' but got " + response.statusCode() + ": " + response.body());
         }
     }
 }
