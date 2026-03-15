@@ -4,6 +4,11 @@ ES Runner ships with a Gradle plugin that starts a shared Elasticsearch
 server once per cluster definition and reuses it across multiple Gradle
 projects and test suites during a single build.
 
+If your build already standardizes on Docker/Testcontainers, use the sibling
+Docker-backed backend documented in
+[docs/docker-shared-test-clusters.md](C:/Dev/elastic-runner/docs/docker-shared-test-clusters.md)
+instead of trying to force the process-backed plugin into that model.
+
 This is intended for production-like integration automation where per-test-JVM
 startup cost is too high, but suites still need isolation from each other.
 

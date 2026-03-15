@@ -12,7 +12,9 @@ ES Runner now has a real release pipeline for the publishable modules:
 - `io.github.wboult:es-runner-java-client`
 - `io.github.wboult:es-runner-gradle-test-support`
 - `io.github.wboult:es-runner-gradle-plugin`
+- `io.github.wboult:es-runner-gradle-plugin-docker`
 - Gradle plugin id `io.github.wboult.es-runner.shared-test-clusters`
+- Gradle plugin id `io.github.wboult.es-runner.docker-shared-test-clusters`
 
 Experimental embedded modules are intentionally excluded from publication.
 The Gradle core module is internal support for the shared-cluster plugins, not a
@@ -60,7 +62,7 @@ Notes:
 Use this before tagging anything:
 
 ```bash
-./gradlew -PreleaseVersion=0.1.0 publishReleasePublicationsToMavenLocal :es-runner-gradle-plugin:validatePlugins
+./gradlew -PreleaseVersion=0.1.0 publishReleasePublicationsToMavenLocal :es-runner-gradle-plugin:validatePlugins :es-runner-gradle-plugin-docker:validatePlugins
 ```
 
 That proves:

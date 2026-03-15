@@ -98,6 +98,8 @@ start with `ElasticGradleTestEnv.fromSystemProperties()`. That gives you:
 
 See [Use shared Gradle test clusters](../../how-to/gradle-shared-test-clusters/)
 for the full workflow.
+If your build already standardizes on Docker, use the sibling Docker-backed
+plugin instead: [Use Docker shared test clusters](../../how-to/docker-shared-test-clusters/).
 
 ## Related
 

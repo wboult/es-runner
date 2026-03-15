@@ -10,6 +10,8 @@ for starting, stopping, and talking to the cluster.
 
 It is aimed at environments where you want a real search node but do not want
 to depend on Docker, Testcontainers, or an already-running shared cluster.
+If Docker is already standard in your Gradle build, the repo also includes an
+optional Docker-backed shared-cluster plugin built on Testcontainers.
 
 Documentation: <https://wboult.github.io/es-runner/>
 Contributor setup: [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -32,6 +34,7 @@ Contributor setup: [CONTRIBUTING.md](CONTRIBUTING.md)
 - [Mirrors and private distros](#mirrors-and-private-distros)
 - [Process-backed OpenSearch](#process-backed-opensearch)
 - [Shared Gradle test clusters](#shared-gradle-test-clusters)
+- [Docker shared Gradle test clusters](#docker-shared-gradle-test-clusters)
 - [Experimental embedded servers](#experimental-embedded-servers)
 
 ## Why ES Runner instead of Testcontainers or custom scripts?
@@ -68,9 +71,11 @@ normal ways to consume ES Runner are:
 The publishable coordinates and plugin id are:
 
 - `io.github.wboult:es-runner`
+- `io.github.wboult:es-runner-gradle-core`
 - `io.github.wboult:es-runner-java-client`
 - `io.github.wboult:es-runner-gradle-test-support`
 - plugin id `io.github.wboult.es-runner.shared-test-clusters`
+- plugin id `io.github.wboult.es-runner.docker-shared-test-clusters`
 
 Core library, once published:
 
@@ -89,6 +94,18 @@ Gradle shared-cluster plugin, once published:
 ```groovy
 plugins {
     id("io.github.wboult.es-runner.shared-test-clusters") version "<version>"
+}
+
+dependencies {
+    testImplementation("io.github.wboult:es-runner-gradle-test-support:<version>")
+}
+```
+
+Docker-backed Gradle shared-cluster plugin, once published:
+
+```groovy
+plugins {
+    id("io.github.wboult.es-runner.docker-shared-test-clusters") version "<version>"
 }
 
 dependencies {
@@ -117,6 +134,9 @@ flow described in [docs/releasing.md](docs/releasing.md) and
 - **A Gradle build with multiple suites or subprojects**:
   use [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
   for one shared cluster plus per-suite namespaces
+- **A Gradle build that already standardizes on Docker**:
+  use [docs/docker-shared-test-clusters.md](docs/docker-shared-test-clusters.md)
+  for the Docker/Testcontainers-backed shared-cluster backend
 - **OpenSearch instead of Elasticsearch**:
   switch the distro family and follow the same process-backed flow documented in
   the [compatibility](https://wboult.github.io/es-runner/reference/compatibility/)
@@ -133,7 +153,7 @@ single build-scoped shared node is enough.
 
 Use something else when:
 
-- you already standardize on Docker/Testcontainers
+- you want container-level isolation and should use the Docker/Testcontainers-backed shared-cluster plugin instead of the process-backed core path
 - you need full container-level isolation per test
 - you need production topology simulation beyond what a small local cluster can
   reasonably provide
@@ -312,6 +332,13 @@ process-backed path:
 | `io.github.wboult:es-runner-java-client` | `ElasticJavaClients`, `ManagedElasticsearchClient` | You want Elastic's official typed Java API Client |
 | `io.github.wboult:es-runner-gradle-test-support` | `ElasticGradleTestEnv` | Your tests run inside the shared Gradle cluster plugin |
 | Plugin id `io.github.wboult.es-runner.shared-test-clusters` | `ElasticTestClustersExtension`, `ElasticClusterService` | You want build-scoped shared clusters in Gradle |
+
+Shared Gradle backend note:
+
+- `io.github.wboult:es-runner-gradle-core` is internal support for the shared
+  Gradle plugins rather than a normal consumer entry point
+- plugin id `io.github.wboult.es-runner.docker-shared-test-clusters` is the
+  Docker/Testcontainers-backed shared-cluster backend
 
 If you need explicit shutdown details:
 
@@ -692,6 +719,36 @@ for the usage guide,
 for namespacing, cleanup, and suite design, and
 [docs/gradle-shared-cluster-plugin-design.md](docs/gradle-shared-cluster-plugin-design.md)
 for the design rationale.
+
+## Docker shared Gradle test clusters
+
+If your build already standardizes on Docker, there is now a second shared
+Gradle plugin backend built on Testcontainers.
+
+Current source-tree plugin id:
+
+- `io.github.wboult.es-runner.docker-shared-test-clusters`
+
+It keeps the same test-side helper and namespace model:
+
+- `ElasticGradleTestEnv.fromSystemProperties()`
+- `env.index(...)`
+- `env.indexPattern(...)`
+- `env.template(...)`
+- `env.alias(...)`
+
+The main difference is the backend:
+
+- process-backed plugin: real ZIP distro plus local OS process
+- Docker-backed plugin: shared Elasticsearch container per build
+
+This backend currently focuses on shared single-node Elasticsearch clusters and
+Linux CI coverage. It does not yet try to mirror every process-backed option
+one for one, and OpenSearch Docker support is intentionally out of scope for
+the first version.
+
+See [docs/docker-shared-test-clusters.md](docs/docker-shared-test-clusters.md)
+for the Docker-specific setup and trade-offs.
 
 ## Experimental embedded runners
 

@@ -8,6 +8,11 @@ sidebar:
 ES Runner includes a Gradle plugin for build-scoped shared Elasticsearch
 clusters.
 
+If Docker/Testcontainers is already your standard build runtime, use the
+sibling Docker-backed backend documented in
+[Use Docker shared test clusters](../docker-shared-test-clusters/) instead of
+forcing the process-backed plugin into that setup.
+
 Use it when you want:
 
 - one Elasticsearch process per build instead of per test JVM

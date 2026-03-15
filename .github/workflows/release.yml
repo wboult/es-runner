@@ -58,6 +58,7 @@ jobs:
           -PreleaseVersion="$RELEASE_VERSION"
           publishReleasePublicationsToMavenLocal
           :es-runner-gradle-plugin:validatePlugins
+          :es-runner-gradle-plugin-docker:validatePlugins
 
       - name: Publish release artifacts to Maven Central staging compatibility service
         if: github.event_name == 'push'
@@ -95,6 +96,7 @@ jobs:
           ./gradlew
           -PreleaseVersion="$RELEASE_VERSION"
           :es-runner-gradle-plugin:publishPlugins
+          :es-runner-gradle-plugin-docker:publishPlugins
 
       - name: Create GitHub release
         if: github.event_name == 'push'

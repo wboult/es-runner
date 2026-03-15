@@ -1,0 +1,57 @@
+import org.gradle.api.plugins.jvm.JvmTestSuite
+
+plugins {
+    id 'io.github.wboult.es-runner.docker-shared-test-clusters'
+}
+
+def testSupportVersion = '@TEST_SUPPORT_VERSION@'
+
+dockerElasticTestClusters {
+    clusters {
+        register("sharedEsDocker") {
+            version.set("9.3.1")
+            clusterName.set("shared-es-docker")
+            startupTimeoutMillis.set(240_000L)
+        }
+    }
+
+    suites {
+        matchingName("integrationTest") {
+            useCluster("sharedEsDocker")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+        matchingName("smokeTest") {
+            useCluster("sharedEsDocker")
+            namespaceMode.set(io.github.wboult.esrunner.gradle.NamespaceMode.SUITE)
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    testing {
+        suites {
+            withType(JvmTestSuite).configureEach {
+                useJUnitJupiter()
+                dependencies {
+                    implementation("io.github.wboult:es-runner-gradle-test-support:${testSupportVersion}")
+                }
+            }
+
+            register("integrationTest", JvmTestSuite)
+            register("smokeTest", JvmTestSuite)
+        }
+    }
+
+    tasks.named("check") {
+        dependsOn(tasks.named("integrationTest"))
+        dependsOn(tasks.named("smokeTest"))
+    }
+}

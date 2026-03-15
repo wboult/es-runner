@@ -272,7 +272,8 @@ tasks.register("publishReleasePublicationsToMavenLocal") {
             project(":es-runner-gradle-core").tasks.named("publishToMavenLocal"),
             project(":es-runner-java-client").tasks.named("publishToMavenLocal"),
             project(":es-runner-gradle-test-support").tasks.named("publishToMavenLocal"),
-            project(":es-runner-gradle-plugin").tasks.named("publishToMavenLocal")
+            project(":es-runner-gradle-plugin").tasks.named("publishToMavenLocal"),
+            project(":es-runner-gradle-plugin-docker").tasks.named("publishToMavenLocal")
     )
 }
 
@@ -285,7 +286,8 @@ if (centralPublishingEnabled.get() || (centralPortalUsername.isPresent() && cent
                 project(":es-runner-gradle-core").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
                 project(":es-runner-java-client").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
                 project(":es-runner-gradle-test-support").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
-                project(":es-runner-gradle-plugin").tasks.named("publishAllPublicationsToOssrhStagingApiRepository")
+                project(":es-runner-gradle-plugin").tasks.named("publishAllPublicationsToOssrhStagingApiRepository"),
+                project(":es-runner-gradle-plugin-docker").tasks.named("publishAllPublicationsToOssrhStagingApiRepository")
         )
     }
 }

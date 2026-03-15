@@ -6,6 +6,7 @@ spark = "3.5.8"
 scala3 = "3.8.2"
 elasticsearchJava = "8.19.11"
 jacksonDatabind = "2.17.0"
+testcontainers = "2.0.1"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
@@ -19,3 +20,4 @@ scala3-sbt-bridge = { module = "org.scala-lang:scala3-sbt-bridge", version.ref =
 elastic-java-client = { module = "co.elastic.clients:elasticsearch-java", version.ref = "elasticsearchJava" }
 elastic-rest-client = { module = "org.elasticsearch.client:elasticsearch-rest-client", version.ref = "elasticsearchJava" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
+testcontainers-elasticsearch = { module = "org.testcontainers:testcontainers-elasticsearch", version.ref = "testcontainers" }
