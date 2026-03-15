@@ -8,10 +8,20 @@ local process, waits for readiness, and provides a small Java API for
 interaction. These docs are organized with the **Diataxis** framework so you
 can choose the style that fits your goal.
 
+## Start here
+
+- **One local node for tests or tooling**
+  Start with [Getting started](tutorials/getting-started/) or
+  [First single-node server](tutorials/first-server/).
+- **A Gradle build with multiple suites or subprojects**
+  Start with [Choose a shared-cluster backend](how-to/choose-gradle-shared-cluster-backend/).
+- **OpenSearch instead of Elasticsearch**
+  Use [Run OpenSearch](how-to/run-opensearch/).
+
 ## Why this instead of Testcontainers or custom scripts?
 
 ES Runner is aimed at the cases where a real local node is useful but Docker is
-not the right default:
+not the right default.
 
 - **Use ES Runner** when you want process-backed realism, Docker-free CI, or a
   shared build-scoped cluster for multiple Gradle suites and subprojects.
@@ -43,14 +53,14 @@ If you want to verify the publication flow now, start with:
 If you are adopting ES Runner for the first time, this path takes you from a
 single local node to a full multi-project CI setup:
 
-1. **Start one node locally** — [Getting started](tutorials/getting-started/)
-2. **Customize ports or install plugins** — [Customize ports](how-to/custom-ports/) · [Install plugins](how-to/install-plugins/)
-3. **Use the official Java client** — [Official Java Client](how-to/official-java-client/)
-4. **Set up mirrors or caching** — [Use a mirror](how-to/use-a-mirror/) · [Reuse a distro](how-to/reuse-pre-downloaded-distro/)
-5. **Share one cluster across Gradle suites** — [Shared Gradle clusters](how-to/gradle-shared-test-clusters/)
-6. **Choose the right shared-cluster backend** — [Backend choice guide](how-to/choose-gradle-shared-cluster-backend/)
-7. **Run it in CI** — [GitHub Actions example](how-to/ci-github-actions/)
-8. **Tune performance** — [Performance guidance](explanation/performance/)
+1. **Start one node locally** - [Getting started](tutorials/getting-started/)
+2. **Customize ports or install plugins** - [Customize ports](how-to/custom-ports/) / [Install plugins](how-to/install-plugins/)
+3. **Use the official Java client** - [Official Java Client](how-to/official-java-client/)
+4. **Set up mirrors or caching** - [Use a mirror](how-to/use-a-mirror/) / [Reuse a distro](how-to/reuse-pre-downloaded-distro/)
+5. **Share one cluster across Gradle suites** - [Shared Gradle clusters](how-to/gradle-shared-test-clusters/)
+6. **Choose the right shared-cluster backend** - [Backend choice guide](how-to/choose-gradle-shared-cluster-backend/)
+7. **Run it in CI** - [GitHub Actions example](how-to/ci-github-actions/)
+8. **Tune performance** - [Performance guidance](explanation/performance/)
 
 ## Common starting points
 
@@ -71,6 +81,12 @@ single local node to a full multi-project CI setup:
   [Choose a shared-cluster backend](how-to/choose-gradle-shared-cluster-backend/)
   then [Use shared Gradle test clusters](how-to/gradle-shared-test-clusters/)
 
+## Samples
+
+- [Canonical process-backed shared-cluster sample](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample)
+- [Canonical Docker Elasticsearch shared-cluster sample](https://github.com/wboult/es-runner/tree/main/samples/docker-shared-cluster-multiproject-sample)
+- [Canonical Docker OpenSearch shared-cluster sample](https://github.com/wboult/es-runner/tree/main/samples/docker-opensearch-shared-cluster-multiproject-sample)
+
 ## Quick links
 
 - Tutorials
@@ -88,9 +104,6 @@ single local node to a full multi-project CI setup:
   - [Choose a shared-cluster backend](how-to/choose-gradle-shared-cluster-backend/)
   - [Use shared Gradle test clusters](how-to/gradle-shared-test-clusters/)
   - [Use Docker shared test clusters](how-to/docker-shared-test-clusters/)
-  - [Canonical multi-project sample](https://github.com/wboult/es-runner/tree/main/samples/gradle-shared-cluster-multiproject-sample)
-  - [Canonical Docker Elasticsearch sample](https://github.com/wboult/es-runner/tree/main/samples/docker-shared-cluster-multiproject-sample)
-  - [Canonical Docker OpenSearch sample](https://github.com/wboult/es-runner/tree/main/samples/docker-opensearch-shared-cluster-multiproject-sample)
   - [Troubleshooting](how-to/troubleshooting/)
 - Reference
   - [API reference](reference/api/)
