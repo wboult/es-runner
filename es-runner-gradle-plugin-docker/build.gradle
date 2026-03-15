@@ -1,0 +1,62 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'com.gradle.plugin-publish' version '2.0.0'
+    id 'signing'
+}
+
+group = rootProject.group
+version = rootProject.version
+description = 'Shared Docker-backed Elasticsearch test clusters for Gradle suites.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+dependencies {
+    implementation project(':es-runner-gradle-core')
+    implementation gradleApi()
+    implementation libs.testcontainers.elasticsearch
+
+    testImplementation project(':es-runner-gradle-test-support')
+    testImplementation gradleTestKit()
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+gradlePlugin {
+    website = 'https://github.com/wboult/es-runner'
+    vcsUrl = 'https://github.com/wboult/es-runner'
+    plugins {
+        elasticRunnerDockerSharedTestClusters {
+            id = 'io.github.wboult.es-runner.docker-shared-test-clusters'
+            implementationClass = 'io.github.wboult.esrunner.gradle.docker.DockerSharedTestClustersPlugin'
+            displayName = 'ES Runner Docker Shared Test Clusters'
+            description = 'Shares Docker-backed Elasticsearch test clusters across Gradle projects and suites.'
+            tags.set(['elasticsearch', 'testcontainers', 'docker', 'gradle', 'testing'])
+        }
+    }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}
+
+publishing {
+    publications.withType(MavenPublication).configureEach {
+        rootProject.ext.configurePomMetadata(delegate, project, 'ES Runner Docker Gradle Plugin', project.description)
+    }
+    repositories {
+        rootProject.ext.configurePublishingRepositories(delegate)
+    }
+}
+
+rootProject.ext.configureSigning(project)

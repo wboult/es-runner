@@ -137,6 +137,32 @@ jobs:
           ./gradlew
           publishReleasePublicationsToMavenLocal
           :es-runner-gradle-plugin:validatePlugins
+          :es-runner-gradle-plugin-docker:validatePlugins
+
+  docker-shared-cluster:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Run Docker shared-cluster plugin tests
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+        run: >
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS="$JAVA_HOME"
+          ./gradlew
+          :es-runner-gradle-plugin-docker:test
 
   plugin-install:
     runs-on: ubuntu-latest
