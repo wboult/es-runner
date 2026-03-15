@@ -63,7 +63,7 @@ class AppIntegrationTest {
     }
 
     private static void assertIndexMissing(String index) throws IOException, InterruptedException {
-        ElasticResponse response = CLIENT.request("GET", "/" + index);
+        ElasticResponse response = CLIENT.request("GET", "/" + index, "");
         if (response.statusCode() != 404) {
             throw new IllegalStateException("Expected fresh Docker cluster state for '" + index
                     + "' but got " + response.statusCode() + ": " + response.body());
