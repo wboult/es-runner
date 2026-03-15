@@ -1,4 +1,5 @@
 rootProject.name = 'es-runner'
+include('es-runner-gradle-core')
 include('es-runner-gradle-plugin')
 include('es-runner-gradle-test-support')
 include('es-runner-java-client')

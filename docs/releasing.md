@@ -3,12 +3,15 @@
 This repo now has a real publication pipeline for the publishable modules:
 
 - `io.github.wboult:es-runner`
+- `io.github.wboult:es-runner-gradle-core`
 - `io.github.wboult:es-runner-java-client`
 - `io.github.wboult:es-runner-gradle-test-support`
 - `io.github.wboult:es-runner-gradle-plugin`
 - Gradle plugin id `io.github.wboult.es-runner.shared-test-clusters`
 
 Experimental embedded modules are intentionally excluded from publication.
+The Gradle core module is internal support for the shared-cluster plugins, not a
+normal consumer entry point.
 
 ## What the release workflow does
 

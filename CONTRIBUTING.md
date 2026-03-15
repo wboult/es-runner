@@ -37,7 +37,7 @@ Full core verification:
 Gradle plugin and helper:
 
 ```bash
-./gradlew :es-runner-gradle-plugin:test :es-runner-gradle-test-support:test
+./gradlew :es-runner-gradle-core:test :es-runner-gradle-plugin:test :es-runner-gradle-test-support:test
 ```
 
 Official Java client adapter:
@@ -148,6 +148,12 @@ The process-backed runner is intentionally split by responsibility:
 
 If you are refactoring internals, prefer keeping those boundaries clear rather
 than growing `ElasticServer` again.
+
+The shared Gradle cluster path is now also split internally:
+
+- `es-runner-gradle-core`: backend-agnostic namespace, suite-binding, and JVM argument wiring
+- `es-runner-gradle-plugin`: process-backed shared-cluster plugin
+- `es-runner-gradle-test-support`: test-side helpers for shared clusters
 
 ## Change expectations
 

@@ -10,6 +10,7 @@ eventually published.
 - Java package prefix: `io.github.wboult.esrunner`
 - Maven coordinate base:
   - `io.github.wboult:es-runner`
+  - `io.github.wboult:es-runner-gradle-core`
   - `io.github.wboult:es-runner-gradle-plugin`
   - `io.github.wboult:es-runner-gradle-test-support`
 - Gradle plugin id: `io.github.wboult.es-runner.shared-test-clusters`

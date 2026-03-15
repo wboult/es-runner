@@ -18,7 +18,8 @@ import java.time.Duration;
  * Shared Gradle build service that lazily starts one Elasticsearch cluster and
  * reuses it for all bound test tasks in the build.
  */
-public abstract class ElasticClusterService implements BuildService<ElasticClusterService.Params>, AutoCloseable {
+public abstract class ElasticClusterService
+        implements BuildService<ElasticClusterService.Params>, SharedClusterBackend {
     /**
      * Build service parameters mirroring the cluster DSL and
      * {@link ElasticRunnerConfig}.
