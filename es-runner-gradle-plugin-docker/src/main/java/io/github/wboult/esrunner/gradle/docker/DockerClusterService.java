@@ -32,6 +32,8 @@ public abstract class DockerClusterService
     public interface Params extends BuildServiceParameters {
         /** @return cluster definition name */
         Property<String> getName();
+        /** @return docker distribution family */
+        Property<String> getDistribution();
         /** @return full Docker image reference */
         Property<String> getImage();
         /** @return configured cluster name */
@@ -73,19 +75,19 @@ public abstract class DockerClusterService
 
     private void startContainer() {
         Params params = getParameters();
+        String distribution = params.getDistribution().get();
         String image = params.getImage().get();
         String clusterName = params.getClusterName().get();
         Duration timeout = Duration.ofMillis(params.getStartupTimeoutMillis().get());
 
         GenericContainer<?> started = new GenericContainer<>(DockerImageName.parse(image))
                 .withExposedPorts(HTTP_PORT, TRANSPORT_PORT)
-                .waitingFor(Wait.forLogMessage(".*(\"message\":\\s?\"started[\\s?|\"].*|] started\\n$)", 1))
+                .waitingFor(Wait.forHttp("/").forPort(HTTP_PORT).forStatusCodeMatching(code -> code >= 200 && code < 500))
                 .withStartupTimeout(timeout);
         for (Map.Entry<String, String> entry : params.getEnvVars().get().entrySet()) {
             started.withEnv(entry.getKey(), entry.getValue());
         }
         started.withEnv("cluster.name", clusterName);
-        started.withEnv("xpack.security.enabled", "false");
 
         try {
             started.start();
@@ -107,6 +109,7 @@ public abstract class DockerClusterService
                     DockerStartupDiagnostics.snapshot(image, started);
             String diagnostics = DockerStartupDiagnostics.renderFailure(
                     params.getName().get(),
+                    distribution,
                     clusterName,
                     image,
                     timeout,

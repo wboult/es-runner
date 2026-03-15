@@ -16,8 +16,8 @@ Use the Docker-backed plugin when:
 
 - your build agents already have Docker
 - your team already thinks in image/tag terms instead of ZIP distros
-- you want one shared Elasticsearch container per build across multiple suites
-  and subprojects
+- you want one shared Elasticsearch or OpenSearch container per build across
+  multiple suites and subprojects
 
 Use the process-backed plugin when:
 
@@ -46,8 +46,9 @@ So test code can usually stay unchanged while the backend changes.
 A checked-in public sample now lives at:
 
 - `samples/docker-shared-cluster-multiproject-sample/`
+- `samples/docker-opensearch-shared-cluster-multiproject-sample/`
 
-It mirrors the structure of the process-backed sample, but swaps the shared
+They mirror the structure of the process-backed sample, but swap the shared
 cluster runtime to Docker/Testcontainers while keeping the same namespace-aware
 test-side API.
 
@@ -93,6 +94,35 @@ and sets these container defaults for local test builds:
 - `xpack.security.enabled=false`
 - `cluster.routing.allocation.disk.threshold_enabled=false`
 - `ES_JAVA_OPTS=-Xms256m -Xmx256m`
+
+To switch the same plugin to OpenSearch instead, set the distribution family:
+
+```groovy
+dockerElasticTestClusters {
+    clusters {
+        register("integration") {
+            distribution.set("opensearch")
+            version.set("3.5.0")
+            clusterName.set("shared-os-docker")
+        }
+    }
+}
+```
+
+That changes the default image to:
+
+```text
+opensearchproject/opensearch:<version>
+```
+
+and applies these OpenSearch-oriented defaults:
+
+- `discovery.type=single-node`
+- `cluster.routing.allocation.disk.threshold_enabled=false`
+- `DISABLE_INSTALL_DEMO_CONFIG=true`
+- `DISABLE_SECURITY_PLUGIN=true`
+- `plugins.security.disabled=true`
+- `OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m`
 
 ## Subproject test suites
 
@@ -144,18 +174,16 @@ client.refresh(orders);
 
 This Docker-backed plugin currently targets:
 
-- shared single-node Elasticsearch clusters
+- shared single-node Elasticsearch or OpenSearch clusters
 - build-scoped reuse across projects and suites
 - the same namespace model as the process-backed plugin
 
 It does not yet try to mirror every process-backed option one for one.
-OpenSearch Docker support is also intentionally out of scope for this first
-version.
 
 ## Fresh-state semantics
 
-The Docker-backed plugin reuses one Elasticsearch container across all bound
-projects and suites within a single Gradle build.
+The Docker-backed plugin reuses one shared container across all bound projects
+and suites within a single Gradle build.
 
 Across separate Gradle invocations, it intentionally starts fresh again:
 
@@ -179,7 +207,7 @@ The Docker-backed plugin does not write a process-style
 directory to inspect. Instead, startup failures now include an inline diagnostic
 block in the exception output with:
 
-- the cluster definition name and configured Elasticsearch cluster name
+- the cluster definition name, distribution family, and configured cluster name
 - the exact image reference
 - startup timeout
 - Docker/Testcontainers environment hints such as `DOCKER_HOST`
