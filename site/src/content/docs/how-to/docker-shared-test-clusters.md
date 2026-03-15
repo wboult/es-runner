@@ -12,6 +12,9 @@ This is a sibling backend to the process-backed shared-cluster plugin. It keeps
 the same namespace helpers and injected test environment while switching the
 cluster runtime from ZIP/processes to a shared Elasticsearch container.
 
+If you are deciding between the two backends, start with
+[Choose a shared-cluster backend](../choose-gradle-shared-cluster-backend/).
+
 ## When to use it
 
 Use the Docker-backed plugin when:
@@ -36,6 +39,16 @@ The test-side API remains the same:
 - `env.indexPattern(...)`
 - `env.template(...)`
 - `env.alias(...)`
+
+## Canonical public sample
+
+A checked-in public sample now lives at:
+
+- `samples/docker-shared-cluster-multiproject-sample/`
+
+It mirrors the structure of the process-backed sample, but swaps the shared
+cluster runtime to Docker/Testcontainers while keeping the same namespace-aware
+test-side API.
 
 ## Root build configuration
 

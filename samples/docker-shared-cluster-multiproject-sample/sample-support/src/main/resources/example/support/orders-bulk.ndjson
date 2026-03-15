@@ -1,0 +1,6 @@
+{ "index": { "_index": "${index}", "_id": "order-1001" } }
+{ "customer": "Ada Lovelace", "status": "new", "priority": "high", "channel": "web", "total": 125.50 }
+{ "index": { "_index": "${index}", "_id": "order-1002" } }
+{ "customer": "Grace Hopper", "status": "processing", "priority": "normal", "channel": "store", "total": 84.10 }
+{ "index": { "_index": "${index}", "_id": "order-1003" } }
+{ "customer": "Katherine Johnson", "status": "new", "priority": "high", "channel": "partner", "total": 230.00 }

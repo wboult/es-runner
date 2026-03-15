@@ -8,6 +8,8 @@ If your build already standardizes on Docker/Testcontainers, use the sibling
 Docker-backed backend documented in
 [docs/docker-shared-test-clusters.md](C:/Dev/elastic-runner/docs/docker-shared-test-clusters.md)
 instead of trying to force the process-backed plugin into that model.
+If you are deciding between the two, start with
+[docs/choose-gradle-shared-cluster-backend.md](C:/Dev/elastic-runner/docs/choose-gradle-shared-cluster-backend.md).
 
 This is intended for production-like integration automation where per-test-JVM
 startup cost is too high, but suites still need isolation from each other.
@@ -41,6 +43,9 @@ A checked-in canonical sample lives at
 `samples/gradle-shared-cluster-multiproject-sample/`. It uses normal
 plugin/helper coordinates instead of `includeBuild`, so it is the closest
 approximation of how a published consumer build will look.
+
+There is now also a matching Docker-backed public sample at
+`samples/docker-shared-cluster-multiproject-sample/`.
 
 Until publication, the correct setup is a composite build:
 

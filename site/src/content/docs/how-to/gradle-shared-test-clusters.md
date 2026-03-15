@@ -12,6 +12,8 @@ If Docker/Testcontainers is already your standard build runtime, use the
 sibling Docker-backed backend documented in
 [Use Docker shared test clusters](../docker-shared-test-clusters/) instead of
 forcing the process-backed plugin into that setup.
+If you are deciding between the two, start with
+[Choose a shared-cluster backend](../choose-gradle-shared-cluster-backend/).
 
 Use it when you want:
 
@@ -42,6 +44,9 @@ A checked-in canonical sample also lives in
 plugin/helper coordinates and can be pointed at a local Maven repo with
 `-PesRunnerRepositoryUrl=...` before publication, then at published artifacts
 later with only `-PesRunnerVersion=...`.
+
+There is now also a matching Docker-backed public sample at
+`samples/docker-shared-cluster-multiproject-sample/`.
 
 That sample is intentionally more realistic than the TestKit fixture:
 
