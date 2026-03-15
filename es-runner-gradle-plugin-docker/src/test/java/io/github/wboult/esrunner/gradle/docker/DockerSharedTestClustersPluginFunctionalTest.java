@@ -3,6 +3,7 @@ package io.github.wboult.esrunner.gradle.docker;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
+import org.gradle.testkit.runner.UnexpectedBuildFailure;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
@@ -42,13 +43,7 @@ class DockerSharedTestClustersPluginFunctionalTest {
                     "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
             ));
 
-            BuildResult result = GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments(gradleArguments(":app:classes"))
-                    .withEnvironment(gradleEnvironment())
-                    .withPluginClasspath()
-                    .forwardOutput()
-                    .build();
+            BuildResult result = runBuild(projectDir, ":app:classes");
 
             TaskOutcome outcome = result.task(":app:classes").getOutcome();
             assertTrue(outcome == SUCCESS || outcome == TaskOutcome.UP_TO_DATE);
@@ -77,18 +72,11 @@ class DockerSharedTestClustersPluginFunctionalTest {
                     "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
             ));
 
-            BuildResult result = GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments(gradleArguments(
-                            ":app:integrationTest",
-                            ":app:smokeTest",
-                            ":search:integrationTest",
-                            ":search:smokeTest"
-                    ))
-                    .withEnvironment(gradleEnvironment())
-                    .withPluginClasspath()
-                    .forwardOutput()
-                    .build();
+            BuildResult result = runBuild(projectDir,
+                    ":app:integrationTest",
+                    ":app:smokeTest",
+                    ":search:integrationTest",
+                    ":search:smokeTest");
 
             assertEquals(SUCCESS, result.task(":app:integrationTest").getOutcome());
             assertEquals(SUCCESS, result.task(":app:smokeTest").getOutcome());
@@ -149,14 +137,13 @@ class DockerSharedTestClustersPluginFunctionalTest {
         environment.remove("TESTCONTAINERS_DOCKER_CLIENT_STRATEGY");
         environment.remove("TESTCONTAINERS_HOST_OVERRIDE");
         environment.remove("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE");
+        environment.put("TESTCONTAINERS_REUSE_ENABLE", "false");
         return environment;
     }
 
     private List<String> gradleArguments(String... tasks) {
-        Path isolatedHome = createIsolatedHome();
         return java.util.stream.Stream.concat(
                 java.util.stream.Stream.of(
-                        "-Duser.home=" + isolatedHome,
                         "-Dorg.gradle.java.installations.paths=" + currentJavaHome()
                 ),
                 java.util.Arrays.stream(tasks)
@@ -167,18 +154,6 @@ class DockerSharedTestClustersPluginFunctionalTest {
                     return arguments;
                 }
         ));
-    }
-
-    private Path createIsolatedHome() {
-        try {
-            Path home = Files.createTempDirectory("es-runner-testcontainers-home-" + Instant.now().toEpochMilli());
-            Files.writeString(home.resolve(".testcontainers.properties"),
-                    "testcontainers.reuse.enable=false" + System.lineSeparator(),
-                    StandardCharsets.UTF_8);
-            return home;
-        } catch (IOException e) {
-            throw new IllegalStateException("Unable to create isolated Testcontainers home", e);
-        }
     }
 
     private String currentJavaHome() {
@@ -218,6 +193,22 @@ class DockerSharedTestClustersPluginFunctionalTest {
         }
 
         throw new IllegalStateException("Unable to determine root version from build.gradle");
+    }
+
+    private BuildResult runBuild(Path projectDir, String... tasks) {
+        try {
+            return GradleRunner.create()
+                    .withProjectDir(projectDir.toFile())
+                    .withArguments(gradleArguments(tasks))
+                    .withEnvironment(gradleEnvironment())
+                    .withPluginClasspath()
+                    .forwardOutput()
+                    .build();
+        } catch (UnexpectedBuildFailure failure) {
+            System.err.println("Nested fixture build failed for " + projectDir + ":");
+            System.err.println(failure.getBuildResult().getOutput());
+            throw failure;
+        }
     }
 
     private void copyFixture(Path targetRoot, Map<String, String> replacements) throws IOException {
