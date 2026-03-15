@@ -27,6 +27,18 @@ Use the Docker-backed plugin when:
 Stay with the process-backed plugin when Docker is the wrong operational fit or
 when you want the mainline ES Runner path with the broadest docs and options.
 
+## Read this page in order
+
+1. Start from the public sample that matches Elasticsearch or OpenSearch.
+2. Wire the root plugin and bind the suites you want to share.
+3. Keep the same `template` / `index` / `indexPattern` / `alias` naming model
+   as the process-backed plugin.
+
+Public samples:
+
+- [`samples/docker-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/docker-shared-cluster-multiproject-sample)
+- [`samples/docker-opensearch-shared-cluster-multiproject-sample/`](https://github.com/wboult/es-runner/tree/main/samples/docker-opensearch-shared-cluster-multiproject-sample)
+
 ## Plugin pieces
 
 - plugin id: `io.github.wboult.es-runner.docker-shared-test-clusters`
@@ -39,17 +51,6 @@ The test-side API remains the same:
 - `env.indexPattern(...)`
 - `env.template(...)`
 - `env.alias(...)`
-
-## Canonical public sample
-
-A checked-in public sample now lives at:
-
-- `samples/docker-shared-cluster-multiproject-sample/`
-- `samples/docker-opensearch-shared-cluster-multiproject-sample/`
-
-They mirror the structure of the process-backed sample, but swap the shared
-cluster runtime to Docker/Testcontainers while keeping the same namespace-aware
-test-side API.
 
 ## Root build configuration
 
@@ -116,10 +117,7 @@ opensearchproject/opensearch:<version>
 and applies these OpenSearch-oriented defaults:
 
 - `discovery.type=single-node`
-- `cluster.routing.allocation.disk.threshold_enabled=false`
-- `DISABLE_INSTALL_DEMO_CONFIG=true`
 - `DISABLE_SECURITY_PLUGIN=true`
-- `plugins.security.disabled=true`
 - `OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m`
 
 ## Subproject suites
@@ -168,6 +166,17 @@ client.createIndex(orders);
 client.indexDocument(orders, newOrder);
 client.refresh(orders);
 ```
+
+The naming model is the same as the process-backed plugin:
+
+- `env.index(...)` for one concrete index
+- `env.alias(...)` for one concrete alias
+- `env.template(...)` for the template id
+- `env.indexPattern(...)` for wildcard-based template matching
+
+If searches return zero hits even though the container started correctly, the
+problem is usually test-side naming or refresh behavior, not Docker startup.
+Jump to [Troubleshooting](../troubleshooting/) before raising timeouts blindly.
 
 ## Scope and current limits
 

@@ -14,6 +14,18 @@ If you are deciding between the two, start with
 This is intended for production-like integration automation where per-test-JVM
 startup cost is too high, but suites still need isolation from each other.
 
+## Read this page in order
+
+1. Copy the public sample first.
+2. Wire the plugin once in the root build.
+3. Bind the suites that should share one cluster.
+4. Keep test-side resource names on the `template` / `index` / `indexPattern` /
+   `alias` model.
+
+The canonical sample is:
+
+- `samples/gradle-shared-cluster-multiproject-sample/`
+
 ## What it gives you
 
 - one Elasticsearch process per cluster definition per build
@@ -197,7 +209,7 @@ Yellow health is a startup/readiness threshold, not a data-visibility
 guarantee. Suites still need to install templates, create indices, and
 `refresh(...)` before making deterministic search assertions.
 
-## Lazy startup behavior
+## Startup and lifecycle behavior
 
 Applying the plugin does not start Elasticsearch on its own.
 
@@ -211,7 +223,7 @@ The cluster starts only when Gradle actually executes a bound test task and
 forks its test JVM. This keeps normal development tasks fast while preserving
 the shared-cluster benefit for real integration suites.
 
-See [docs/gradle-shared-test-cluster-best-practices.md](docs/gradle-shared-test-cluster-best-practices.md)
+See [docs/gradle-shared-test-cluster-best-practices.md](C:/Dev/elastic-runner/docs/gradle-shared-test-cluster-best-practices.md)
 for concrete guidance on namespacing, cleanup, and suite boundaries.
 If the cluster starts but assertions still fail, use the troubleshooting flow
 in the docs site:
@@ -310,31 +322,10 @@ Mirror configuration follows the same rules as the core library. See
 `docs/cloud-storage-mirrors.md`. For cloud storage (S3, GCS, Azure), use
 HTTPS pre-signed or SAS URLs rather than native cloud scheme URIs.
 
-## Operational guidance
+## Related
 
-Use shared clusters when:
-
-- suites are expensive enough that repeated startup is wasteful
-- test data can be isolated by namespacing
-- cluster-wide settings are stable for the whole build
-
-Avoid shared clusters when:
-
-- suites need incompatible cluster settings
-- suites mutate node-level behavior in ways that affect each other
-- you need isolation across separate Gradle invocations
-
-## Current scope
-
-The initial implementation covers:
-
-- root-scoped plugin application
-- shared single-node clusters via a Gradle BuildService
-- `Test` task wiring, including `JvmTestSuite` tasks
-- suite/project namespace modes
-- injected system properties
-- test helper API
-
-See `docs/gradle-shared-cluster-plugin-design.md` for the design rationale and
-future directions.
-
+- `samples/gradle-shared-cluster-multiproject-sample/`
+- [docs/gradle-shared-test-cluster-best-practices.md](C:/Dev/elastic-runner/docs/gradle-shared-test-cluster-best-practices.md)
+- [docs/choose-gradle-shared-cluster-backend.md](C:/Dev/elastic-runner/docs/choose-gradle-shared-cluster-backend.md)
+- [docs/docker-shared-test-clusters.md](C:/Dev/elastic-runner/docs/docker-shared-test-clusters.md)
+- [docs/gradle-shared-cluster-plugin-design.md](C:/Dev/elastic-runner/docs/gradle-shared-cluster-plugin-design.md)
