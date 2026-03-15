@@ -8,6 +8,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ElasticRunnerConfigTest {
@@ -110,5 +111,17 @@ class ElasticRunnerConfigTest {
         assertEquals(Duration.ofSeconds(45), config.requestTimeout());
         assertEquals(Duration.ofMinutes(7), config.bulkTimeout());
         assertEquals(Duration.ofMinutes(9), config.downloadTimeout());
+    }
+
+    @Test
+    void rejectsInvalidPortRangeUpperBound() {
+        assertThrows(IllegalArgumentException.class,
+                () -> ElasticRunnerConfig.defaults().toBuilder().portRange(9200, 70000).build());
+    }
+
+    @Test
+    void rejectsInvalidFixedHttpPort() {
+        assertThrows(IllegalArgumentException.class,
+                () -> ElasticRunnerConfig.defaults().toBuilder().httpPort(70000).build());
     }
 }

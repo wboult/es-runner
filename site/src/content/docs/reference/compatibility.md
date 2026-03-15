@@ -76,9 +76,12 @@ This page defines what ES Runner means by `verified`, `supported`, and
   above.
 - If you choose the embedded modules, do it knowingly as an experimental path
   with narrower guarantees.
+- If you want to try the embedded modules locally, start with
+  [Try embedded runners](../../how-to/try-embedded-runners/).
 
 ## Related
 
 - [Build/test matrix](../build-test-matrix/)
+- [Module overview](../modules/)
 - [Security & support policy](../../explanation/security-support/)
 - [Release & versioning policy](../release-versioning/)

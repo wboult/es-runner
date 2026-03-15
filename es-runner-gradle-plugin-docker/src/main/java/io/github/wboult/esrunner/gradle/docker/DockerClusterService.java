@@ -55,8 +55,21 @@ public abstract class DockerClusterService
     @Override
     public ElasticClusterMetadata metadata() {
         synchronized (lock) {
-            if (container == null || !container.isRunning()) {
-                startContainer();
+            if (container == null) {
+                startContainer(false);
+            } else if (!container.isRunning()) {
+                LOGGER.warn("Shared Docker cluster '{}' container is no longer running - restarting."
+                        + " Tests in the previous suite may have failed.", getParameters().getName().get());
+                try {
+                    container.stop();
+                } catch (Exception e) {
+                    LOGGER.warn("Shared Docker cluster '{}' restart cleanup hit an error while stopping the dead container.",
+                            getParameters().getName().get(), e);
+                } finally {
+                    container = null;
+                    metadata = null;
+                }
+                startContainer(true);
             }
             return metadata;
         }
@@ -73,7 +86,7 @@ public abstract class DockerClusterService
         }
     }
 
-    private void startContainer() {
+    private void startContainer(boolean isRestart) {
         Params params = getParameters();
         String distribution = params.getDistribution().get();
         DockerDistribution dockerDistribution = DockerDistribution.from(distribution);
@@ -96,12 +109,21 @@ public abstract class DockerClusterService
                     clusterName
             );
             container = started;
-            LOGGER.lifecycle("Shared Docker cluster '{}' started from image {} with container id {} on {}:{}.",
-                    params.getName().get(),
-                    image,
-                    started.getContainerId(),
-                    started.getHost(),
-                    started.getMappedPort(HTTP_PORT));
+            if (isRestart) {
+                LOGGER.warn("Shared Docker cluster '{}' restarted from image {} with container id {} on {}:{}.",
+                        params.getName().get(),
+                        image,
+                        started.getContainerId(),
+                        started.getHost(),
+                        started.getMappedPort(HTTP_PORT));
+            } else {
+                LOGGER.lifecycle("Shared Docker cluster '{}' started from image {} with container id {} on {}:{}.",
+                        params.getName().get(),
+                        image,
+                        started.getContainerId(),
+                        started.getHost(),
+                        started.getMappedPort(HTTP_PORT));
+            }
         } catch (Exception e) {
             DockerStartupDiagnostics.DockerContainerSnapshot snapshot =
                     DockerStartupDiagnostics.snapshot(image, started);

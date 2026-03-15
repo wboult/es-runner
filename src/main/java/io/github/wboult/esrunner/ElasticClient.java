@@ -26,6 +26,7 @@ public final class ElasticClient implements Serializable {
     /** Default timeout for bulk requests. */
     private final Duration bulkTimeout;
     private transient HttpClient httpClient;
+    private transient HttpClient bulkHttpClient;
 
     /**
      * Creates a client with default request and bulk timeouts.
@@ -45,6 +46,7 @@ public final class ElasticClient implements Serializable {
         this.requestTimeout = Objects.requireNonNull(requestTimeout, "requestTimeout");
         this.bulkTimeout = Objects.requireNonNull(bulkTimeout, "bulkTimeout");
         this.httpClient = httpClient;
+        this.bulkHttpClient = null;
     }
 
     /**
@@ -572,8 +574,8 @@ public final class ElasticClient implements Serializable {
                 .header("Content-Type", "application/x-ndjson")
                 .POST(HttpRequest.BodyPublishers.ofString(ndjson))
                 .build();
-        // Bulk requests are long-lived and hit the JDK connection-pool flake seen in CI, so use a fresh client.
-        HttpResponse<String> response = buildHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        // Bulk requests use a dedicated client to avoid the JDK connection-pool flake seen in CI.
+        HttpResponse<String> response = bulkHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         return new ElasticResponse(response.statusCode(), response.body(), response.headers().map());
     }
 
@@ -582,6 +584,13 @@ public final class ElasticClient implements Serializable {
             httpClient = buildHttpClient();
         }
         return httpClient;
+    }
+
+    private synchronized HttpClient bulkHttpClient() {
+        if (bulkHttpClient == null) {
+            bulkHttpClient = buildHttpClient();
+        }
+        return bulkHttpClient;
     }
 
     private static HttpClient buildHttpClient() {

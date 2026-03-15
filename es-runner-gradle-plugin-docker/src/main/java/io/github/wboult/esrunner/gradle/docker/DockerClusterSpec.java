@@ -115,4 +115,18 @@ public abstract class DockerClusterSpec {
     public void env(String name, String value) {
         envVars.put(name, value);
     }
+
+    /**
+     * Copies the configured DSL values into one build-service parameter object.
+     *
+     * @param params target parameter object
+     */
+    void copyTo(DockerClusterService.Params params) {
+        params.getName().set(getName());
+        params.getDistribution().set(getDistribution());
+        params.getImage().set(getImage());
+        params.getClusterName().set(getClusterName());
+        params.getStartupTimeoutMillis().set(getStartupTimeoutMillis());
+        params.getEnvVars().set(getEnvVars());
+    }
 }

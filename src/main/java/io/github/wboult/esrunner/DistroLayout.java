@@ -1,25 +1,39 @@
 package io.github.wboult.esrunner;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class DistroLayout {
+    private static final Map<Path, Object> PROCESS_LOCKS = new ConcurrentHashMap<>();
+
     private DistroLayout() {
     }
 
     static Path prepare(Path zip, Path workDir, DistroFamily family) throws IOException {
         Path distroDir = workDir.resolve("distro");
         Files.createDirectories(distroDir);
-        Optional<Path> existing = findHomeDir(distroDir, family);
-        if (existing.isPresent()) {
-            return existing.get();
+        Path lockFile = distroDir.resolve(".extract.lock").toAbsolutePath().normalize();
+        Object processLock = PROCESS_LOCKS.computeIfAbsent(lockFile, ignored -> new Object());
+        synchronized (processLock) {
+            try (FileChannel channel = FileChannel.open(lockFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                 FileLock ignored = channel.lock()) {
+                Optional<Path> existing = findHomeDir(distroDir, family);
+                if (existing.isPresent()) {
+                    return existing.get();
+                }
+                ArchiveExtractor.extract(zip, distroDir);
+                return findHomeDir(distroDir, family)
+                        .orElseThrow(() -> new IOException("Failed to locate " + family.displayName() + " home after extraction."));
+            }
         }
-        ArchiveExtractor.extract(zip, distroDir);
-        return findHomeDir(distroDir, family)
-                .orElseThrow(() -> new IOException("Failed to locate " + family.displayName() + " home after extraction."));
     }
 
     private static Optional<Path> findHomeDir(Path root, DistroFamily family) throws IOException {

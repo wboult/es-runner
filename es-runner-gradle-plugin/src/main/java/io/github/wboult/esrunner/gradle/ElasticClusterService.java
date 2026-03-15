@@ -83,7 +83,9 @@ public abstract class ElasticClusterService
                             + " Tests in the previous suite may have failed.", clusterName);
                     try {
                         server.close();
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        LOGGER.warn("Shared cluster '{}' restart cleanup hit an error while closing the dead process.",
+                                clusterName, e);
                     }
                 }
                 ElasticServer started = ElasticRunner.start(toConfig());

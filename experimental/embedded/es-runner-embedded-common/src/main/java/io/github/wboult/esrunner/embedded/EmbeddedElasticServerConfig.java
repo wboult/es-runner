@@ -54,7 +54,10 @@ public record EmbeddedElasticServerConfig(
         settings = settings == null ? Map.of() : Map.copyOf(settings);
         includedModules = includedModules == null ? Set.of() : Set.copyOf(includedModules);
         classpathPlugins = classpathPlugins == null ? Set.of() : Set.copyOf(classpathPlugins);
-        if (portRangeStart <= 0 || portRangeEnd < portRangeStart) {
+        if (httpPort < 0 || httpPort > 65535) {
+            throw new IllegalArgumentException("Invalid HTTP port: " + httpPort);
+        }
+        if (portRangeStart <= 0 || portRangeStart > 65535 || portRangeEnd < portRangeStart || portRangeEnd > 65535) {
             throw new IllegalArgumentException("Invalid port range: " + portRangeStart + "-" + portRangeEnd);
         }
     }

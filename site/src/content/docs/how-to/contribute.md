@@ -51,6 +51,9 @@ export ES_VERSION=9.3.1
 This repo also verifies specific Scala/Spark combinations. Use `-PscalaVersion`
 and `-PsparkVersion` when you need to reproduce one CI lane locally.
 
+For the full ES/OpenSearch integration-test env-var list, see
+[Environment variables](../../reference/environment/).
+
 ## 3. Update dependency verification only when needed
 
 If you intentionally add or upgrade dependencies, refresh the verification file
@@ -90,6 +93,7 @@ npm run build
 ## Related
 
 - [Build/test matrix](../../reference/build-test-matrix/)
+- [Environment variables](../../reference/environment/)
 - [Compatibility matrix](../../reference/compatibility/)
 - [Release & versioning policy](../../reference/release-versioning/)
 

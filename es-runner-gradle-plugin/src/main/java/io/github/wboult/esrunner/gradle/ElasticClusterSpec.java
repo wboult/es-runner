@@ -241,4 +241,29 @@ public abstract class ElasticClusterSpec {
     public void shutdownTimeout(Duration duration) {
         shutdownTimeoutMillis.set(duration.toMillis());
     }
+
+    /**
+     * Copies the configured DSL values into one build-service parameter object.
+     *
+     * @param params target parameter object
+     */
+    void copyTo(ElasticClusterService.Params params) {
+        params.getName().set(getName());
+        params.getDistroZip().set(getDistroZip());
+        params.getVersion().set(getVersion());
+        params.getDistrosDir().set(getDistrosDir());
+        params.getDownload().set(getDownload());
+        params.getDownloadBaseUrl().set(getDownloadBaseUrl());
+        params.getWorkDir().set(getWorkDir());
+        params.getClusterName().set(getClusterName());
+        params.getHttpPort().set(getHttpPort());
+        params.getPortRangeStart().set(getPortRangeStart());
+        params.getPortRangeEnd().set(getPortRangeEnd());
+        params.getHeap().set(getHeap());
+        params.getStartupTimeoutMillis().set(getStartupTimeoutMillis());
+        params.getShutdownTimeoutMillis().set(getShutdownTimeoutMillis());
+        params.getSettings().set(getSettings());
+        params.getPlugins().set(getPlugins());
+        params.getQuiet().set(getQuiet());
+    }
 }

@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.URI;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
@@ -50,6 +51,29 @@ class DistroDownloaderTest {
         DistroDownloadException ex = assertThrows(DistroDownloadException.class,
                 () -> DistroDownloader.download(uri, dir.resolve("elasticsearch.zip")));
         assertEquals(ElasticRunnerException.Kind.DISTRO_DOWNLOAD, ex.kind());
+    }
+
+    @Test
+    void downloadsHttpArchiveSuccessfully(@TempDir Path dir) throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/ok.zip", exchange -> {
+            byte[] body = "zip-content".getBytes();
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        try {
+            Path target = dir.resolve("elasticsearch.zip");
+            URI uri = URI.create("http://localhost:" + server.getAddress().getPort() + "/ok.zip");
+
+            DistroDownloader.download(uri, target, Duration.ofSeconds(5));
+
+            assertTrue(Files.exists(target));
+            assertEquals("zip-content", Files.readString(target));
+        } finally {
+            server.stop(0);
+        }
     }
 
     @Test
