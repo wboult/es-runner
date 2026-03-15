@@ -117,6 +117,43 @@ class DockerSharedTestClustersPluginFunctionalTest {
     }
 
     @Test
+    void startsFromFreshContainerStateAcrossSeparateGradleInvocations() throws IOException {
+        Assumptions.assumeTrue(linuxDockerAvailable(),
+                "Docker plugin functional tests require Linux with a working Docker daemon");
+        Path projectDir = Files.createTempDirectory("es-runner-docker-plugin-repeat-it");
+        boolean success = false;
+        try {
+            Path repoRoot = repoRoot();
+            copyFixture(projectDir, Map.of(
+                    "@REPO_ROOT@", repoRoot.toString().replace("\\", "/"),
+                    "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
+            ));
+
+            BuildResult first = runBuild(projectDir, ":app:integrationTest", "--rerun-tasks");
+            Properties firstMetadata = loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties"));
+
+            BuildResult second = runBuild(projectDir, ":app:integrationTest", "--rerun-tasks");
+            Properties secondMetadata = loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties"));
+
+            assertEquals(SUCCESS, first.task(":app:integrationTest").getOutcome());
+            assertEquals(SUCCESS, second.task(":app:integrationTest").getOutcome());
+            assertTrue(first.getOutput().contains("Shared Docker cluster 'sharedEsDocker' started"));
+            assertTrue(second.getOutput().contains("Shared Docker cluster 'sharedEsDocker' started"));
+            assertNotEquals(firstMetadata.getProperty("buildId"), secondMetadata.getProperty("buildId"));
+            assertEquals("docker-fresh-state-proof", firstMetadata.getProperty("fixedFreshStateIndex"));
+            assertEquals("docker-fresh-state-proof", secondMetadata.getProperty("fixedFreshStateIndex"));
+
+            success = true;
+        } finally {
+            if (success) {
+                deleteTempDir(projectDir);
+            } else {
+                System.err.println("Preserving failed fixture at " + projectDir);
+            }
+        }
+    }
+
+    @Test
     void publishedArtifactSampleBuildSharesOneDockerClusterAcrossProjectsAndSuites() throws IOException {
         Assumptions.assumeTrue(linuxDockerAvailable(),
                 "Docker plugin functional tests require Linux with a working Docker daemon");

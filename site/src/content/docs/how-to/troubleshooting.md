@@ -104,6 +104,10 @@ fails, the problem is usually not cluster startup. It is usually one of:
 - the suite is reading stale local state from a reused `workDir`
 - the cluster reached yellow health, but your test assumptions still were not true
 
+For the Docker-backed shared-cluster plugin, stale state from previous Gradle
+invocations is not normally the issue because it intentionally starts a fresh
+container for each build.
+
 ### Zero hits after indexing
 
 **Symptoms**:

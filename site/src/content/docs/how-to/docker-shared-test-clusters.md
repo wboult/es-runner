@@ -150,6 +150,20 @@ This first Docker-backed version currently focuses on:
 It does not yet aim for full process-backed option parity, and OpenSearch
 Docker support is intentionally not included yet.
 
+## Fresh-state semantics
+
+The Docker-backed plugin reuses one Elasticsearch container across all bound
+projects and suites within a single Gradle build.
+
+Across separate Gradle invocations, it intentionally starts fresh again:
+
+- one build invocation: shared container reused across bound suites/projects
+- next build invocation: new container, no carried-over cluster state
+
+So this backend is designed for build-scoped reuse, not for preserving local
+cluster state across reruns. If you want stickier local state between runs,
+prefer the process-backed shared-cluster plugin.
+
 ## Verification model
 
 The real end-to-end Docker-backed TestKit flow is verified in a dedicated Linux
