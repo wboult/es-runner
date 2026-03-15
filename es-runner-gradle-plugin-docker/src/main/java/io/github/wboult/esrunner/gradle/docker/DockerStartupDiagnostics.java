@@ -14,6 +14,7 @@ final class DockerStartupDiagnostics {
     }
 
     static String renderFailure(String clusterDefinitionName,
+                                String distribution,
                                 String configuredClusterName,
                                 String image,
                                 Duration startupTimeout,
@@ -28,6 +29,7 @@ final class DockerStartupDiagnostics {
                 .append(System.lineSeparator())
                 .append("Cluster diagnostics")
                 .append(System.lineSeparator())
+                .append("- distribution: ").append(distribution).append(System.lineSeparator())
                 .append("- configured cluster name: ").append(configuredClusterName).append(System.lineSeparator())
                 .append("- image: ").append(image).append(System.lineSeparator())
                 .append("- startup timeout: ").append(startupTimeout).append(System.lineSeparator())

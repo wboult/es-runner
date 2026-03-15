@@ -28,8 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DockerSharedTestClustersPluginFunctionalTest {
-    private static final String FIXTURE_ROOT = "fixtures/docker-shared-cluster-multiproject";
-    private static final String SAMPLE_ROOT = "samples/docker-shared-cluster-multiproject-sample";
+    private static final String ES_FIXTURE_ROOT = "fixtures/docker-shared-cluster-multiproject";
+    private static final String OS_FIXTURE_ROOT = "fixtures/docker-opensearch-shared-cluster-multiproject";
+    private static final String ES_SAMPLE_ROOT = "samples/docker-shared-cluster-multiproject-sample";
+    private static final String OS_SAMPLE_ROOT = "samples/docker-opensearch-shared-cluster-multiproject-sample";
 
     @Test
     void doesNotStartClusterWhenBuildRunsNoBoundTestTask() throws IOException {
@@ -42,7 +44,7 @@ class DockerSharedTestClustersPluginFunctionalTest {
             copyFixture(projectDir, Map.of(
                     "@REPO_ROOT@", repoRoot.toString().replace("\\", "/"),
                     "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
-            ));
+            ), ES_FIXTURE_ROOT);
 
             BuildResult result = runBuild(projectDir, ":app:classes");
 
@@ -62,6 +64,22 @@ class DockerSharedTestClustersPluginFunctionalTest {
 
     @Test
     void sharesOneDockerEsClusterAcrossProjectsAndSuites() throws IOException {
+        assertFixtureSharesOneDockerClusterAcrossProjectsAndSuites(
+                ES_FIXTURE_ROOT,
+                "shared-es-docker"
+        );
+    }
+
+    @Test
+    void sharesOneDockerOpenSearchClusterAcrossProjectsAndSuites() throws IOException {
+        assertFixtureSharesOneDockerClusterAcrossProjectsAndSuites(
+                OS_FIXTURE_ROOT,
+                "shared-os-docker"
+        );
+    }
+
+    private void assertFixtureSharesOneDockerClusterAcrossProjectsAndSuites(String fixtureRoot,
+                                                                            String expectedClusterName) throws IOException {
         Assumptions.assumeTrue(linuxDockerAvailable(),
                 "Docker plugin functional tests require Linux with a working Docker daemon");
         Path projectDir = Files.createTempDirectory("es-runner-docker-plugin-it");
@@ -71,7 +89,7 @@ class DockerSharedTestClustersPluginFunctionalTest {
             copyFixture(projectDir, Map.of(
                     "@REPO_ROOT@", repoRoot.toString().replace("\\", "/"),
                     "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
-            ));
+            ), fixtureRoot);
 
             BuildResult result = runBuild(projectDir,
                     ":app:integrationTest",
@@ -93,7 +111,7 @@ class DockerSharedTestClustersPluginFunctionalTest {
 
             String sharedBaseUri = metadata.get(0).getProperty("baseUri");
             metadata.forEach(properties -> {
-                assertEquals("shared-es-docker", properties.getProperty("clusterName"));
+                assertEquals(expectedClusterName, properties.getProperty("clusterName"));
                 assertEquals(sharedBaseUri, properties.getProperty("baseUri"));
             });
 
@@ -127,7 +145,7 @@ class DockerSharedTestClustersPluginFunctionalTest {
             copyFixture(projectDir, Map.of(
                     "@REPO_ROOT@", repoRoot.toString().replace("\\", "/"),
                     "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
-            ));
+            ), ES_FIXTURE_ROOT);
 
             BuildResult first = runBuild(projectDir, ":app:integrationTest", "--rerun-tasks");
             Properties firstMetadata = loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties"));
@@ -152,6 +170,22 @@ class DockerSharedTestClustersPluginFunctionalTest {
 
     @Test
     void publishedArtifactSampleBuildSharesOneDockerClusterAcrossProjectsAndSuites() throws IOException {
+        assertPublishedArtifactSampleBuildSharesOneDockerClusterAcrossProjectsAndSuites(
+                ES_SAMPLE_ROOT,
+                "sample-docker-es9"
+        );
+    }
+
+    @Test
+    void publishedArtifactSampleBuildSharesOneDockerOpenSearchClusterAcrossProjectsAndSuites() throws IOException {
+        assertPublishedArtifactSampleBuildSharesOneDockerClusterAcrossProjectsAndSuites(
+                OS_SAMPLE_ROOT,
+                "sample-docker-os3"
+        );
+    }
+
+    private void assertPublishedArtifactSampleBuildSharesOneDockerClusterAcrossProjectsAndSuites(String sampleRoot,
+                                                                                                  String expectedClusterName) throws IOException {
         Assumptions.assumeTrue(linuxDockerAvailable(),
                 "Docker plugin functional tests require Linux with a working Docker daemon");
         Path sampleDir = Files.createTempDirectory("es-runner-docker-sample");
@@ -159,7 +193,7 @@ class DockerSharedTestClustersPluginFunctionalTest {
         boolean success = false;
         try {
             Path repoRoot = repoRoot();
-            copyDirectory(repoRoot.resolve(SAMPLE_ROOT), sampleDir);
+            copyDirectory(repoRoot.resolve(sampleRoot), sampleDir);
             publishArtifacts(repoRoot, sampleRepo);
 
             BuildResult result = GradleRunner.create()
@@ -190,7 +224,7 @@ class DockerSharedTestClustersPluginFunctionalTest {
 
             String sharedBaseUri = metadata.get(0).getProperty("baseUri");
             metadata.forEach(properties -> {
-                assertEquals("sample-docker-es9", properties.getProperty("clusterName"));
+                assertEquals(expectedClusterName, properties.getProperty("clusterName"));
                 assertEquals(sharedBaseUri, properties.getProperty("baseUri"));
             });
             assertEquals(4, metadata.stream().map(properties -> properties.getProperty("namespace")).distinct().count());
@@ -325,11 +359,11 @@ class DockerSharedTestClustersPluginFunctionalTest {
                 publishResult.task(":es-runner-gradle-plugin-docker:publishPluginMavenPublicationToSampleRepoRepository").getOutcome());
     }
 
-    private void copyFixture(Path targetRoot, Map<String, String> replacements) throws IOException {
+    private void copyFixture(Path targetRoot, Map<String, String> replacements, String fixtureRootRelative) throws IOException {
         Path fixtureRoot = repoRoot()
                 .resolve("es-runner-gradle-plugin-docker")
                 .resolve("src/test/resources")
-                .resolve(FIXTURE_ROOT);
+                .resolve(fixtureRootRelative);
         Files.walkFileTree(fixtureRoot, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {

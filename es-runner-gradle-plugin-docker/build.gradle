@@ -6,7 +6,7 @@ plugins {
 
 group = rootProject.group
 version = rootProject.version
-description = 'Shared Docker-backed Elasticsearch test clusters for Gradle suites.'
+description = 'Shared Docker-backed Elasticsearch and OpenSearch test clusters for Gradle suites.'
 
 java {
     toolchain {
@@ -35,8 +35,8 @@ gradlePlugin {
             id = 'io.github.wboult.es-runner.docker-shared-test-clusters'
             implementationClass = 'io.github.wboult.esrunner.gradle.docker.DockerSharedTestClustersPlugin'
             displayName = 'ES Runner Docker Shared Test Clusters'
-            description = 'Shares Docker-backed Elasticsearch test clusters across Gradle projects and suites.'
-            tags.set(['elasticsearch', 'testcontainers', 'docker', 'gradle', 'testing'])
+            description = 'Shares Docker-backed Elasticsearch and OpenSearch test clusters across Gradle projects and suites.'
+            tags.set(['elasticsearch', 'opensearch', 'testcontainers', 'docker', 'gradle', 'testing'])
         }
     }
 }

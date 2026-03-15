@@ -1,0 +1,10 @@
+rootProject.name = 'docker-opensearch-shared-cluster-fixture'
+include('app', 'search')
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}
+
+includeBuild('@REPO_ROOT@')

@@ -23,6 +23,7 @@ class DockerStartupDiagnosticsTest {
 
         String diagnostics = DockerStartupDiagnostics.renderFailure(
                 "integration",
+                "elasticsearch",
                 "shared-es-docker",
                 "docker.elastic.co/elasticsearch/elasticsearch:9.3.1",
                 Duration.ofMinutes(4),
@@ -35,6 +36,7 @@ class DockerStartupDiagnosticsTest {
         );
 
         assertTrue(diagnostics.contains("Failed to start shared Docker cluster 'integration'."));
+        assertTrue(diagnostics.contains("- distribution: elasticsearch"));
         assertTrue(diagnostics.contains("- configured cluster name: shared-es-docker"));
         assertTrue(diagnostics.contains("- image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1"));
         assertTrue(diagnostics.contains("- container id: abc123"));
@@ -51,6 +53,7 @@ class DockerStartupDiagnosticsTest {
     void renderFailureExplainsDockerConnectivityFailuresWithoutContainerState() {
         String diagnostics = DockerStartupDiagnostics.renderFailure(
                 "integration",
+                "elasticsearch",
                 "shared-es-docker",
                 "docker.elastic.co/elasticsearch/elasticsearch:9.3.1",
                 Duration.ofMinutes(3),
@@ -70,5 +73,35 @@ class DockerStartupDiagnosticsTest {
         assertTrue(diagnostics.contains("- container id: <unavailable>"));
         assertTrue(diagnostics.contains("Container logs unavailable."));
         assertTrue(diagnostics.contains("Verify the Docker daemon is reachable from this Gradle process"));
+    }
+
+    @Test
+    void renderFailureIncludesOpenSearchDistributionContext() {
+        String diagnostics = DockerStartupDiagnostics.renderFailure(
+                "integration",
+                "opensearch",
+                "shared-os-docker",
+                "opensearchproject/opensearch:3.5.0",
+                Duration.ofMinutes(3),
+                Map.of(
+                        "DISABLE_SECURITY_PLUGIN", "true",
+                        "OPENSEARCH_INITIAL_ADMIN_PASSWORD", "super-secret"
+                ),
+                new DockerStartupDiagnostics.DockerContainerSnapshot(
+                        "opensearchproject/opensearch:3.5.0",
+                        "os123",
+                        "/shared-os",
+                        "127.0.0.1",
+                        49213,
+                        49214,
+                        null
+                ),
+                new IllegalStateException("manifest for opensearchproject/opensearch:3.5.0 not found")
+        );
+
+        assertTrue(diagnostics.contains("- distribution: opensearch"));
+        assertTrue(diagnostics.contains("- configured cluster name: shared-os-docker"));
+        assertTrue(diagnostics.contains("- OPENSEARCH_INITIAL_ADMIN_PASSWORD: <redacted>"));
+        assertTrue(diagnostics.contains("Verify the configured image exists and that the registry is reachable"));
     }
 }

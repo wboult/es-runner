@@ -155,10 +155,11 @@ If you are adopting the Gradle shared-cluster path, decide the backend first:
 - **Process-backed**:
   [docs/gradle-shared-test-clusters.md](docs/gradle-shared-test-clusters.md)
   when you want the mainline ES Runner path, ZIP distro control, mirrors, or
-  OpenSearch shared clusters
+  the richest distro-level knobs
 - **Docker-backed**:
   [docs/docker-shared-test-clusters.md](docs/docker-shared-test-clusters.md)
-  when Docker/Testcontainers is already the standard build runtime
+  when Docker/Testcontainers is already the standard build runtime, including
+  Docker-backed OpenSearch clusters
 - **Quick decision guide**:
   [docs/choose-gradle-shared-cluster-backend.md](docs/choose-gradle-shared-cluster-backend.md)
   compares both backends and links to the public samples
@@ -167,8 +168,10 @@ Canonical public samples:
 
 - process-backed:
   `samples/gradle-shared-cluster-multiproject-sample/`
-- Docker-backed:
+- Docker-backed Elasticsearch:
   `samples/docker-shared-cluster-multiproject-sample/`
+- Docker-backed OpenSearch:
+  `samples/docker-opensearch-shared-cluster-multiproject-sample/`
 
 ## When not to use it
 
@@ -772,16 +775,17 @@ It keeps the same test-side helper and namespace model:
 The main difference is the backend:
 
 - process-backed plugin: real ZIP distro plus local OS process
-- Docker-backed plugin: shared Elasticsearch container per build
+- Docker-backed plugin: shared Elasticsearch or OpenSearch container per build
 
-This backend currently focuses on shared single-node Elasticsearch clusters and
-Linux CI coverage. It does not yet try to mirror every process-backed option
-one for one, and OpenSearch Docker support is intentionally out of scope for
-the first version.
+This backend currently focuses on shared single-node search clusters and Linux
+CI coverage. It does not yet try to mirror every process-backed option one for
+one.
 
 There is also a realistic public sample in
 [`samples/docker-shared-cluster-multiproject-sample`](samples/docker-shared-cluster-multiproject-sample)
-that mirrors the process-backed sample structure while consuming the Docker
+and an OpenSearch variant in
+[`samples/docker-opensearch-shared-cluster-multiproject-sample`](samples/docker-opensearch-shared-cluster-multiproject-sample)
+that mirror the process-backed sample structure while consuming the Docker
 plugin and helper through normal coordinates.
 
 See [docs/docker-shared-test-clusters.md](docs/docker-shared-test-clusters.md)

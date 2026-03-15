@@ -6,14 +6,12 @@ import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 /**
- * DSL model for one shared Docker-backed Elasticsearch cluster definition.
+ * DSL model for one shared Docker-backed search cluster definition.
  */
 public abstract class DockerClusterSpec {
     private final String name;
+    private final Property<String> distribution;
     private final Property<String> version;
     private final Property<String> image;
     private final Property<String> clusterName;
@@ -29,28 +27,30 @@ public abstract class DockerClusterSpec {
     @Inject
     public DockerClusterSpec(String name, ObjectFactory objects) {
         this.name = name;
+        this.distribution = objects.property(String.class);
         this.version = objects.property(String.class);
         this.image = objects.property(String.class);
         this.clusterName = objects.property(String.class);
         this.startupTimeoutMillis = objects.property(Long.class);
         this.envVars = objects.mapProperty(String.class, String.class);
 
-        this.version.convention("9.3.1");
-        this.image.convention(this.version.map(v -> "docker.elastic.co/elasticsearch/elasticsearch:" + v));
+        this.distribution.convention(DockerDistribution.ELASTICSEARCH.id());
+        this.version.convention(this.distribution.map(raw -> DockerDistribution.from(raw).defaultVersion()));
+        this.image.convention(this.distribution.flatMap(raw ->
+                this.version.map(version -> DockerDistribution.from(raw).defaultImage(version))));
         this.clusterName.convention(name);
         this.startupTimeoutMillis.convention(Duration.ofMinutes(3).toMillis());
-
-        Map<String, String> defaults = new LinkedHashMap<>();
-        defaults.put("discovery.type", "single-node");
-        defaults.put("xpack.security.enabled", "false");
-        defaults.put("cluster.routing.allocation.disk.threshold_enabled", "false");
-        defaults.put("ES_JAVA_OPTS", "-Xms256m -Xmx256m");
-        this.envVars.convention(defaults);
+        this.envVars.convention(this.distribution.map(raw -> DockerDistribution.from(raw).defaultEnvVars()));
     }
 
     /** @return logical cluster name in the Gradle container */
     public String getName() {
         return name;
+    }
+
+    /** @return distribution family used to derive the default version, image, and env vars */
+    public Property<String> getDistribution() {
+        return distribution;
     }
 
     /** @return convenience Elasticsearch version used to derive the default image */
@@ -85,6 +85,25 @@ public abstract class DockerClusterSpec {
      */
     public void startupTimeout(Duration duration) {
         startupTimeoutMillis.set(duration.toMillis());
+    }
+
+    /**
+     * Selects the Docker distribution family.
+     *
+     * @param distribution supported values: {@code elasticsearch}, {@code opensearch}
+     */
+    public void distribution(String distribution) {
+        this.distribution.set(distribution);
+    }
+
+    /** Uses the default Elasticsearch image family. */
+    public void elasticsearch() {
+        this.distribution.set(DockerDistribution.ELASTICSEARCH.id());
+    }
+
+    /** Uses the default OpenSearch image family. */
+    public void opensearch() {
+        this.distribution.set(DockerDistribution.OPENSEARCH.id());
     }
 
     /**
