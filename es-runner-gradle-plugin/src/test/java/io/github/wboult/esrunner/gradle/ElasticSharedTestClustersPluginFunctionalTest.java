@@ -3,6 +3,7 @@ package io.github.wboult.esrunner.gradle;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
+import org.gradle.testkit.runner.UnexpectedBuildFailure;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,7 +50,7 @@ class ElasticSharedTestClustersPluginFunctionalTest {
 
             BuildResult result = GradleRunner.create()
                     .withProjectDir(projectDir.toFile())
-                    .withArguments(":app:classes", "--stacktrace")
+                    .withArguments(gradleArguments(":app:classes"))
                     .withPluginClasspath()
                     .forwardOutput()
                     .build();
@@ -87,18 +90,13 @@ class ElasticSharedTestClustersPluginFunctionalTest {
                     "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
             ));
 
-            BuildResult result = GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments(
-                            ":app:integrationTest",
-                            ":app:smokeTest",
-                            ":search:integrationTest",
-                            ":search:smokeTest",
-                            "--stacktrace"
-                    )
-                    .withPluginClasspath()
-                    .forwardOutput()
-                    .build();
+            BuildResult result = runBuild(
+                    projectDir,
+                    ":app:integrationTest",
+                    ":app:smokeTest",
+                    ":search:integrationTest",
+                    ":search:smokeTest"
+            );
 
             assertEquals(SUCCESS, result.task(":app:integrationTest").getOutcome());
             assertEquals(SUCCESS, result.task(":app:smokeTest").getOutcome());
@@ -181,21 +179,11 @@ class ElasticSharedTestClustersPluginFunctionalTest {
                     "@TEST_SUPPORT_VERSION@", rootVersion(repoRoot)
             ));
 
-            BuildResult first = GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments(":app:integrationTest", "--rerun-tasks", "--stacktrace")
-                    .withPluginClasspath()
-                    .forwardOutput()
-                    .build();
+            BuildResult first = runBuild(projectDir, ":app:integrationTest", "--rerun-tasks");
             assertEquals(SUCCESS, first.task(":app:integrationTest").getOutcome());
             Properties firstMetadata = loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties"));
 
-            BuildResult second = GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments(":app:integrationTest", "--rerun-tasks", "--stacktrace")
-                    .withPluginClasspath()
-                    .forwardOutput()
-                    .build();
+            BuildResult second = runBuild(projectDir, ":app:integrationTest", "--rerun-tasks");
             assertEquals(SUCCESS, second.task(":app:integrationTest").getOutcome());
             Properties secondMetadata = loadProperties(projectDir.resolve("app/build/es-runner/app-integration.properties"));
 
@@ -243,6 +231,45 @@ class ElasticSharedTestClustersPluginFunctionalTest {
         }
 
         throw new IllegalStateException("Unable to determine root version from build.gradle");
+    }
+
+    private BuildResult runBuild(Path projectDir, String... tasks) {
+        try {
+            return GradleRunner.create()
+                    .withProjectDir(projectDir.toFile())
+                    .withArguments(gradleArguments(tasks))
+                    .withPluginClasspath()
+                    .forwardOutput()
+                    .build();
+        } catch (UnexpectedBuildFailure failure) {
+            throw new AssertionError(
+                    "Nested fixture build failed for " + projectDir + ":\n"
+                            + failure.getBuildResult().getOutput(),
+                    failure
+            );
+        }
+    }
+
+    private List<String> gradleArguments(String... tasks) {
+        return Stream.concat(
+                Stream.of("-Dorg.gradle.java.installations.paths=" + currentJavaHome()),
+                Stream.of(tasks)
+        ).collect(Collectors.collectingAndThen(
+                Collectors.toList(),
+                arguments -> {
+                    arguments.add("--no-configuration-cache");
+                    arguments.add("--stacktrace");
+                    return arguments;
+                }
+        ));
+    }
+
+    private String currentJavaHome() {
+        String javaHome = System.getenv("JAVA_HOME");
+        if (javaHome != null && !javaHome.isBlank()) {
+            return javaHome;
+        }
+        return System.getProperty("java.home");
     }
 
     private void copyFixture(Path targetRoot, Map<String, String> replacements) throws IOException {
