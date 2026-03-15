@@ -96,17 +96,30 @@ public abstract class DockerClusterService
                     clusterName
             );
             container = started;
-            LOGGER.lifecycle("Shared Docker cluster '{}' started from image {} on port {}.",
-                    params.getName().get(), image, started.getMappedPort(HTTP_PORT));
+            LOGGER.lifecycle("Shared Docker cluster '{}' started from image {} with container id {} on {}:{}.",
+                    params.getName().get(),
+                    image,
+                    started.getContainerId(),
+                    started.getHost(),
+                    started.getMappedPort(HTTP_PORT));
         } catch (Exception e) {
-            String diagnostics = diagnostics(started, image);
+            DockerStartupDiagnostics.DockerContainerSnapshot snapshot =
+                    DockerStartupDiagnostics.snapshot(image, started);
+            String diagnostics = DockerStartupDiagnostics.renderFailure(
+                    params.getName().get(),
+                    clusterName,
+                    image,
+                    timeout,
+                    params.getEnvVars().get(),
+                    snapshot,
+                    asRuntimeException(e)
+            );
             try {
                 started.stop();
             } catch (Exception suppressed) {
                 e.addSuppressed(suppressed);
             }
-            throw new IllegalStateException("Failed to start shared Docker cluster '"
-                    + params.getName().get() + "'. " + diagnostics, e);
+            throw new IllegalStateException(diagnostics, e);
         }
     }
 
@@ -128,22 +141,7 @@ public abstract class DockerClusterService
         }
     }
 
-    private String diagnostics(GenericContainer<?> started, String image) {
-        StringBuilder message = new StringBuilder("image=").append(image);
-        try {
-            if (started.getContainerId() != null) {
-                message.append(", containerId=").append(started.getContainerId());
-            }
-        } catch (Exception ignored) {
-        }
-        try {
-            String logs = started.getLogs();
-            if (logs != null && !logs.isBlank()) {
-                String tail = logs.length() > 2000 ? logs.substring(logs.length() - 2000) : logs;
-                message.append(", logTail=").append(tail.replace('\n', ' ').replace('\r', ' '));
-            }
-        } catch (Exception ignored) {
-        }
-        return message.toString();
+    private RuntimeException asRuntimeException(Exception failure) {
+        return failure instanceof RuntimeException runtime ? runtime : new IllegalStateException(failure.getMessage(), failure);
     }
 }

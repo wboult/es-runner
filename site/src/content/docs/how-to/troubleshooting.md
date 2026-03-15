@@ -18,6 +18,11 @@ When a build fails, work through these in order:
 4. If the cluster started but test assertions still fail, check refresh,
    namespacing, and reused work-dir state before changing timeouts.
 
+For Docker-backed shared-cluster failures, there is no
+`startup-diagnostics.txt` file. Use the exception message as the primary
+diagnostic artifact because it now includes image, Docker/Testcontainers
+environment hints, container id/name/ports, and a recent log tail.
+
 ## Distro ZIP not found
 
 **Symptom**: `ElasticRunnerException: Distro archive does not exist`
@@ -66,6 +71,28 @@ OpenSearch`, or `Timed out waiting for HTTP port bind`.
 - Check the resolved archive path and download URI in the diagnostics output.
 - Increase `startupTimeout` or `heap` if the node is starting slowly.
 - Widen the HTTP port range if the machine may already have other local nodes.
+
+## Docker shared cluster fails to start
+
+**Symptom**: the Docker/Testcontainers-backed shared-cluster plugin fails before
+any test code runs.
+
+**Fix**:
+- Start with the exception message itself. It now includes:
+  - configured cluster name
+  - image reference
+  - startup timeout
+  - Docker/Testcontainers environment hints
+  - container id/name/ports when available
+  - a recent container log tail
+- If the message says Docker environment detection failed, confirm the Gradle
+  process can reach the Docker daemon and socket.
+- If the message mentions manifest, image pull, or not found errors, verify the
+  configured image exists and the registry is reachable.
+- If the message says the health probe failed, inspect the inline log tail for
+  Elasticsearch bootstrap or security-setting issues.
+- If the container starts but never becomes healthy on slower machines, raise
+  `startupTimeoutMillis`.
 
 ## Shared cluster started, but tests still fail
 

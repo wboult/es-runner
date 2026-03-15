@@ -157,6 +157,26 @@ CI lane. Local Windows development can still build the module, but the
 container-backed functional test is intentionally treated as Linux-first
 coverage.
 
+## Startup failure diagnostics
+
+The Docker-backed plugin does not write a process-style
+`startup-diagnostics.txt` file because there is no extracted distro work
+directory to inspect. Instead, startup failures include an inline diagnostic
+block in the exception output with:
+
+- the cluster definition name and configured Elasticsearch cluster name
+- the exact image reference
+- startup timeout
+- Docker/Testcontainers environment hints such as `DOCKER_HOST`
+- container id, container name, host, and mapped ports when available
+- sanitized container env vars
+- a recent container log tail
+- remediation hints for common cases such as daemon connectivity, image pull
+  failures, and health-probe timeouts
+
+So for Docker-backed failures, start with the exception message itself before
+looking elsewhere.
+
 ## Related
 
 - [Use shared Gradle test clusters](../gradle-shared-test-clusters/)
